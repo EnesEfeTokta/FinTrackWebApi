@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinTrackWebApi", "FinTrackWebApi.csproj", "{DBC67F9E-3109-4D54-9849-7A9241DD5EFB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DBC67F9E-3109-4D54-9849-7A9241DD5EFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBC67F9E-3109-4D54-9849-7A9241DD5EFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBC67F9E-3109-4D54-9849-7A9241DD5EFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBC67F9E-3109-4D54-9849-7A9241DD5EFB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {817C02DB-3655-4CEF-9046-F1867C45E0FA}
+	EndGlobalSection
+EndGlobal
