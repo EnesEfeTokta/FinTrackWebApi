@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250422114816_InitialCreate")]
+    [Migration("20250423121419_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,6 +24,41 @@ namespace FinTrackWebApi.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("FinTrackWebApi.Models.OtpVerifications", b =>
+                {
+                    b.Property<int>("OtpId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OtpId"));
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreateAt");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("Email");
+
+                    b.Property<DateTime>("ExpireAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ExpireAt");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("IsVerified");
+
+                    b.Property<string>("OtpCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("OtpCode");
+
+                    b.HasKey("OtpId");
+
+                    b.ToTable("OtpVerifications", (string)null);
+                });
 
             modelBuilder.Entity("FinTrackWebApi.Models.UserModel", b =>
                 {

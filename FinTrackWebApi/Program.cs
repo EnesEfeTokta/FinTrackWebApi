@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FinTrackWebApi.Services.EmailService;
+using FinTrackWebApi.Services.OtpService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddTransient<IOtpService, OtpService>();
 
 builder.Services.AddDbContext<MyDataContext>(options =>
     options.UseNpgsql(connectionString));

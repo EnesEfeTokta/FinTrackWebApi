@@ -8,6 +8,7 @@ namespace FinTrackWebApi.Data
         public MyDataContext(DbContextOptions<MyDataContext> options) : base(options) { }
 
         public DbSet<UserModel> Users { get; set; }
+        public DbSet<OtpVerifications> OtpVerifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -16,6 +17,10 @@ namespace FinTrackWebApi.Data
             modelBuilder.Entity<UserModel>()
                 .ToTable("Users")
                 .HasKey(u => u.UserId);
+
+            modelBuilder.Entity<OtpVerifications>()
+                .ToTable("OtpVerifications")
+                .HasKey(o => o.OtpId);
         }
     }
 }
