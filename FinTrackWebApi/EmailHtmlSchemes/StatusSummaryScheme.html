@@ -1,0 +1,311 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Detailed Summary</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: #24292e;
+            text-align: center;
+            padding: 20px;
+        }
+
+            .header img {
+                width: 120px;
+            }
+
+        .intro {
+            padding: 20px;
+            text-align: center;
+        }
+
+            .intro h1 {
+                margin: 0;
+                font-size: 24px;
+                color: #24292e;
+            }
+
+            .intro p {
+                margin: 8px 0 0;
+                font-size: 14px;
+                color: #586069;
+            }
+
+        .metrics {
+            width: 100%;
+            padding: 0 20px;
+        }
+
+            .metrics td {
+                width: 50%;
+                padding: 10px;
+            }
+
+        .metric-box {
+            background: #f6f8fa;
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+        }
+
+            .metric-box h3 {
+                margin: 0;
+                font-size: 16px;
+                color: #24292e;
+            }
+
+            .metric-box p {
+                margin: 4px 0 0;
+                font-size: 14px;
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        .chart {
+            padding: 20px;
+            text-align: center;
+        }
+
+            .chart img {
+                max-width: 100%;
+                height: auto;
+            }
+
+        .section {
+            padding: 20px;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .section h2 {
+                margin: 0 0 12px;
+                font-size: 18px;
+                color: #24292e;
+            }
+
+        .budget-breakdown, .transactions {
+            width: 100%;
+        }
+
+            .budget-breakdown th, .budget-breakdown td, .transactions th, .transactions td {
+                padding: 8px;
+                font-size: 14px;
+                color: #24292e;
+                text-align: left;
+            }
+
+            .budget-breakdown th {
+                background: #f6f8fa;
+                font-weight: 600;
+            }
+
+            .transactions tr:nth-child(even) td {
+                background: #fafbfc;
+            }
+
+        .progress {
+            background: #e1e4e8;
+            border-radius: 4px;
+            height: 10px;
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 10px;
+            border-radius: 4px;
+        }
+
+        .goals {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .goals li {
+                margin-bottom: 12px;
+            }
+
+            .goals p {
+                margin: 0 0 4px;
+                font-size: 14px;
+                color: #24292e;
+            }
+
+        .fx {
+            font-size: 14px;
+            color: #24292e;
+            margin: 4px 0;
+        }
+
+            .fx strong {
+                color: #0366d6;
+            }
+
+        .cta {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #28a745;
+            color: #fff;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .footer {
+            background: #24292e;
+            color: #adbac7;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+            .footer a {
+                color: #adbac7;
+            }
+
+        .disclaimer {
+            font-style: italic;
+            color: #8b949e;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <table class="container" role="presentation">
+        <!-- Header -->
+        <tr><td class="header"><img src="[LOGO_URL]" alt="FinTrack"></td></tr>
+
+        <!-- Intro -->
+        <tr>
+            <td class="intro">
+                <h1>Hello, [UserName]!</h1>
+                <p>Here’s your detailed financial snapshot as of [DATE]</p>
+            </td>
+        </tr>
+
+        <!-- Key Metrics -->
+        <tr>
+            <td>
+                <table class="metrics" role="presentation">
+                    <tr>
+                        <td><div class="metric-box"><h3>Current Balance</h3><p>[CURRENT_BALANCE]</p></div></td>
+                        <td><div class="metric-box"><h3>Net Income</h3><p>[NET_INCOME]</p></div></td>
+                    </tr>
+                    <tr>
+                        <td><div class="metric-box"><h3>Total Expenses</h3><p>[TOTAL_EXPENSES]</p></div></td>
+                        <td><div class="metric-box"><h3>Savings Rate</h3><p>[SAVINGS_RATE]%</p></div></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Trend Chart -->
+        <tr>
+            <td class="chart">
+                <h2>Income vs Expenses Trend</h2>
+            </td>
+        </tr>
+
+        <!-- Budget Breakdown -->
+        <tr>
+            <td class="section">
+                <h2>Budget Breakdown by Category</h2>
+                <table class="budget-breakdown">
+                    <tr><th>Category</th><th>Budget</th><th>Used</th><th>%</th></tr>
+                    [BUDGET_CATEGORIES_ROWS]
+                </table>
+            </td>
+        </tr>
+
+        <!-- Recent Transactions -->
+        <tr>
+            <td class="section">
+                <h2>Last 5 Transactions</h2>
+                <table class="transactions">
+                    <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr>
+                    [TRANSACTION_ROWS]
+                </table>
+            </td>
+        </tr>
+
+        <!-- Goals -->
+        <tr>
+            <td class="section">
+                <h2>Financial Goals Progress</h2>
+                <ul class="goals">
+                    <!-- Example: -->
+                    <!-- <li><p>Emergency Fund: 60% complete</p><div class="progress"><div class="progress-bar" style="width:60%; background:#28a745;"></div></div></li> -->
+                    [GOALS_PROGRESS_ITEMS]
+                </ul>
+            </td>
+        </tr>
+
+        <!-- Exchange Rates -->
+        <tr>
+            <td class="section">
+                <h2>Exchange Rates</h2>
+                <p class="fx">USD/TRY: <strong>[USD_TL_RATE]</strong> (<span style="color:#28a745;">+ [USD_CHANGE]%</span>)</p>
+                <p class="fx">EUR/TRY: <strong>[EUR_TL_RATE]</strong> (<span style="color:#d73a49;">- [EUR_CHANGE]%</span>)</p>
+            </td>
+        </tr>
+
+        <!-- Call to Action -->
+        <tr>
+            <td class="cta">
+                <a href="[DASHBOARD_LINK]" class="btn">View Full Dashboard</a>
+            </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+            <td class="footer">
+                © [YEAR] FinTrack. All rights reserved.<br>
+                <a href="[PREFERENCES_LINK]">Manage Email Preferences</a>
+                <p class="disclaimer">FinTrack is an educational project. Use responsibly.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
