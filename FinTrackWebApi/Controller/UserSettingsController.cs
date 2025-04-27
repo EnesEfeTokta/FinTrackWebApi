@@ -17,7 +17,7 @@ namespace FinTrackWebApi.Controller
 
         private readonly ILogger<UserSettingsController> _logger;
 
-        public UserSettingsController(MyDataContext context, ILogger<UserSettingsController> logger)
+        public UserSettingsController(MyDataContext context, ILogger<UserSettingsController> logger = null)
         {
             _context = context;
             _logger = logger;
@@ -29,8 +29,6 @@ namespace FinTrackWebApi.Controller
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid in token for user {UserName}.", User.Identity?.Name ?? "Unknown");
-                // Üretimde daha spesifik bir exception veya uygun bir dönüş yapılabilir.
-                // Ancak [Authorize] düzgün çalışıyorsa bu noktaya gelinmemeli.
                 throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
             }
             return userId;
@@ -73,7 +71,7 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateUserSettings(int userId, [FromBody] UserSettingsDto userSettingsDto)
+        public async Task<IActionResult> UpdateUserSettings([FromBody] UserSettingsDto userSettingsDto)
         {
             int authenticatedUserId = GetAuthenticatedUserId();
 

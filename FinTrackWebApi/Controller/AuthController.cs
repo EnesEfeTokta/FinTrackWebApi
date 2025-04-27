@@ -6,8 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
-using System.Security.Cryptography;
-using System.Text;
+using FinTrackWebApi.Controller;
 
 namespace FinTrackWebApi.Controller
 {
@@ -126,6 +125,15 @@ namespace FinTrackWebApi.Controller
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
                 return Unauthorized("Invalid credentials");
+            }
+
+            // Kullanıcının giriş tarihi kayıt ediliyor.
+            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s => s.UserId == user.UserId);
+
+            if (userSettings != null)
+            {
+                userSettings.EntryDate = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
 
             Token token = TokenHandler.CreateToken(_configuration, user); // JWT token oluşturuluyor.
