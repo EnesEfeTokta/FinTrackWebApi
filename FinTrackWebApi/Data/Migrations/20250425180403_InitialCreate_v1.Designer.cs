@@ -3,6 +3,7 @@ using System;
 using FinTrackWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    partial class MyDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250425180403_InitialCreate_v1")]
+    partial class InitialCreate_v1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,66 +106,6 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserSettingsModel", b =>
-                {
-                    b.Property<int>("SettingsId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SettingsId"));
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Currency");
-
-                    b.Property<DateTime>("EntryDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("EntryDate");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Language");
-
-                    b.Property<bool>("Notification")
-                        .HasColumnType("boolean")
-                        .HasColumnName("Notification");
-
-                    b.Property<string>("Theme")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Theme");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer")
-                        .HasColumnName("UserId");
-
-                    b.HasKey("SettingsId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("UserSettings", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserSettingsModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
-                        .WithOne("Settings")
-                        .HasForeignKey("FinTrackWebApi.Models.UserSettingsModel", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserModel", b =>
-                {
-                    b.Navigation("Settings")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

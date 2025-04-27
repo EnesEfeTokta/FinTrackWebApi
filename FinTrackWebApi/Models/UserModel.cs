@@ -29,5 +29,7 @@ namespace FinTrackWebApi.Models
         [Required]
         [Column("CreateAt")]
         public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+
+        public UserSettingsModel Settings { get; set; }
     }
 }

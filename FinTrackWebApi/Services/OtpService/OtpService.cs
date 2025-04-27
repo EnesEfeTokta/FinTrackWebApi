@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
+using FinTrackWebApi.Dtos;
 
 namespace FinTrackWebApi.Services.OtpService
 {
@@ -28,6 +29,11 @@ namespace FinTrackWebApi.Services.OtpService
             }
         }
 
+        /// <summary>
+        /// Verilen e-posta adresi için OTP'yi siler.
+        /// </summary>
+        /// <param name="email">Silinecek ilgili e-psta.</param>
+        /// <returns></returns>
         public async Task<bool> RemoveOtpAsync(string email)
         {
             try
@@ -55,7 +61,13 @@ namespace FinTrackWebApi.Services.OtpService
             }
         }
 
-        public async Task<bool> StoreOtpAsync(string email, string hashOtpCde)
+        /// <summary>
+        /// Gönderilen e-posta adresi için OTP'yi saklar.
+        /// </summary>
+        /// <param name="email">Gönderilecek e-posta.</param>
+        /// <param name="hashOtpCde">Gönderilecek kod.</param>
+        /// <returns></returns>
+        public async Task<bool> StoreOtpAsync(string email, string hashOtpCde, string username, string passwordHash, string? profilePicture)
         {
             try
             {
@@ -67,19 +79,23 @@ namespace FinTrackWebApi.Services.OtpService
                 {
                     _logger.LogInformation("Removing OTP(s) for email: {Email}", email);
                     _context.OtpVerifications.RemoveRange(existingOtps);
-                    await _context.SaveChangesAsync();
+                    //await _context.SaveChangesAsync();
                 }
 
-                OtpVerifications otpVerification = new OtpVerifications
+                OtpVerificationModel otpVerification = new OtpVerificationModel
                 {
                     Email = email,
                     OtpCode = hashOtpCde,
-                    IsVerified = false,
                     CreateAt = DateTime.UtcNow,
-                    ExpireAt = DateTime.UtcNow.AddMinutes(5)
+                    ExpireAt = DateTime.UtcNow.AddMinutes(5),
+                    Username = username,
+                    PasswordHash = passwordHash,
+                    ProfilePicture = profilePicture ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"
                 };
 
                 await _context.OtpVerifications.AddAsync(otpVerification);
+                await _context.SaveChangesAsync();
+
                 _logger.LogInformation("Storing OTP for email: {Email}", email);
                 return true;
             }
@@ -90,12 +106,15 @@ namespace FinTrackWebApi.Services.OtpService
             }
         }
 
-        public async Task<string> VerifyOtpAsync(string email, string hashOtpCde)
+        public async Task<OtpVerificationModel> VerifyOtpAsync(string email, string hashOtpCde)
         {
-            OtpVerifications otpVerifications = new OtpVerifications();
+            OtpVerificationModel otpVerifications = new OtpVerificationModel();
 
             try
             {
+                var allOtps = await _context.OtpVerifications.ToListAsync();
+                _logger.LogInformation("Toplam OTP kaydı: {Count}", allOtps.Count);
+
                 var otpRecord = await _context.OtpVerifications
                     .Where(x => x.Email == email)
                     .OrderByDescending(x => x.CreateAt) // Sıralıyr ve en son eklenen kaydı alıyoruz.
@@ -104,37 +123,36 @@ namespace FinTrackWebApi.Services.OtpService
                 if (otpRecord == null)
                 {
                     _logger.LogWarning("No OTP record found for email: {Email}", email);
-                    return "No OTP record found";
-                }
-
-                if (otpRecord.IsVerified)
-                {
-                    _logger.LogWarning("OTP already verified for email: {Email}", email);
-                    return "Already Verified";
                 }
 
                 if (otpRecord.ExpireAt < DateTime.UtcNow)
                 {
                     _logger.LogWarning("OTP expired for email: {Email}", email);
-                    return "Expired";
+                    _context.OtpVerifications.Remove(otpRecord);
+                    await _context.SaveChangesAsync();
+                    return null;
                 }
 
-                if (otpRecord.OtpCode != hashOtpCde)
+                if (!BCrypt.Net.BCrypt.Verify(hashOtpCde, otpRecord.OtpCode))
                 {
-                    _logger.LogWarning("Invalid OTP for email: {Email}", email);
-                    return "Invalid OTP";
+                    _logger.LogWarning("Invalid OTP for email: {Email} {OtpCode} {hashOtpCode}", email, otpRecord.OtpCode, hashOtpCde);
+                    return null;
                 }
 
-                otpRecord.IsVerified = true;
                 _logger.LogInformation("OTP verified for email: {Email}", email);
 
-                return "Verified";
+                // OTP doğrulandıktan sonra kaydı silmek isteyebilirsiniz.
+                _context.OtpVerifications.Remove(otpRecord);
+                await _context.SaveChangesAsync();
+
+                return otpRecord;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error verifying OTP for email: {Email}", email);
-                return "Error";
             }
+
+            return null;
         }
     }
 }

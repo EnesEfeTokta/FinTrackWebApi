@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="EmailHtmlSchemes\CodeVerificationScheme.html" />
+    <None Remove="EmailHtmlSchemes\HelloScheme.html" />
+    <None Remove="EmailHtmlSchemes\PasswordResetScheme.html" />
+    <None Remove="EmailHtmlSchemes\RaporScheme.html" />
+    <None Remove="EmailHtmlSchemes\StatusSummaryScheme.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
@@ -17,6 +25,28 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="EmailHtmlSchemes\CodeVerificationScheme.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="EmailHtmlSchemes\HelloScheme.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="EmailHtmlSchemes\PasswordResetScheme.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="EmailHtmlSchemes\RaporScheme.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="EmailHtmlSchemes\StatusSummaryScheme.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

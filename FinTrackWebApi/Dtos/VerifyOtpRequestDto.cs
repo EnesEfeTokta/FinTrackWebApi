@@ -2,12 +2,12 @@
 
 namespace FinTrackWebApi.Dtos
 {
-    public class LoginDto
+    public class VerifyOtpRequestDto
     {
         [Required]
         public string Email { get; set; } = null!;
 
         [Required]
-        public string Password { get; set; } = null!;
+        public string Code { get; set; } = null!;
     }
 }

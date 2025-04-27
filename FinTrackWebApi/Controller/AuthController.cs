@@ -5,6 +5,9 @@ using FinTrackWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
+using FinTrackWebApi.Services.OtpService;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FinTrackWebApi.Controller
 {
@@ -16,37 +19,101 @@ namespace FinTrackWebApi.Controller
 
         private readonly IConfiguration _configuration;
 
-        public AuthController(MyDataContext context, IConfiguration configuration)
+        private readonly IEmailSender _emailSender;
+        private readonly IOtpService _otpService;
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(
+            MyDataContext context,
+            IConfiguration configuration,
+            IOtpService otpService,
+            IEmailSender emailService,
+            ILogger<AuthController> logger) 
         {
             _context = context;
             _configuration = configuration;
+            _otpService = otpService;
+            _emailSender = emailService;
+            _logger = logger;
         }
 
-        // Kullanıcı kayıt işlemi yapılıyor.
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+        [HttpPost("initiate-registration")]
+        public async Task<IActionResult> InitiateRegistration([FromBody] InitiateRegistrationDto initiateRegistrationDto)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == initiateRegistrationDto.Email))
             {
-                return BadRequest("Email already exists");
+                _logger.LogWarning("Registration initiation failed: Email {Email} already exists.", initiateRegistrationDto.Email);
+                return BadRequest("This email address is already registered.");
+            }
+            
+            string otp = _otpService.GenerateOtp();
+            DateTime expiryTime = DateTime.UtcNow.AddMinutes(10);
+            string hashOtpCde = BCrypt.Net.BCrypt.HashPassword(otp);
+
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(initiateRegistrationDto.PasswordHash);
+
+            bool stored = await _otpService.StoreOtpAsync(initiateRegistrationDto.Email, hashOtpCde, initiateRegistrationDto.Username, passwordHash, initiateRegistrationDto.ProfilePicture);
+
+            try
+            {
+                string emailSubject = "Email Verification Code For FinTrack new Membership";
+                string emailBody = string.Empty;
+                using (StreamReader reader = new StreamReader(@"C:\Users\EnesEfeTokta\OneDrive\Belgeler\GitHub\FinTrackWebApiRepo\FinTrackWebApi\FinTrackWebApi\EmailHtmlSchemes\CodeVerificationScheme.html"))
+                {
+                    emailBody = await reader.ReadToEndAsync();
+                }
+
+                emailBody = emailBody.Replace("[UserName]", initiateRegistrationDto.Username);
+                emailBody = emailBody.Replace("[VERIFICATION_CODE]", otp);
+
+                emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+                await _emailSender.SendEmailAsync(initiateRegistrationDto.Email, emailSubject, emailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send verification email to {Email}.", initiateRegistrationDto.Email);
+
+                // E-posta gönderilemezse, oluşturulan geçici OTP kaydını temizle!
+                await _otpService.RemoveOtpAsync(initiateRegistrationDto.Email);
+                return StatusCode(500, "Failed to send verification email. Please check the address and try again.");
             }
 
-            // Kayıt için gerekli sınıftan örnek oluşturuluyor.
-            var user = new UserModel
+            _logger.LogInformation("OTP sent to {Email}.", initiateRegistrationDto.Email);
+            return Ok(new { Message = "OTP sent to your email address." });
+        }
+
+        // OTP doğrulama işlemi yapılıyor.
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto verifyOtpDto)
+        {
+            OtpVerificationModel result = await _otpService.VerifyOtpAsync(verifyOtpDto.Email, verifyOtpDto.Code);
+
+            if (result == null)
             {
-                Username = registerDto.Username,
-                Email = registerDto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-                ProfilePicture = registerDto.ProfilePicture
-            };
+                _logger.LogWarning("OTP verification failed for {Email}.", verifyOtpDto.Email);
+                return BadRequest("Invalid OTP code.");
+            }
+            _logger.LogInformation("OTP verified successfully for {Email}.", verifyOtpDto.Email);
 
-            EmailSender emailSender = new EmailSender(_configuration); // Email gönderimi için sınıf örneği oluşturuluyor.
-            await emailSender.SendEmailAsync(registerDto.Email, "Welcome to FinTrack", "<p>You have successfully registered to FinTrack.</p>"); // Kullanıcıya hoş geldin emaili gönderiliyor.
-
-            await _context.Users.AddAsync(user); // Kullanıcı veritabanına ekleniyor.
-            await _context.SaveChangesAsync(); // Değişiklikler kaydediliyor.
-            
-            return Ok(new { user.UserId, user.Username, user.Email, user.ProfilePicture }); // Başarılı kayıt sonrası kullanıcı bilgileri döndürülüyor.
+            try
+            {
+                UserModel newUser = new UserModel
+                {
+                    Username = result.Username,
+                    Email = result.Email,
+                    PasswordHash = result.PasswordHash,
+                    ProfilePicture = result.ProfilePicture
+                };
+                await _context.Users.AddAsync(newUser);
+                await _context.SaveChangesAsync();
+                return Ok(new { Message = "Registration successful." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to register user with email {Email}.", verifyOtpDto.Email);
+                return StatusCode(500, "An error occurred while registering the user.");
+            }
         }
 
         // Kullanıcı giriş işlemi yapılıyor.
@@ -61,10 +128,10 @@ namespace FinTrackWebApi.Controller
                 return Unauthorized("Invalid credentials");
             }
 
-            Token token = TokenHandler.CreateToken(_configuration); // JWT token oluşturuluyor.
+            Token token = TokenHandler.CreateToken(_configuration, user); // JWT token oluşturuluyor.
 
             // Başarılı giriş sonrası kullanıcı bilgileri döndürülüyor.
-            return Ok(new { user.UserId, user.Username, user.Email, user.ProfilePicture, token});
+            return Ok(new { user.UserId, user.Username, user.Email, user.ProfilePicture, AccessToken = token.AccessToken});
         }
     }
 }
