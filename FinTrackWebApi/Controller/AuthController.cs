@@ -106,6 +106,50 @@ namespace FinTrackWebApi.Controller
                 };
                 await _context.Users.AddAsync(newUser);
                 await _context.SaveChangesAsync();
+
+                try
+                {
+                    // Kullanıcı ayarları oluşturuluyor.
+                    UserSettingsModel userSettings = new UserSettingsModel
+                    {
+                        UserId = newUser.UserId,
+                        EntryDate = DateTime.UtcNow,
+                        Notification = true,
+                        Currency = "USD",
+                        Language = "en",
+                        Theme = "light"
+                    };
+                    await _context.UserSettings.AddAsync(userSettings);
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create user settings for {Email}.", verifyOtpDto.Email);
+                    return StatusCode(500, "An error occurred while creating user settings.");
+                }
+
+                try
+                {
+                    // Hoşgeldin e-postası gönderiliyor.
+                    string welcomeEmailSubject = "Welcome to FinTrack!";
+                    string welcomeEmailBody = string.Empty;
+                    using (StreamReader reader = new StreamReader(@"C:\Users\EnesEfeTokta\OneDrive\Belgeler\GitHub\FinTrackWebApiRepo\FinTrackWebApi\FinTrackWebApi\EmailHtmlSchemes\HelloScheme.html"))
+                    {
+                        welcomeEmailBody = await reader.ReadToEndAsync();
+                    }
+
+                    welcomeEmailBody = welcomeEmailBody.Replace("[UserName]", result.Username);
+                    welcomeEmailBody = welcomeEmailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+                    await _emailSender.SendEmailAsync(result.Email, welcomeEmailSubject, welcomeEmailBody);
+                    _logger.LogInformation("Welcome email sent to {Email}.", result.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send welcome email to {Email}.", result.Email);
+                    return StatusCode(500, "Failed to send welcome email.");
+                }
+
                 return Ok(new { Message = "Registration successful." });
             }
             catch (Exception ex)
