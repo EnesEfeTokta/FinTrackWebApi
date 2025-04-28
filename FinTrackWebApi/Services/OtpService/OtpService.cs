@@ -38,7 +38,7 @@ namespace FinTrackWebApi.Services.OtpService
         {
             try
             {
-                var existingOtps = await _context.OtpVerifications
+                var existingOtps = await _context.OtpVerification
                                     .Where(x => x.Email == email)
                                     .ToListAsync();
 
@@ -48,7 +48,7 @@ namespace FinTrackWebApi.Services.OtpService
                     return true;
                 }
 
-                _context.OtpVerifications.RemoveRange(existingOtps);
+                _context.OtpVerification.RemoveRange(existingOtps);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Removed OTP(s) for email: {Email}", email);
@@ -71,14 +71,14 @@ namespace FinTrackWebApi.Services.OtpService
         {
             try
             {
-                var existingOtps = await _context.OtpVerifications
+                var existingOtps = await _context.OtpVerification
                     .Where(x => x.Email == email)
                     .ToListAsync();
 
                 if (existingOtps.Any())
                 {
                     _logger.LogInformation("Removing OTP(s) for email: {Email}", email);
-                    _context.OtpVerifications.RemoveRange(existingOtps);
+                    _context.OtpVerification.RemoveRange(existingOtps);
                     //await _context.SaveChangesAsync();
                 }
 
@@ -93,7 +93,7 @@ namespace FinTrackWebApi.Services.OtpService
                     ProfilePicture = profilePicture ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"
                 };
 
-                await _context.OtpVerifications.AddAsync(otpVerification);
+                await _context.OtpVerification.AddAsync(otpVerification);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Storing OTP for email: {Email}", email);
@@ -108,14 +108,14 @@ namespace FinTrackWebApi.Services.OtpService
 
         public async Task<OtpVerificationModel> VerifyOtpAsync(string email, string hashOtpCde)
         {
-            OtpVerificationModel otpVerifications = new OtpVerificationModel();
+            OtpVerificationModel OtpVerification = new OtpVerificationModel();
 
             try
             {
-                var allOtps = await _context.OtpVerifications.ToListAsync();
+                var allOtps = await _context.OtpVerification.ToListAsync();
                 _logger.LogInformation("Toplam OTP kaydı: {Count}", allOtps.Count);
 
-                var otpRecord = await _context.OtpVerifications
+                var otpRecord = await _context.OtpVerification
                     .Where(x => x.Email == email)
                     .OrderByDescending(x => x.CreateAt) // Sıralıyr ve en son eklenen kaydı alıyoruz.
                     .FirstOrDefaultAsync();
@@ -128,7 +128,7 @@ namespace FinTrackWebApi.Services.OtpService
                 if (otpRecord.ExpireAt < DateTime.UtcNow)
                 {
                     _logger.LogWarning("OTP expired for email: {Email}", email);
-                    _context.OtpVerifications.Remove(otpRecord);
+                    _context.OtpVerification.Remove(otpRecord);
                     await _context.SaveChangesAsync();
                     return null;
                 }
@@ -142,7 +142,7 @@ namespace FinTrackWebApi.Services.OtpService
                 _logger.LogInformation("OTP verified for email: {Email}", email);
 
                 // OTP doğrulandıktan sonra kaydı silmek isteyebilirsiniz.
-                _context.OtpVerifications.Remove(otpRecord);
+                _context.OtpVerification.Remove(otpRecord);
                 await _context.SaveChangesAsync();
 
                 return otpRecord;

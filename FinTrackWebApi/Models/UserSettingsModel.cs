@@ -6,8 +6,8 @@ namespace FinTrackWebApi.Models
     [Table("UserSettings")]
     public class UserSettingsModel
     {
-        [Required]
         [Key]
+        [Required]
         public int SettingsId { get; set; }
 
         [Required]
@@ -31,10 +31,9 @@ namespace FinTrackWebApi.Models
         public DateTime EntryDate { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [Column("UserId")]
+        [ForeignKey("User")]
         public int UserId { get; set; }
 
-        [ForeignKey("UserId")]
         public virtual UserModel User { get; set; } = null!;
     }
 }
