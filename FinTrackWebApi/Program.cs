@@ -6,8 +6,12 @@ using System.Text;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using Microsoft.OpenApi.Models;
+using FinTrackWebApi.Services.DocumentService;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddAuthentication(options =>
 {
@@ -34,6 +38,13 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // --- Servisler ---
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IOtpService, OtpService>();
+
+builder.Services.AddScoped<PdfDocumentGenerator>();
+builder.Services.AddScoped<WordDocumentGenerator>();
+builder.Services.AddScoped<TextDocumentGenerator>();
+
+builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
+
 builder.Services.AddDbContext<MyDataContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddControllers();
