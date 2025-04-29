@@ -36,21 +36,29 @@ namespace FinTrackWebApi.Controller
         [HttpGet("budgets")]
         public async Task<IActionResult> GetBudgets()
         {
-            int authenticatedUserId = GetAuthenticatedUserId();
-
-            var budgets = await _context.Budgets
-                .AsNoTracking()
-                .Where(b => b.UserId == authenticatedUserId)
-                .ToListAsync();
-
-            if (budgets == null || !budgets.Any())
+            try
             {
-                _logger.LogWarning("No budgets found for user ID: {UserId}", authenticatedUserId);
-                return NotFound("No budgets found.");
-            }
+                int authenticatedUserId = GetAuthenticatedUserId();
 
-            _logger.LogInformation("Successfully retrieved budgets for user ID: {UserId}", authenticatedUserId);
-            return Ok(budgets);
+                var budgets = await _context.Budgets
+                    .AsNoTracking()
+                    .Where(b => b.UserId == authenticatedUserId)
+                    .ToListAsync();
+
+                if (budgets == null || !budgets.Any())
+                {
+                    _logger.LogWarning("No budgets found for user ID: {UserId}", authenticatedUserId);
+                    return NotFound("No budgets found.");
+                }
+
+                _logger.LogInformation("Successfully retrieved budgets for user ID: {UserId}", authenticatedUserId);
+                return Ok(budgets);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving budgets for user ID: {UserId}", GetAuthenticatedUserId());
+                return StatusCode(500, "Internal server error while retrieving budgets.");
+            }
         }
 
         [HttpGet("get-budget/{id}")]
