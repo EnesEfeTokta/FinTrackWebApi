@@ -4,6 +4,7 @@ using FinTrackWebApi.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Controller
 {
@@ -125,7 +126,7 @@ namespace FinTrackWebApi.Controller
 
             if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
             {
-                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text.");
+                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown");
             }
 
             try

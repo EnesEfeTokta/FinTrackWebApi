@@ -11,7 +11,7 @@
         Word,
         Text,
         Markdown, 
-        Xml, 
-        Svg
+        Xml,
+        Xlsx
     }
 }
