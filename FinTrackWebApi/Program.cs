@@ -43,7 +43,8 @@ builder.Services.AddScoped<PdfDocumentGenerator>();
 builder.Services.AddScoped<WordDocumentGenerator>();
 builder.Services.AddScoped<TextDocumentGenerator>();
 builder.Services.AddScoped<MarkdownDocumentGenerator>();
-builder.Services.AddScoped<XlsxDocumentGenerator>(); 
+builder.Services.AddScoped<XlsxDocumentGenerator>();
+builder.Services.AddScoped<XmlDocumentGenerator>();
 
 builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
 

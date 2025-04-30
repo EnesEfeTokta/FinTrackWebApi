@@ -27,7 +27,7 @@
                 DocumentFormat.Word => _serviceProvider.GetRequiredService<WordDocumentGenerator>(),
                 DocumentFormat.Text => _serviceProvider.GetRequiredService<TextDocumentGenerator>(),
                 DocumentFormat.Markdown => _serviceProvider.GetRequiredService<MarkdownDocumentGenerator>(),
-                //DocumentFormat.Xml => _serviceProvider.GetRequiredService<XmlDocumentGenerator>(),
+                DocumentFormat.Xml => _serviceProvider.GetRequiredService<XmlDocumentGenerator>(),
                 DocumentFormat.Xlsx => _serviceProvider.GetRequiredService<XlsxDocumentGenerator>(),
 
                 _ => throw new NotSupportedException($"Document format '{format}' is not supported.")
