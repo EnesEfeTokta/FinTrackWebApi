@@ -6,7 +6,7 @@
 
 **ASP.NET Core Tabanlı Finansal Takip Uygulaması Web API'si**
 
-Bu repository, [Uygulama Adınız] adlı finansal takip uygulamasının backend hizmetlerini sağlayan ASP.NET Core Web API projesini içerir. API, kullanıcıların gelirlerini, giderlerini yönetmelerine, bütçeler oluşturmalarına ve finansal raporlar almalarına olanak tanır.
+Bu repository, FinTrack adlı finansal takip uygulamasının backend hizmetlerini sağlayan ASP.NET Core Web API projesini içerir. API, kullanıcıların gelirlerini, giderlerini yönetmelerine, bütçeler oluşturmalarına ve finansal raporlar almalarına olanak tanır.
 
 ---
 
