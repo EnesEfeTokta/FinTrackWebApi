@@ -24,6 +24,7 @@ namespace FinTrackWebApi.Models
 
         public virtual UserModel User { get; set; } = null!;
         public virtual ICollection<BudgetCategoryModel> BudgetAllocations { get; set; } = new List<BudgetCategoryModel>();
+        public virtual ICollection<TransactionModel> Transactions { get; set; } = new List<TransactionModel>();
     }
 
     public enum CategoryType

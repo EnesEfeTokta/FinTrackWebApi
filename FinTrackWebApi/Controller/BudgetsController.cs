@@ -61,7 +61,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpGet("get-budget/{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(int id)
         {
             try
@@ -88,7 +88,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpPost("create-budget")]
+        [HttpPost]
         public async Task<IActionResult> CreateBudget([FromBody] BudgetDto budgetDto)
         {
             try
@@ -119,7 +119,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpPut("update-budget/{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBudget(int id, [FromBody] BudgetDto budgetDto)
         {
             try
@@ -154,7 +154,7 @@ namespace FinTrackWebApi.Controller
         }
 
 
-        [HttpDelete("delete-budget/{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBudget(int id)
         {
             try
@@ -181,7 +181,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpGet("get-budget-categories/{id}")]
+        [HttpGet("categories/{id}")]
         public async Task<IActionResult> GetBudgetCategories(int id)
         {
             try

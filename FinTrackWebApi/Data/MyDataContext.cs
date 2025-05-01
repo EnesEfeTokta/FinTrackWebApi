@@ -13,6 +13,8 @@ namespace FinTrackWebApi.Data
         public DbSet<CategoryModel> Categories { get; set; } = null!;
         public DbSet<BudgetCategoryModel> BudgetCategories { get; set; } = null!;
         public DbSet<BudgetModel> Budgets { get; set; } = null!;
+        public DbSet<TransactionModel> Transactions { get; set; } = null!;
+        public DbSet<AccountModel> Accounts { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -103,6 +105,47 @@ namespace FinTrackWebApi.Data
                       .HasColumnType("decimal(18, 2)");
 
                 entity.HasIndex(bc => new { bc.BudgetId, bc.CategoryId }).IsUnique();
+            });
+
+            modelBuilder.Entity<TransactionModel>(entity =>
+            {
+                entity.ToTable("Transactions");
+                entity.HasKey(t => t.TransactionId);
+
+                entity.Property(t => t.Amount)
+                      .HasColumnType("decimal(18, 2)");
+
+                entity.HasOne(t => t.User)
+                      .WithMany(u => u.Transactions)
+                      .HasForeignKey(t => t.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(t => t.Category)
+                      .WithMany(c => c.Transactions)
+                      .HasForeignKey(t => t.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(t => t.Account)
+                      .WithMany(a => a.Transactions)
+                      .HasForeignKey(t => t.AccountId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(t => t.UserId);
+                entity.HasIndex(t => t.CategoryId);
+                entity.HasIndex(t => t.TransactionDateUtc);
+                entity.HasIndex(t => t.AccountId);
+            });
+
+            modelBuilder.Entity<AccountModel>(entity => {
+                entity.ToTable("Accounts");
+                entity.HasKey(a => a.AccountId);
+                entity.Property(a => a.Balance)
+                      .HasColumnType("decimal(18, 2)");
+                entity.HasOne(a => a.User)
+                      .WithMany(u => u.Accounts)
+                      .HasForeignKey(a => a.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(a => a.UserId);
             });
         }
     }

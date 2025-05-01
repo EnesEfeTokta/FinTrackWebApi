@@ -45,23 +45,23 @@ namespace FinTrackWebApi.Controller
                     .Where(c => c.UserId == authenticatedUserId)
                     .ToListAsync();
 
-                if (categories == null || !categories.Any())
+                if (categories == null || categories.Count == 0)
                 {
-                    _logger.LogInformation("Successfully retrieved categories for user ID: {UserId}", authenticatedUserId);
-                    return Ok(categories);
+                    _logger.LogWarning("No categories found for user ID: {UserId}", authenticatedUserId);
+                    return NotFound("No categories found.");
                 }
+
+                _logger.LogInformation("Successfully retrieved categories for user ID: {UserId}", authenticatedUserId);
+                return Ok(categories);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving categories for user ID: {UserId}", GetAuthenticatedUserId());
                 return StatusCode(500, "Internal server error while retrieving categories.");
             }
-
-            _logger.LogWarning("No categories found for user ID: {UserId}", GetAuthenticatedUserId());
-            return NotFound("No categories found.");
         }
 
-        [HttpGet("get-Categories/{categoryId}")]
+        [HttpGet("{categoryId}")]
         public async Task<IActionResult> GetCategory(int categoryId)
         {
             try
@@ -88,7 +88,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpPost("create-category")]
+        [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
         {
             try
@@ -115,7 +115,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpPut("update-category/{categoryId}")]
+        [HttpPut("{categoryId}")]
         public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto categoryDto)
         {
             try
@@ -147,7 +147,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpDelete("delete-category/{categoryId}")]
+        [HttpDelete("{categoryId}")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
             try
