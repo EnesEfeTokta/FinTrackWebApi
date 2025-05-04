@@ -36,14 +36,10 @@ namespace FinTrackWebApi.Services.CurrencyServices
                 {
                     var responseStream = await request.Content.ReadAsStreamAsync(cancellationToken);
 
-                    // --- DESERIALIZATION OPTIONS GÜNCELLEMESİ ---
                     var options = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true,
-                        // Bu satırı ekleyin: String olarak gelen sayıları okumaya izin ver
-                        NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString // Opsiyonel: Yazarken de string yazdırır
-                                                                                                                      // Sadece okumak yeterliyse:
-                                                                                                                      // NumberHandling = JsonNumberHandling.AllowReadingFromString
+                        NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString
                     };
 
                     var ratesResponse = await JsonSerializer.DeserializeAsync<CurrencyFreaksResponse>(responseStream, options, cancellationToken);
