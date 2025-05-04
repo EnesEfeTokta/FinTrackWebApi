@@ -8,10 +8,44 @@ using FinTrackWebApi.Services.OtpService;
 using Microsoft.OpenApi.Models;
 using FinTrackWebApi.Services.DocumentService;
 using QuestPDF.Infrastructure;
+using FinTrackWebApi.Services.CurrencyServices;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 QuestPDF.Settings.License = LicenseType.Community;
+
+builder.Services.Configure<CurrencyFreaksSettings>(builder.Configuration.GetSection("CurrencyFreaks"));
+
+builder.Services.AddMemoryCache();
+
+builder.Services.AddHttpClient("CurrencyFreaksClient", (serviceProvider, client) =>
+{
+    // Ayarlarý IOptions ile güvenli bir þekilde al
+    var settings = serviceProvider.GetRequiredService<IOptions<CurrencyFreaksSettings>>().Value;
+
+    // BaseUrl ayarlanmýþsa HttpClient'ýn BaseAddress'ini ayarla
+    if (!string.IsNullOrWhiteSpace(settings.BaseUrl))
+    {
+        // Uri'nin geçerli olduðundan emin olalým
+        if (Uri.TryCreate(settings.BaseUrl, UriKind.Absolute, out var baseUri))
+        {
+            client.BaseAddress = baseUri;
+        }
+        else
+        {
+            // Loglama veya hata fýrlatma eklenebilir
+            Console.Error.WriteLine($"Geçersiz BaseUrl formatý: {settings.BaseUrl}");
+        }
+    }
+    else
+    {
+        Console.Error.WriteLine("CurrencyFreaks BaseUrl yapýlandýrýlmamýþ!");
+        // Loglama eklenebilir
+    }
+    // Gerekirse diðer HttpClient ayarlarý (Timeout, Default Headers vb.)
+    // client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddAuthentication(options =>
 {
@@ -47,6 +81,12 @@ builder.Services.AddScoped<XlsxDocumentGenerator>();
 builder.Services.AddScoped<XmlDocumentGenerator>();
 
 builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
+
+builder.Services.AddScoped<ICurrencyDataProvider, CurrencyFreaksProvider>();
+builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
+
+// --- Arkaplan Servisleri ---
+builder.Services.AddHostedService<CurrencyUpdateService>();
 
 builder.Services.AddDbContext<MyDataContext>(options =>
     options.UseNpgsql(connectionString));

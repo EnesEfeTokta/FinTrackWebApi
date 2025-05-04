@@ -89,7 +89,7 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
+        public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateDto categoryDto)
         {
             try
             {
@@ -116,7 +116,7 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPut("{categoryId}")]
-        public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto categoryDto)
+        public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryUpdateDto categoryDto)
         {
             try
             {
