@@ -3,6 +3,7 @@ using System;
 using FinTrackWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    partial class MyDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250504173447_UpdateCurrencyHistorySchema")]
+    partial class UpdateCurrencyHistorySchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,56 +173,6 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CurrencyModel", b =>
-                {
-                    b.Property<int>("CurrencyId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CurrencyId"));
-
-                    b.Property<DateTime?>("AvailableFrom")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("AvailableUntil")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<string>("CountryCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<string>("CountryName")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("IconUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("LastUpdatedUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("Status")
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.HasKey("CurrencyId");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Currencies");
-                });
-
             modelBuilder.Entity("FinTrackWebApi.Models.CurrencySnapshotModel", b =>
                 {
                     b.Property<int>("CurrencySnapshotId")
@@ -230,8 +183,7 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.Property<string>("BaseCurrency")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
+                        .HasColumnType("text")
                         .HasColumnName("BaseCurrency");
 
                     b.Property<DateTime>("FetchTimestamp")
@@ -242,7 +194,7 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.HasIndex("FetchTimestamp");
 
-                    b.ToTable("CurrencySnapshots", (string)null);
+                    b.ToTable("CurrencySnapshots");
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.ExchangeRateModel", b =>
@@ -253,23 +205,24 @@ namespace FinTrackWebApi.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ExchangeRateId"));
 
-                    b.Property<int>("CurrencyId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("CurrencySnapshotId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("CurrencySnapshotId ");
 
                     b.Property<decimal>("Rate")
-                        .HasColumnType("numeric(18, 6)");
+                        .HasColumnType("decimal(18, 8)");
+
+                    b.Property<string>("TargetCurrency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("TargetCurrency");
 
                     b.HasKey("ExchangeRateId");
 
-                    b.HasIndex("CurrencyId");
-
-                    b.HasIndex("CurrencySnapshotId", "CurrencyId")
+                    b.HasIndex("CurrencySnapshotId", "TargetCurrency")
                         .IsUnique();
 
-                    b.ToTable("ExchangeRates", (string)null);
+                    b.ToTable("ExchangeRates");
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.OtpVerificationModel", b =>
@@ -515,19 +468,11 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.ExchangeRateModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.CurrencyModel", "Currency")
-                        .WithMany("ExchangeRates")
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("FinTrackWebApi.Models.CurrencySnapshotModel", "CurrencySnapshot")
                         .WithMany("Rates")
                         .HasForeignKey("CurrencySnapshotId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Currency");
 
                     b.Navigation("CurrencySnapshot");
                 });
@@ -592,11 +537,6 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("BudgetAllocations");
 
                     b.Navigation("Transactions");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.CurrencyModel", b =>
-                {
-                    b.Navigation("ExchangeRates");
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.CurrencySnapshotModel", b =>

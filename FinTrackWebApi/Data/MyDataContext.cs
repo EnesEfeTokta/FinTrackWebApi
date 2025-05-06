@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Models;
+using DocumentFormat.OpenXml.VariantTypes;
 
 namespace FinTrackWebApi.Data
 {
@@ -15,6 +16,10 @@ namespace FinTrackWebApi.Data
         public DbSet<BudgetModel> Budgets { get; set; } = null!;
         public DbSet<TransactionModel> Transactions { get; set; } = null!;
         public DbSet<AccountModel> Accounts { get; set; } = null!;
+
+        public DbSet<CurrencySnapshotModel> CurrencySnapshots { get; set; } = null!;
+        public DbSet<ExchangeRateModel> ExchangeRates { get; set; } = null!;
+        public DbSet<CurrencyModel> Currencies { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -136,7 +141,8 @@ namespace FinTrackWebApi.Data
                 entity.HasIndex(t => t.AccountId);
             });
 
-            modelBuilder.Entity<AccountModel>(entity => {
+            modelBuilder.Entity<AccountModel>(entity =>
+            {
                 entity.ToTable("Accounts");
                 entity.HasKey(a => a.AccountId);
                 entity.Property(a => a.Balance)
@@ -146,6 +152,59 @@ namespace FinTrackWebApi.Data
                       .HasForeignKey(a => a.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(a => a.UserId);
+            });
+
+            modelBuilder.Entity<ExchangeRateModel>(entity =>
+            {
+                entity.ToTable("ExchangeRates");
+                entity.HasKey(e => e.ExchangeRateId);
+
+                entity.Property(e => e.Rate).HasColumnType("numeric(18, 6)");
+
+                entity.HasOne(d => d.Currency)
+                      .WithMany(p => p.ExchangeRates)
+                      .HasForeignKey(d => d.CurrencyId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.CurrencySnapshotId, e.CurrencyId })
+                      .IsUnique();
+            });
+
+            modelBuilder.Entity<CurrencySnapshotModel>(entity => {
+                entity.ToTable("CurrencySnapshots");
+                entity.HasKey(cs => cs.CurrencySnapshotId);
+
+                entity.Property(cs => cs.BaseCurrency)
+                      .IsRequired()
+                      .HasMaxLength(10);
+
+                entity.HasMany(cs => cs.Rates)
+                      .WithOne(er => er.CurrencySnapshot)
+                      .HasForeignKey(er => er.CurrencySnapshotId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(cs => cs.FetchTimestamp);
+            });
+
+            modelBuilder.Entity<CurrencyModel>(entity =>
+            {
+                entity.HasKey(c => c.CurrencyId);
+
+                entity.Property(c => c.Code)
+                      .IsRequired()
+                      .HasMaxLength(10);
+                entity.HasIndex(c => c.Code).IsUnique();
+
+                entity.Property(c => c.Name).HasMaxLength(100);
+                entity.Property(c => c.CountryCode).HasMaxLength(10);
+                entity.Property(c => c.CountryName).HasMaxLength(100);
+                entity.Property(c => c.Status).HasMaxLength(20);
+                entity.Property(c => c.IconUrl).HasMaxLength(255);
+
+                // entity.Property(c => c.AvailableFrom).HasColumnType("date");
+                // entity.Property(c => c.AvailableUntil).HasColumnType("date");
+
+                entity.Property(c => c.LastUpdatedUtc).IsRequired();
             });
         }
     }
