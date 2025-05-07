@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Detailed Financial Report - FinTrack</title>
+    <style>
+        /* Base Reset */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: #24292e;
+            text-align: center;
+            padding: 20px;
+        }
+
+            .header img {
+                width: 120px;
+            }
+
+        .intro {
+            padding: 20px;
+            text-align: center;
+        }
+
+            .intro h1 {
+                margin: 0;
+                font-size: 24px;
+                color: #24292e;
+            }
+
+            .intro p {
+                margin: 8px 0 0;
+                font-size: 14px;
+                color: #586069;
+            }
+
+        .section {
+            padding: 20px;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .section h2 {
+                margin: 0 0 8px;
+                font-size: 18px;
+                color: #24292e;
+            }
+
+            .section .summary {
+                margin: 0 0 12px;
+                font-size: 14px;
+                font-style: italic;
+                color: #586069;
+            }
+
+            .section p {
+                margin: 0 0 10px;
+                font-size: 14px;
+                color: #24292e;
+            }
+
+        .data-table {
+            width: 100%;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+            .data-table th, .data-table td {
+                padding: 8px 12px;
+                font-size: 14px;
+                color: #24292e;
+                text-align: left;
+            }
+
+            .data-table th {
+                background: #f6f8fa;
+                font-weight: 600;
+            }
+
+            .data-table tr:nth-child(even) td {
+                background: #fafbfc;
+            }
+
+        .progress {
+            background: #e1e4e8;
+            border-radius: 4px;
+            height: 10px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            border-radius: 4px;
+        }
+
+        .goals {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            .goals li {
+                margin-bottom: 12px;
+            }
+
+            .goals p {
+                margin: 0 0 4px;
+                font-size: 14px;
+                color: #24292e;
+            }
+
+        .footer {
+            background: #24292e;
+            color: #adbac7;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+
+            .footer a {
+                color: #adbac7;
+                text-decoration: underline;
+            }
+
+        .disclaimer {
+            font-style: italic;
+            color: #8b949e;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <table class="container" role="presentation">
+        <!-- Header -->
+        <tr><td class="header"><img src="[LOGO_URL]" alt="FinTrack Logo"></td></tr>
+        <!-- Intro -->
+        <tr>
+            <td class="intro">
+                <h1>Detailed Financial Report</h1>
+                <p>Hi [UserName], here is your requested report as of [DATE]</p>
+            </td>
+        </tr>
+
+        <!-- Income & Expenses -->
+        <tr>
+            <td class="section">
+                <h2>Income & Expenses</h2>
+                <p class="summary">The highest income this month was <b>[HIGH_ INCOME]</b>, while the lowest income was <b>[LOW_ INCOME]</b>. Your highest expense this month was <b>[HIGHEST_EXPENSE]</b>, while your lowest expense was <b>[LOWEST_EXPENSE]</b>.</p>
+                <table class="data-table">
+                    <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr>
+                    <!-- [INCOME_EXPENSE_ROWS] -->
+                </table>
+            </td>
+        </tr>
+
+        <!-- Budget Details -->
+        <tr>
+            <td class="section">
+                <h2>Budget Details</h2>
+                <p class="summary">[BUDGET_DETAILS_SUMMARY]</p>
+                <table class="data-table">
+                    <tr><th>Category</th><th>Allocated</th><th>Used</th><th>Remaining</th><th>% Used</th></tr>
+                    <!-- [BUDGET_DETAILS_ROWS] -->
+                </table>
+            </td>
+        </tr>
+
+        <!-- Budget Goals -->
+        <tr>
+            <td class="section">
+                <h2>Budget Goals Status</h2>
+                <p class="summary">[GOALS_PROGRESS_SUMMARY]</p>
+                <ul class="goals">
+                    <!-- [GOALS_PROGRESS_ITEMS] -->
+                </ul>
+            </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+            <td class="footer">
+                © [YEAR] FinTrack. All rights reserved.<br>
+                <a href="[PREFERENCES_LINK]">Manage Email Preferences</a>
+                <p class="disclaimer">FinTrack is an educational project. Use responsibly.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
