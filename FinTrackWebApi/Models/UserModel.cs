@@ -37,5 +37,8 @@ namespace FinTrackWebApi.Models
         public virtual ICollection<OtpVerificationModel> OtpVerifications { get; set; } = new List<OtpVerificationModel>();
         public virtual ICollection<TransactionModel> Transactions { get; set; } = new List<TransactionModel>();
         public virtual ICollection<AccountModel> Accounts { get; set; } = new List<AccountModel>();
+
+        public virtual ICollection<UserMembershipModel> UserMemberships { get; set; } = new List<UserMembershipModel>();
+        public virtual ICollection<PaymentModel> Payments { get; set; } = new List<PaymentModel>();
     }
 }

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250506155236_CurrencyHistorySchema")]
-    partial class CurrencyHistorySchema
+    [Migration("20250507090449_InitialCurrencySchemaWithAllChanges_v1")]
+    partial class InitialCurrencySchemaWithAllChanges_v1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -263,7 +263,7 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Rate")
-                        .HasColumnType("numeric(18, 6)");
+                        .HasColumnType("decimal(18, 6)");
 
                     b.HasKey("ExchangeRateId");
 

@@ -17,7 +17,7 @@ namespace FinTrackWebApi.Models
         public virtual CurrencyModel? Currency { get; set; } = null;
 
         [Required]
-        [Column(TypeName = "decimal(18, 6)")]
+        [Column("Rate")]
         public decimal Rate { get; set; }
 
         [Required]

@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.VariantTypes;
 using System.Text.Json;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {
@@ -181,9 +182,10 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
                 _logger.LogDebug("{Count} last exchange rate information for {Base} base was retrieved from the database.", newRatesResponse.Base, lastSnapshotRates.Count);
 
+                DateTime fetchTimestampUtc = DateTime.SpecifyKind(newRatesResponse.Date, DateTimeKind.Utc);
                 var newDbSnapshot = new CurrencySnapshotModel
                 {
-                    FetchTimestamp = newRatesResponse.Date,
+                    FetchTimestamp = fetchTimestampUtc,
                     BaseCurrency = newRatesResponse.Base,
                     Rates = new List<ExchangeRateModel>()
                 };
@@ -290,15 +292,17 @@ namespace FinTrackWebApi.Services.CurrencyServices
                             SupportedCurrencyDetail apiDetail = apiKeyValuePair.Value;
 
                             DateTime? availableFrom = null;
-                            if (DateTime.TryParse(apiDetail.AvailableFromString, out DateTime fromDate))
+                            if (!string.IsNullOrWhiteSpace(apiDetail.AvailableFromString) &&
+                                DateTime.TryParse(apiDetail.AvailableFromString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fromDate))
                             {
-                                availableFrom = fromDate;
+                                availableFrom = DateTime.SpecifyKind(fromDate, DateTimeKind.Utc);
                             }
 
                             DateTime? availableUntil = null;
-                            if (DateTime.TryParse(apiDetail.AvailableUntilString, out DateTime untilDate))
+                            if (!string.IsNullOrWhiteSpace(apiDetail.AvailableUntilString) &&
+                                DateTime.TryParse(apiDetail.AvailableUntilString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime untilDate))
                             {
-                                availableUntil = untilDate;
+                                availableUntil = DateTime.SpecifyKind(untilDate, DateTimeKind.Utc);
                             }
 
                             if (existingDbCurrencies.TryGetValue(apiCurrencyCode, out CurrencyModel? dbCurrency))
