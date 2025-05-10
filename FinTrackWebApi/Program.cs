@@ -10,6 +10,7 @@ using FinTrackWebApi.Services.DocumentService;
 using QuestPDF.Infrastructure;
 using FinTrackWebApi.Services.CurrencyServices;
 using Microsoft.Extensions.Options;
+using FinTrackWebApi.Services.PaymentService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +85,9 @@ builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService
 
 builder.Services.AddScoped<ICurrencyDataProvider, CurrencyFreaksProvider>();
 builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
+
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
+builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 
 // --- Arkaplan Servisleri ---
 builder.Services.AddHostedService<CurrencyUpdateService>();
