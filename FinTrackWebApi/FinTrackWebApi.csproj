@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="EmailHtmlSchemes\CodeVerificationScheme.html" />
-    <None Remove="EmailHtmlSchemes\HelloScheme.html" />
-    <None Remove="EmailHtmlSchemes\PasswordResetScheme.html" />
-    <None Remove="EmailHtmlSchemes\RaporScheme.html" />
-    <None Remove="EmailHtmlSchemes\StatusSummaryScheme.html" />
+    <None Remove="Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html" />
+    <None Remove="Services\EmailService\EmailHtmlSchemes\HelloScheme.html" />
+    <None Remove="Services\EmailService\EmailHtmlSchemes\PasswordResetScheme.html" />
+    <None Remove="Services\EmailService\EmailHtmlSchemes\RaporScheme.html" />
+    <None Remove="Services\EmailService\EmailHtmlSchemes\StatusSummaryScheme.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +24,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.8.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.49.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Google" Version="1.15.1-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.49.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="QuestPDF" Version="2025.4.0" />
     <PackageReference Include="Stripe.net" Version="48.1.0" />
@@ -32,19 +35,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="EmailHtmlSchemes\CodeVerificationScheme.html">
+    <Resource Include="Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="EmailHtmlSchemes\HelloScheme.html">
+    <Resource Include="Services\EmailService\EmailHtmlSchemes\HelloScheme.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="EmailHtmlSchemes\PasswordResetScheme.html">
+    <Resource Include="Services\EmailService\EmailHtmlSchemes\PasswordResetScheme.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="EmailHtmlSchemes\RaporScheme.html">
+    <Resource Include="Services\EmailService\EmailHtmlSchemes\RaporScheme.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="EmailHtmlSchemes\StatusSummaryScheme.html">
+    <Resource Include="Services\EmailService\EmailHtmlSchemes\StatusSummaryScheme.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

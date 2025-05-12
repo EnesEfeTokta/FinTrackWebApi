@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Payment Was Successful - FinTrack</title>
+    <style>
+        /* Base Reset */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+            color: #24292e;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        /* Container */
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .header {
+            background-color: #24292e;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 120px;
+                margin: 0 auto;
+            }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 30px 25px;
+        }
+
+            .main-content h1 {
+                font-size: 24px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+            .main-content p {
+                font-size: 16px;
+                color: #586069;
+                margin: 0 0 15px;
+                line-height: 1.6;
+            }
+
+            .main-content .highlight {
+                color: #28a745;
+                font-weight: bold;
+            }
+
+        /* Invoice Details Section */
+        .invoice-section {
+            margin-top: 25px;
+        }
+
+            .invoice-section h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #e1e4e8;
+                padding-bottom: 10px;
+            }
+
+        .invoice-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+            .invoice-table th, .invoice-table td {
+                text-align: left;
+                padding: 10px 0;
+                border-bottom: 1px solid #eaecef;
+                font-size: 15px;
+            }
+
+            .invoice-table th {
+                color: #586069;
+                font-weight: 600;
+                width: 40%;
+            }
+
+            .invoice-table td {
+                color: #24292e;
+            }
+
+            .invoice-table tr:last-child th, .invoice-table tr:last-child td {
+                border-bottom: none;
+            }
+
+        .total-summary {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #24292e;
+        }
+
+            .total-summary table {
+                width: 100%;
+            }
+
+            .total-summary td {
+                padding: 8px 0;
+                font-size: 16px;
+            }
+            /* Removed text-align: right for label to allow natural left alignment */
+            .total-summary .label {
+                font-weight: 600;
+                color: #586069;
+                padding-right: 10px;
+            }
+
+            .total-summary .amount {
+                text-align: right;
+                font-weight: bold;
+                color: #24292e;
+            }
+            /* Amount still right aligned */
+            .total-summary .grand-total .label {
+                font-size: 18px;
+                font-weight: bold;
+                text-align: left;
+                color: #24292e;
+            }
+            /* Label left aligned and bold */
+            .total-summary .grand-total .amount {
+                font-size: 18px;
+                color: #28a745;
+                text-align: right;
+            }
+
+
+        /* Button */
+        .button-cta {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+            .button-cta a {
+                display: inline-block;
+                padding: 12px 28px;
+                background-color: #0366d6;
+                color: #ffffff;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 16px;
+            }
+
+        /* Footer */
+        .footer {
+            background: #f6f8fa;
+            color: #586069;
+            font-size: 12px;
+            padding: 25px 20px;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .footer a {
+                color: #0366d6;
+            }
+
+            .footer p {
+                margin: 5px 0;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="width: 100%; background-color: #f6f8fa; padding: 20px 0;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Main Content -->
+                    <tr>
+                        <td class="main-content">
+                            <h1>Your Payment Was Successful!</h1>
+                            <p>Hello [UserName],</p>
+                            <p>Your payment for the FinTrack <strong>[MembershipPlanName]</strong> plan has been successfully processed. Thank you for joining the FinTrack family and trusting us!</p>
+                            <p>Your membership is now active, and you can access <span class="highlight">all premium features</span>.</p>
+
+                            <div class="button-cta">
+                                <a href="[DASHBOARD_LINK]" class="btn">Access Your Account</a>
+                            </div>
+
+                            <div class="invoice-section">
+                                <h2>Invoice Summary</h2>
+                                <table class="invoice-table">
+                                    <tr>
+                                        <th>Invoice Number:</th>
+                                        <td>[InvoiceNumber]</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Transaction Date:</th>
+                                        <td>[TransactionDate]</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Stripe Transaction ID:</th>
+                                        <td>[StripeTransactionId]</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Membership Plan:</th>
+                                        <td>[MembershipPlanName]</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Billing Period:</th>
+                                        <td>[MembershipStartDate] - [MembershipEndDate]</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payment Method:</th>
+                                        <td>[PaymentMethodDetails]</td> <!-- e.g., Visa ending in **** 4242 -->
+                                    </tr>
+                                </table>
+
+                                <div class="total-summary">
+                                    <table>
+                                        <!-- Optional: Add rows for subtotal, discount if applicable -->
+                                        <!--
+                                        <tr>
+                                          <td class="label">Subtotal:</td>
+                                          <td class="amount">[SubTotalAmount] [Currency]</td>
+                                        </tr>
+                                        <tr>
+                                          <td class="label">Discount:</td>
+                                          <td class="amount">-[DiscountAmount] [Currency]</td>
+                                        </tr>
+                                        -->
+                                        <tr class="grand-total">
+                                            <td class="label">TOTAL AMOUNT:</td>
+                                            <td class="amount">[TotalAmount] [Currency]</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <p style="margin-top: 30px;">If you have any questions or need assistance, please don't hesitate to contact our <a href="mailto:[SUPPORT_EMAIL]">support team</a>.</p>
+                            <p>We're here to help you achieve your financial goals!</p>
+                            <p>Sincerely,<br><strong>The FinTrack Team</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <p>This email confirms your subscription to the [MembershipPlanName] plan.</p>
+                            <p>© [YEAR] FinTrack. All rights reserved.</p>
+                            <p><a href="[UNSUBSCRIBE_LINK]">Email Preferences</a> | <a href="[TERMS_LINK]">Terms of Service</a></p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
