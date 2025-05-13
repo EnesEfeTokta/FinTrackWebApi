@@ -11,12 +11,7 @@ using QuestPDF.Infrastructure;
 using FinTrackWebApi.Services.CurrencyServices;
 using Microsoft.Extensions.Options;
 using FinTrackWebApi.Services.PaymentService;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using FinTrackWebApi.Services.ChatBotService.Plugins;
 using FinTrackWebApi.Services.ChatBotService;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,26 +22,9 @@ builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
 builder.Services.Configure<CurrencyFreaksSettings>(builder.Configuration.GetSection("CurrencyFreaks"));
-builder.Services.AddMemoryCache();
-builder.Services.AddHttpClient("CurrencyFreaksClient", (serviceProvider, client) =>
-{
-    var settings = serviceProvider.GetRequiredService<IOptions<CurrencyFreaksSettings>>().Value;
-    if (!string.IsNullOrWhiteSpace(settings.BaseUrl))
-    {
-        if (Uri.TryCreate(settings.BaseUrl, UriKind.Absolute, out var baseUri))
-        {
-            client.BaseAddress = baseUri;
-        }
-        else
-        {
-            Console.Error.WriteLine($"Geçersiz BaseUrl formatı: {settings.BaseUrl}");
-        }
-    }
-    else
-    {
-        Console.Error.WriteLine("CurrencyFreaks BaseUrl yapılandırılmamış!");
-    }
-});
+builder.Services.AddMemoryCache(); // Genel cacheleme için kalabilir
+builder.Services.AddHttpClient(); // IHttpClientFactory için genel kayıt
+builder.Services.AddHttpClient("PythonChatBotClient"); // İsimlendirilmiş HttpClient
 
 builder.Services.AddAuthentication(options =>
 {
@@ -89,13 +67,11 @@ builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Str
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
 
-builder.Services.AddDbContext<MyDataContext>(options =>
-    options.UseNpgsql(connectionString),
-    ServiceLifetime.Scoped);
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<FinancePlugin>();
+builder.Services.AddDbContext<MyDataContext>(options => // VEYA AddDbContextFactory
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -127,96 +103,29 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var geminiApiKey = builder.Configuration["Gemini:ApiKey"];
-var geminiModelId = builder.Configuration["Gemini:ModelId"];
-
-if (string.IsNullOrWhiteSpace(geminiApiKey))
-{
-    throw new InvalidOperationException("Gemini API anahtarı yapılandırmada bulunamadı. 'Gemini:ApiKey' değerini kontrol edin.");
-}
-if (string.IsNullOrWhiteSpace(geminiModelId))
-{
-    geminiModelId = "gemini-1.5-flash-latest";
-    Console.WriteLine($"Uyarı: Gemini Model ID yapılandırmada bulunamadı. Varsayılan model kullanılıyor: {geminiModelId}");
-}
-
-var kernelBuilder = Kernel.CreateBuilder();
-
-kernelBuilder.Services.AddLogging(loggingBuilder =>
-{
-    loggingBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));
-    loggingBuilder.AddConsole();
-    loggingBuilder.SetMinimumLevel(LogLevel.Trace);
-});
-kernelBuilder.Services.AddMemoryCache();
-kernelBuilder.Services.AddHttpContextAccessor();
-kernelBuilder.Services.AddDbContext<MyDataContext>(options =>
-    options.UseNpgsql(connectionString),
-    ServiceLifetime.Scoped);
-kernelBuilder.Services.AddScoped<FinancePlugin>();
-
-
-#pragma warning disable SKEXP0070, SKEXP0011, SKEXP0020
-kernelBuilder.AddGoogleAIGeminiChatCompletion(
-    modelId: geminiModelId,
-    apiKey: geminiApiKey
-);
-#pragma warning restore SKEXP0070, SKEXP0011, SKEXP0020
-
-kernelBuilder.Plugins.AddFromType<FinancePlugin>();
-
-var kernel = kernelBuilder.Build();
-
-builder.Services.AddSingleton(kernel);
-builder.Services.AddSingleton<IChatCompletionService>(sp => sp.GetRequiredService<Kernel>().GetRequiredService<IChatCompletionService>());
+// ChatBot servisini (Python servisine istek atacak olan) kaydet
 builder.Services.AddScoped<IChatBotService, ChatBotService>();
 
 var app = builder.Build();
 
+// Başlangıç loglamalarını (Kernel plugin loglaması gibi) bu modelde kaldırabiliriz,
+// çünkü Kernel artık bu projede değil. İsterseniz genel DI testi kalabilir.
 using (var scope = app.Services.CreateScope())
 {
-    var serviceProviderInScope = scope.ServiceProvider;
-    var logger = serviceProviderInScope.GetRequiredService<ILogger<Program>>();
-
-    logger.LogInformation("--- ANA DI ÇÖZÜMLEME TESTİ BAŞLIYOR ---");
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("--- ANA DI ÇÖZÜMLEME TESTİ (app.Services KULLANILARAK) BAŞLIYOR ---");
     try
     {
-        var dbContext = serviceProviderInScope.GetService<MyDataContext>();
-        logger.LogInformation(dbContext == null ? "HATA: MyDataContext ANA DI'DAN ÇÖZÜLEMEDİ!" : "BAŞARI: MyDataContext ANA DI'DAN çözüldü.");
+        var chatBotService = scope.ServiceProvider.GetService<IChatBotService>();
+        logger.LogInformation(chatBotService == null ? "HATA: IChatBotService ANA DI'DAN ÇÖZÜLEMEDİ!" : "BAŞARI: IChatBotService ANA DI'DAN çözüldü.");
     }
-    catch (Exception exFactory)
+    catch (Exception ex)
     {
-        logger.LogError(exFactory, "HATA: MyDataContext çözümlenirken genel bir istisna oluştu!");
-    }
-
-    try
-    {
-        var financePluginInstance = serviceProviderInScope.GetService<FinancePlugin>();
-        logger.LogInformation(financePluginInstance == null ? "HATA: FinancePlugin ANA DI'DAN ÇÖZÜLEMEDİ!" : "BAŞARI: FinancePlugin ANA DI'DAN çözüldü.");
-    }
-    catch (Exception exPlugin)
-    {
-        logger.LogError(exPlugin, "HATA: FinancePlugin çözümlenirken bir istisna oluştu!");
-    }
-    var kernelInstance = serviceProviderInScope.GetService<Kernel>();
-    logger.LogInformation(kernelInstance == null ? "HATA: Kernel ANA DI'DAN ÇÖZÜLEMEDİ!" : "BAŞARI: Kernel ANA DI'DAN çözüldü.");
-
-    if (kernelInstance != null && kernelInstance.Plugins.Any())
-    {
-        logger.LogInformation("Kernel'a yüklenen plugin'ler ({Count} adet):", kernelInstance.Plugins.Count);
-        foreach (var pluginEntry in kernelInstance.Plugins)
-        {
-            logger.LogInformation("  Plugin Adı: {PluginName}", pluginEntry.Name);
-            if (!pluginEntry.Any()) { logger.LogWarning("    Plugin '{PluginName}' içinde HİÇ fonksiyon bulunmuyor!", pluginEntry.Name); }
-            else { foreach (var func in pluginEntry) { logger.LogInformation("    - Fonksiyon: {FunctionName}, Açıklama: {Description}", func.Name, func.Description); } }
-        }
-    }
-    else if (kernelInstance != null)
-    {
-        logger.LogWarning("KERNEL'DA HİÇ PLUGIN BULUNMUYOR (Kernel instance var ama plugin yok)!");
+        logger.LogError(ex, "HATA: IChatBotService çözümlenirken genel bir istisna oluştu!");
     }
     logger.LogInformation("--- ANA DI ÇÖZÜMLEME TESTİ BİTTİ ---");
 }
+
 
 if (app.Environment.IsDevelopment())
 {

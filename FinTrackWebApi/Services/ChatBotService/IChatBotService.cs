@@ -1,11 +1,9 @@
-using FinTrackWebApi.Controller;
-using FinTrackWebApi.Dtos;
-using System.Threading.Tasks;
+﻿using FinTrackWebApi.Dtos;
 
 namespace FinTrackWebApi.Services.ChatBotService
 {
     public interface IChatBotService
     {
-        Task<ChatResponseDto> ProcessUserMessageAsync(ChatRequestDto request, string userId);
+        Task<ChatResponseDto> SendMessageToPythonServiceAsync(ChatRequestDto request, string userId);
     }
 }

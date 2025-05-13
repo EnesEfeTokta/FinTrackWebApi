@@ -1,58 +1,97 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// ChatController.cs (Yeni Yaklaşım)
+using DocumentFormat.OpenXml.Spreadsheet;
 using FinTrackWebApi.Dtos;
-using FinTrackWebApi.Services.ChatBotService; // IChatBotService için
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Text.Json;
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
 
-namespace FinTrackWebApi.Controller
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class ChatController : ControllerBase
 {
-    [Authorize]
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ChatController : ControllerBase
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<ChatController> _logger;
+
+    public ChatController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<ChatController> logger)
     {
-        private readonly IChatBotService _chatBotService;
-        private readonly ILogger<ChatController> _logger;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
+        _logger = logger;
+    }
 
-        public ChatController(IChatBotService chatBotService, ILogger<ChatController> logger)
+    private string GetCurrentUserIdString()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "null";
+    }
+
+    [HttpPost("send")]
+    public async Task<IActionResult> SendMessage([FromBody] ChatRequestDto request)
+    {
+        var userId = GetCurrentUserIdString();
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            _chatBotService = chatBotService;
-            _logger = logger;
+            return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
+        }
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
         }
 
-        private string GetCurrentUserIdString() // String olarak UserId döndür
+        var pythonChatBotUrl = _configuration["PythonChatBotService:Url"]; // appsettings.json'dan
+        if (string.IsNullOrWhiteSpace(pythonChatBotUrl))
         {
-            return User.FindFirstValue(ClaimTypes.NameIdentifier);
+            _logger.LogError("PythonChatBotService:Url yapılandırması eksik.");
+            return StatusCode(500, "ChatBot servisi yapılandırma hatası.");
         }
 
-        [HttpPost("send")]
-        public async Task<IActionResult> SendMessage([FromBody] ChatRequestDto request)
+        try
         {
-            var userId = GetCurrentUserIdString();
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                _logger.LogWarning("SendMessage: Kullanıcı kimliği alınamadı.");
-                return Unauthorized("Kullanıcı kimliği doğrulanamadı.");
-            }
+            var httpClient = _httpClientFactory.CreateClient();
+            var token = HttpContext.GetTokenAsync("access_token").Result;
 
-            if (!ModelState.IsValid) // DTO validasyonunu da ekleyelim
+            // Python servisine gönderilecek veri
+            var payload = new
             {
-                return BadRequest(ModelState);
-            }
+                userId = userId,
+                clientChatSessionId = request.ClientChatSessionId,
+                message = request.Message,
+                authToken = token
+                // Gerekirse, basitleştirilmiş sohbet geçmişi de eklenebilir
+            };
 
-            _logger.LogInformation("ChatController: SendMessage çağrıldı. UserId: {UserId}, ClientSessionId: {ClientSessionId}", userId, request.ClientChatSessionId);
+            var jsonPayload = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-            try
+            _logger.LogInformation("Python ChatBot servisine istek gönderiliyor: {Url}, UserId: {UserId}, SessionId: {SessionId}",
+                                   pythonChatBotUrl, userId, request.ClientChatSessionId);
+
+            HttpResponseMessage responseFromPython = await httpClient.PostAsync(pythonChatBotUrl, content);
+
+            if (responseFromPython.IsSuccessStatusCode)
             {
-                var responseDto = await _chatBotService.ProcessUserMessageAsync(request, userId);
-                return Ok(responseDto);
+                var responseBody = await responseFromPython.Content.ReadAsStringAsync();
+                // Python'dan gelen JSON yanıtını deserialize et (ChatResponseDto veya benzeri)
+                var chatResponse = JsonSerializer.Deserialize<ChatResponseDto>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                _logger.LogInformation("Python ChatBot servisinden yanıt alındı. UserId: {UserId}, SessionId: {SessionId}", userId, request.ClientChatSessionId);
+                return Ok(chatResponse);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "ChatController: SendMessage işlenirken beklenmedik bir hata oluştu. UserId: {UserId}", userId);
-                return StatusCode(500, new { error = "Mesajınız işlenirken sunucuda bir hata oluştu." });
+                var errorBody = await responseFromPython.Content.ReadAsStringAsync();
+                _logger.LogError("Python ChatBot servisinden hata yanıtı alındı. Status: {StatusCode}, Body: {ErrorBody}, UserId: {UserId}",
+                                 responseFromPython.StatusCode, errorBody, userId);
+                return StatusCode((int)responseFromPython.StatusCode, new { error = "ChatBot servisinden beklenmeyen bir yanıt alındı.", details = errorBody });
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Python ChatBot servisine istek gönderilirken hata oluştu. UserId: {UserId}", userId);
+            return StatusCode(500, new { error = "ChatBot servisiyle iletişim kurulamadı." });
         }
     }
 }

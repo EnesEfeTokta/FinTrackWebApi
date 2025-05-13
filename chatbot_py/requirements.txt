@@ -1,0 +1,8 @@
+# chatbot_py/requirements.txt
+
+fastapi
+uvicorn[standard]
+google-generativeai
+python-dotenv
+requests 
+pydantic
