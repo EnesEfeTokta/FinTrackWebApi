@@ -1,4 +1,3 @@
-# chatbot_py/tools/account_tools.py
 import logging
 import os
 from typing import List, Dict, Any, Optional
@@ -12,11 +11,10 @@ logger = logging.getLogger(__name__)
 
 FINTRACK_API_BASE_URL = os.getenv("FINTRACK_API_BASE_URL", "http://localhost:5246")
 
-# --- Yardımcı Fonksiyon (FinTrack API'sine istek atmak için - diğer tool dosyalarından alınabilir) ---
 def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "GET", params: Optional[Dict] = None, json_data: Optional[Dict] = None) -> Dict[str, Any] | List[Dict[str, Any]]:
     if not auth_token:
-        logger.error("API isteği için Auth Token sağlanmadı. Endpoint: %s", endpoint)
-        return {"error": "Kimlik doğrulama bilgisi eksik."}
+        logger.error("Auth Token not provided for API request. Endpoint: %s", endpoint)
+        return {"error": "Authentication information is missing."}
 
     headers = {
         "Authorization": f"Bearer {auth_token}",
@@ -28,7 +26,7 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
     url = f"{FINTRACK_API_BASE_URL}{endpoint}"
     
     try:
-        logger.info(f"Python: FinTrack API'sine istek gönderiliyor: {method} {url}, Params: {params}, Data: {json_data}")
+        logger.info(f"Python: Sending request to FinTrack API: {method} {url}, Params: {params}, Data: {json_data}")
         if method.upper() == "GET":
             response = requests.get(url, headers=headers, params=params, timeout=15)
         elif method.upper() == "POST":
@@ -38,39 +36,38 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
         elif method.upper() == "DELETE":
             response = requests.delete(url, headers=headers, timeout=15)
         else:
-            logger.error(f"Desteklenmeyen HTTP metodu: {method}")
-            return {"error": f"Desteklenmeyen HTTP metodu: {method}"}
+            logger.error(f"Unsupported HTTP method: {method}")
+            return {"error": f"Unsupported HTTP method: {method}"}
 
-        if response.status_code == 204: # No Content (genellikle DELETE ve bazen PUT için)
-             logger.info(f"FinTrack API'den {method} isteği için 204 No Content yanıtı alındı. Endpoint: {url}")
+        if response.status_code == 204:
+             logger.info(f"FinTrack API returned 204 No Content for {method} request. Endpoint: {url}")
              if method.upper() == "DELETE":
-                return {"message": "İşlem başarıyla silindi."}
-             return {} # Diğer 204 durumları için boş dict
+                return {"message": "Successfully deleted."}
+             return {} 
             
-        response.raise_for_status() # Diğer 4xx veya 5xx hatalarında exception fırlatır
+        response.raise_for_status()
         
         return response.json()
     except requests.exceptions.HTTPError as http_err:
-        logger.error(f"Python: FinTrack API HTTP Hatası: {http_err} - Yanıt: {http_err.response.text if http_err.response else 'Yanıt yok'}")
+        logger.error(f"Python: FinTrack API HTTP Error: {http_err} - Response: {http_err.response.text if http_err.response else 'No response'}")
         try:
-            error_detail = http_err.response.json() if http_err.response else {"message": "Sunucudan hata detayı alınamadı."}
-            return {"error": f"API Hatası: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": error_detail}
-        except ValueError: # JSON parse hatası
-            return {"error": f"API Hatası: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": http_err.response.text if http_err.response else 'Yanıt yok'}
+            error_detail = http_err.response.json() if http_err.response else {"message": "No error details received from server."}
+            return {"error": f"API Error: {http_err.response.status_code if http_err.response else 'Unknown'}", "details": error_detail}
+        except ValueError: # JSON parse error
+            return {"error": f"API Error: {http_err.response.status_code if http_err.response else 'Unknown'}", "details": http_err.response.text if http_err.response else 'No response'}
     except requests.exceptions.RequestException as req_err:
-        logger.error(f"Python: FinTrack API İstek Hatası: {req_err}")
-        return {"error": f"FinTrack API'sine ulaşılamadı: {req_err}"}
+        logger.error(f"Python: FinTrack API Request Error: {req_err}")
+        return {"error": f"Unable to reach FinTrack API: {req_err}"}
     except Exception as e:
-        logger.error(f"Python: FinTrack API isteğinde genel hata: {e}", exc_info=True)
-        return {"error": f"Bilinmeyen bir hata oluştu: {e}"}
+        logger.error(f"Python: General error in FinTrack API request: {e}", exc_info=True)
+        return {"error": f"An unknown error occurred: {e}"}
 
-# --- Fonksiyon Şemaları (Tool Tanımları) ---
 GET_USER_ACCOUNTS_TOOL = {
     "name": "get_user_accounts",
     "description": "Kullanıcının FinTrack sistemindeki tüm finansal hesaplarını (örneğin banka hesapları, cüzdanlar) ve mevcut bakiyelerini listeler.",
     "parameters": {
         "type": "OBJECT",
-        "properties": {}, # Parametre yok, auth_token ile kullanıcı bilgisi alınacak
+        "properties": {},
         "required": []
     }
 }
@@ -104,29 +101,28 @@ CREATE_ACCOUNT_TOOL = {
     }
 }
 
-# --- Python Fonksiyonları ---
 def get_user_accounts(auth_token: Optional[str]) -> List[Dict[str, Any]]:
-    """Kullanıcının tüm finansal hesaplarını FinTrack API'sinden alır."""
-    logger.info(f"Python: get_user_accounts çağrıldı.")
+    """Fetches all financial accounts of the user from the FinTrack API."""
+    logger.info(f"Python: get_user_accounts called.")
     result = _make_api_request("/api/Account", auth_token)
     return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
 
 def get_account_details(account_id: int, auth_token: Optional[str]) -> Dict[str, Any]:
-    """Belirli bir finansal hesabın detaylarını FinTrack API'sinden alır."""
-    logger.info(f"Python: get_account_details çağrıldı. AccountID: {account_id}")
+    """Fetches the details of a specific financial account from the FinTrack API."""
+    logger.info(f"Python: get_account_details called. AccountID: {account_id}")
     return _make_api_request(f"/api/Account/{account_id}", auth_token)
 
 def create_account(name: str, type: str, balance: float, auth_token: Optional[str]) -> Dict[str, Any]:
-    """Yeni bir finansal hesap oluşturur."""
-    logger.info(f"Python: create_account çağrıldı. Name: {name}, Type: {type}, Balance: {balance}")
+    """Creates a new financial account."""
+    logger.info(f"Python: create_account called. Name: {name}, Type: {type}, Balance: {balance}")
     payload = {
         "name": name,
-        "type": type, # AccountCreateDto'nuzdaki Type alanı string mi enum mı kontrol edin
+        "type": type,
         "balance": balance
     }
     return _make_api_request("/api/Account", auth_token, method="POST", json_data=payload)
 
-# --- Araç ve Fonksiyon Eşleştirme Listeleri ---
+
 ACCOUNT_AVAILABLE_TOOLS = [
     GET_USER_ACCOUNTS_TOOL,
     GET_ACCOUNT_DETAILS_TOOL,

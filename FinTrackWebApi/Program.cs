@@ -9,7 +9,6 @@ using Microsoft.OpenApi.Models;
 using FinTrackWebApi.Services.DocumentService;
 using QuestPDF.Infrastructure;
 using FinTrackWebApi.Services.CurrencyServices;
-using Microsoft.Extensions.Options;
 using FinTrackWebApi.Services.PaymentService;
 using FinTrackWebApi.Services.ChatBotService;
 
@@ -22,9 +21,9 @@ builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
 builder.Services.Configure<CurrencyFreaksSettings>(builder.Configuration.GetSection("CurrencyFreaks"));
-builder.Services.AddMemoryCache(); // Genel cacheleme için kalabilir
-builder.Services.AddHttpClient(); // IHttpClientFactory için genel kayıt
-builder.Services.AddHttpClient("PythonChatBotClient"); // İsimlendirilmiş HttpClient
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("PythonChatBotClient");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -67,7 +66,7 @@ builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Str
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
 
-builder.Services.AddDbContext<MyDataContext>(options => // VEYA AddDbContextFactory
+builder.Services.AddDbContext<MyDataContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddControllers();
@@ -103,28 +102,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ChatBot servisini (Python servisine istek atacak olan) kaydet
 builder.Services.AddScoped<IChatBotService, ChatBotService>();
 
 var app = builder.Build();
-
-// Başlangıç loglamalarını (Kernel plugin loglaması gibi) bu modelde kaldırabiliriz,
-// çünkü Kernel artık bu projede değil. İsterseniz genel DI testi kalabilir.
-using (var scope = app.Services.CreateScope())
-{
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("--- ANA DI ÇÖZÜMLEME TESTİ (app.Services KULLANILARAK) BAŞLIYOR ---");
-    try
-    {
-        var chatBotService = scope.ServiceProvider.GetService<IChatBotService>();
-        logger.LogInformation(chatBotService == null ? "HATA: IChatBotService ANA DI'DAN ÇÖZÜLEMEDİ!" : "BAŞARI: IChatBotService ANA DI'DAN çözüldü.");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "HATA: IChatBotService çözümlenirken genel bir istisna oluştu!");
-    }
-    logger.LogInformation("--- ANA DI ÇÖZÜMLEME TESTİ BİTTİ ---");
-}
 
 
 if (app.Environment.IsDevelopment())

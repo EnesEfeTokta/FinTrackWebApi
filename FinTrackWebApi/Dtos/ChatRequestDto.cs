@@ -4,14 +4,14 @@ namespace FinTrackWebApi.Dtos
 {
     public class ChatRequestDto
     {
-        [Required(ErrorMessage = "Mesaj alanı boş olamaz.")]
-        [StringLength(2000, MinimumLength = 1, ErrorMessage = "Mesaj en az 1, en fazla 2000 karakter olmalıdır.")]
+        [Required(ErrorMessage = "The message field cannot be empty.")]
+        [StringLength(2000, MinimumLength = 1, ErrorMessage = "The message must be at least 1 and at most 2000 characters.")]
         public string Message { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "ClientChatSessionId alanı gereklidir.")]
+        [Required(ErrorMessage = "ClientChatSessionId field is required.")]
         public string? ClientChatSessionId { get; set; }
 
-        [Required(ErrorMessage = "Kullanıcı kimliği gereklidir.")]
+        [Required(ErrorMessage = "User ID is required.")]
         public string? UserId { get; set; }
         public string? AuthToken { get; set; }
     }

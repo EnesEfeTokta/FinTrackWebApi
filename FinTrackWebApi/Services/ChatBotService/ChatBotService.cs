@@ -22,13 +22,13 @@ namespace FinTrackWebApi.Services.ChatBotService
             var pythonChatBotUrl = _configuration["PythonChatBotService:Url"];
             if (string.IsNullOrWhiteSpace(pythonChatBotUrl))
             {
-                _logger.LogError("PythonChatBotService:Url yapılandırması eksik.");
-                return new ChatResponseDto { Reply = "ChatBot servisi yapılandırma hatası." };
+                _logger.LogError("PythonChatBotService:Url configuration is missing.");
+                return new ChatResponseDto { Reply = "ChatBot service configuration error." };
             }
 
             try
             {
-                var httpClient = _httpClientFactory.CreateClient("PythonChatBotClient"); // İsimlendirilmiş client kullanabiliriz
+                var httpClient = _httpClientFactory.CreateClient("PythonChatBotClient");
 
                 var payload = new
                 {
@@ -39,28 +39,27 @@ namespace FinTrackWebApi.Services.ChatBotService
                 var jsonPayload = JsonSerializer.Serialize(payload);
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-                _logger.LogInformation("Python ChatBot servisine istek gönderiliyor: {Url}...", pythonChatBotUrl);
+                _logger.LogInformation("Sending a request to the Python ChatBot service: {Url}...", pythonChatBotUrl);
                 HttpResponseMessage responseFromPython = await httpClient.PostAsync(pythonChatBotUrl, content);
 
                 if (responseFromPython.IsSuccessStatusCode)
                 {
                     var responseBody = await responseFromPython.Content.ReadAsStringAsync();
                     var chatResponse = JsonSerializer.Deserialize<ChatResponseDto>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return chatResponse ?? new ChatResponseDto { Reply = "ChatBot'tan boş yanıt alındı." };
+                    return chatResponse ?? new ChatResponseDto { Reply = "Empty response received from ChatBot." };
                 }
                 else
                 {
                     var errorBody = await responseFromPython.Content.ReadAsStringAsync();
-                    _logger.LogError("Python ChatBot servisinden hata yanıtı. Status: {StatusCode}, Body: {ErrorBody}",
+                    _logger.LogError("Error response from Python ChatBot service. Status: {StatusCode}, Body: {ErrorBody}",
                                      responseFromPython.StatusCode, errorBody);
-                    // Kullanıcıya daha genel bir hata mesajı dönebiliriz
-                    return new ChatResponseDto { Reply = "ChatBot ile iletişimde bir sorun oluştu." };
+                    return new ChatResponseDto { Reply = "There was a problem communicating with the ChatBot." };
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Python ChatBot servisine istek gönderilirken hata oluştu.");
-                return new ChatResponseDto { Reply = "ChatBot servisine ulaşılamadı." };
+                _logger.LogError(ex, "Error sending request to Python ChatBot service.");
+                return new ChatResponseDto { Reply = "ChatBot service could not be reached." };
             }
         }
     }

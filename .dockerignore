@@ -1,0 +1,23 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.git/
+**/.gitignore
+**/.DS_Store
+**/__pycache__/
+*.user
+*.db
+*.pdb
+*.suo
+Dockerfile
+Dockerfile.*
+docker-compose.yml
+docker-compose.*.yml
+README.md
+LICENSE
+
+# Python için
+chatbot_py/.env
+# .NET için
+FinTrackWebApi/appsettings.Development.json
