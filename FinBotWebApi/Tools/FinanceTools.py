@@ -1,3 +1,5 @@
+# -*- coding: windows-1254 -*-
+
 import logging
 import os
 from typing import List, Dict, Any, Optional
@@ -13,7 +15,7 @@ FINTRACK_API_BASE_URL = os.getenv("FINTRACK_API_BASE_URL", "http://localhost:524
 
 GET_ALL_TRANSACTIONS_TOOL = {
     "name": "get_all_user_transactions",
-    "description": "KullanÄ±cÄ±nÄ±n FinTrack sistemindeki tÃ¼m gelir ve gider iÅŸlemlerini listeler.",
+    "description": "Kullanýcýnýn FinTrack sistemindeki tüm gelir ve gider iþlemlerini listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {},
@@ -23,13 +25,13 @@ GET_ALL_TRANSACTIONS_TOOL = {
 
 GET_TRANSACTIONS_BY_CATEGORY_TYPE_TOOL = {
     "name": "get_user_transactions_by_category_type",
-    "description": "KullanÄ±cÄ±nÄ±n belirli bir kategori tÃ¼rÃ¼ndeki (Ã¶rneÄŸin 'Gelir' veya 'Gider') tÃ¼m iÅŸlemlerini listeler.",
+    "description": "Kullanýcýnýn belirli bir kategori türündeki (örneðin 'Gelir' veya 'Gider') tüm iþlemlerini listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "category_type": {
                 "type": "STRING",
-                "description": "Listelenecek iÅŸlemlerin kategori tÃ¼rÃ¼ (Ã¶rneÄŸin 'Gelir', 'Gider')."
+                "description": "Listelenecek iþlemlerin kategori türü (örneðin 'Gelir', 'Gider')."
             }
         },
         "required": ["category_type"]
@@ -38,13 +40,13 @@ GET_TRANSACTIONS_BY_CATEGORY_TYPE_TOOL = {
 
 GET_TRANSACTIONS_BY_CATEGORY_NAME_TOOL = {
     "name": "get_user_transactions_by_category_name",
-    "description": "KullanÄ±cÄ±nÄ±n belirli bir kategori adÄ±na sahip (Ã¶rneÄŸin 'MaaÅŸ', 'Market AlÄ±ÅŸveriÅŸi') tÃ¼m iÅŸlemlerini listeler.",
+    "description": "Kullanýcýnýn belirli bir kategori adýna sahip (örneðin 'Maaþ', 'Market Alýþveriþi') tüm iþlemlerini listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "category_name": {
                 "type": "STRING",
-                "description": "Listelenecek iÅŸlemlerin kategori adÄ± (Ã¶rneÄŸin 'MaaÅŸ', 'Yemek')."
+                "description": "Listelenecek iþlemlerin kategori adý (örneðin 'Maaþ', 'Yemek')."
             }
         },
         "required": ["category_name"]

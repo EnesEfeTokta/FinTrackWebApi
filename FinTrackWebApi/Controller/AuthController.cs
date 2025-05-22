@@ -58,7 +58,7 @@ namespace FinTrackWebApi.Controller
                 string emailSubject = "Email Verification Code For FinTrack new Membership";
                 string emailBody = string.Empty;
                 // TODO: Path 'i dinamik olarak ayarlanacak.
-                using (StreamReader reader = new StreamReader(@"C:\Users\EnesEfeTokta\OneDrive\Belgeler\GitHub\FinTrackWebApiRepo\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html"))
+                using (StreamReader reader = new StreamReader(@"C:\Users\alfac\OneDrive\Belgeler\GitHub\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html"))
                 {
                     emailBody = await reader.ReadToEndAsync();
                 }
@@ -135,7 +135,7 @@ namespace FinTrackWebApi.Controller
                     string welcomeEmailSubject = "Welcome to FinTrack!";
                     string welcomeEmailBody = string.Empty;
                     // TOOD: Path'i dinamik hale getir.
-                    using (StreamReader reader = new StreamReader(@"C:\Users\EnesEfeTokta\OneDrive\Belgeler\GitHub\FinTrackWebApiRepo\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\HelloScheme.html"))
+                    using (StreamReader reader = new StreamReader(@"C:\Users\alfac\OneDrive\Belgeler\GitHub\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\HelloScheme.html"))
                     {
                         welcomeEmailBody = await reader.ReadToEndAsync();
                     }

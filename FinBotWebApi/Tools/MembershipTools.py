@@ -1,3 +1,5 @@
+# -*- coding: windows-1254 -*-
+
 import logging
 import os
 from typing import List, Dict, Any, Optional
@@ -59,7 +61,7 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
 
 GET_CURRENT_USER_MEMBERSHIP_TOOL = {
     "name": "get_current_user_active_membership",
-    "description": "KullanÄ±cÄ±nÄ±n FinTrack sistemindeki mevcut aktif Ã¼yelik planÄ±nÄ±n durumunu, adÄ±nÄ± ve geÃ§erlilik tarihlerini getirir.",
+    "description": "Kullanıcının FinTrack sistemindeki mevcut aktif üyelik planının durumunu, adını ve geçerlilik tarihlerini getirir.",
     "parameters": {
         "type": "OBJECT",
         "properties": {},
@@ -69,7 +71,7 @@ GET_CURRENT_USER_MEMBERSHIP_TOOL = {
 
 GET_USER_MEMBERSHIP_HISTORY_TOOL = {
     "name": "get_user_membership_history",
-    "description": "KullanÄ±cÄ±nÄ±n FinTrack sistemindeki tÃ¼m geÃ§miÅŸ Ã¼yeliklerini (aktif, sÃ¼resi dolmuÅŸ, iptal edilmiÅŸ) listeler.",
+    "description": "Kullanıcının FinTrack sistemindeki tüm geçmiş üyeliklerini (aktif, süresi dolmuş, iptal edilmiş) listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {},

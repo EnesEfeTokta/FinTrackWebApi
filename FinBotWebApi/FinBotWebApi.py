@@ -1,3 +1,5 @@
+# -*- coding: windows-1254 -*-
+
 import os
 import logging
 from typing import List, Dict, Any, Optional
@@ -11,11 +13,10 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 from dotenv import load_dotenv
 
-from tools.finance_tools import AVAILABLE_TOOLS as FINANCE_TOOLS, FUNCTION_MAPPING as FINANCE_FUNCTION_MAPPING
-from tools.membership_tools import MEMBERSHIP_AVAILABLE_TOOLS, MEMBERSHIP_FUNCTION_MAPPING
-from tools.budget_tools import BUDGET_AVAILABLE_TOOLS, BUDGET_FUNCTION_MAPPING
-from tools.account_tools import ACCOUNT_AVAILABLE_TOOLS, ACCOUNT_FUNCTION_MAPPING
-
+from Tools.FinanceTools import AVAILABLE_TOOLS as FINANCE_TOOLS, FUNCTION_MAPPING as FINANCE_FUNCTION_MAPPING
+from Tools.MembershipTools import MEMBERSHIP_AVAILABLE_TOOLS, MEMBERSHIP_FUNCTION_MAPPING
+from Tools.BudgetTools import BUDGET_AVAILABLE_TOOLS, BUDGET_FUNCTION_MAPPING
+from Tools.AccountTools import ACCOUNT_AVAILABLE_TOOLS, ACCOUNT_FUNCTION_MAPPING
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -62,22 +63,22 @@ def get_system_prompt(user_id: str, tools_config: Optional[List[genai.types.Tool
     
     available_tools_str = "\n".join(tool_descriptions)
     if not tool_descriptions:
-        available_tools_str = "Åu anda Ã¶zel bir finansal veya Ã¼yelik aracÄ±m bulunmuyor."
+        available_tools_str = "Şu anda özel bir finansal veya üyelik aracım bulunmuyor."
 
-    return f"""Sen FinBot'sun. FinTrack kullanÄ±cÄ±sÄ± (UserId: {user_id}) iÃ§in bir finans, Ã¼yelik, bÃ¼tÃ§e ve hesap yÃ¶netimi asistanÄ±sÄ±n.
-    AmacÄ±n, kullanÄ±cÄ±lara finansal konularda, Ã¼yelik durumlarÄ±yla, bÃ¼tÃ§eleriyle ve hesaplarÄ±yla ilgili yardÄ±mcÄ± olmaktÄ±r.
-    KullanÄ±labilir AraÃ§larÄ±n (FonksiyonlarÄ±n):
-    {available_tools_str} # Bu artÄ±k tÃ¼m fonksiyonlarÄ± iÃ§erecek
-    KullanÄ±cÄ± bir istekte bulunduÄŸunda, eÄŸer uygun bir araÃ§ varsa, o aracÄ± Ã§aÄŸÄ±rmak iÃ§in bir 'function_call' isteÄŸi dÃ¶ndÃ¼r.
-    Ã–rneÄŸin:
-    - KullanÄ±cÄ± 'tÃ¼m hesaplarÄ±mÄ± listele' veya 'hangi banka hesaplarÄ±m var?' derse, 'get_user_accounts' fonksiyonunu Ã§aÄŸÄ±r.
-    - KullanÄ±cÄ± 'maaÅŸ hesabÄ±mÄ±n bakiyesi nedir?' veya 'ID'si 3 olan hesabÄ±mÄ±n detaylarÄ±nÄ± gÃ¶ster' derse, 'get_account_details' fonksiyonunu uygun 'account_id' ile Ã§aÄŸÄ±r (gerekirse ID'yi kullanÄ±cÄ±dan iste).
-    - KullanÄ±cÄ± 'yeni bir nakit cÃ¼zdanÄ± oluÅŸturmak istiyorum, adÄ± Cep HarÃ§lÄ±ÄŸÄ± olsun, baÅŸlangÄ±Ã§ bakiyesi 100 TL' derse, 'create_account' fonksiyonunu kullanmak iÃ§in gerekli bilgileri (isim, tÃ¼r, bakiye) Ã§Ä±karÄ±m yap veya kullanÄ±cÄ±dan iste.
-    DÃ¶nen verileri kullanÄ±cÄ±ya anlaÅŸÄ±lÄ±r bir ÅŸekilde Ã¶zetleyerek sun. EÄŸer fonksiyon bir hata dÃ¶ndÃ¼rÃ¼rse veya veri bulamazsa, bunu uygun bir ÅŸekilde kullanÄ±cÄ±ya bildir.
-    EÄŸer bir fonksiyonu Ã§aÄŸÄ±rmak iÃ§in gerekli bilgi eksikse, bu bilgiyi kullanÄ±cÄ±dan Ä°STE.
-    YanÄ±tlarÄ±nda ASLA '(Bu kÄ±sÄ±mda ... fonksiyonu Ã§aÄŸrÄ±lÄ±r)' gibi parantez iÃ§i aÃ§Ä±klamalar KULLANMA; fonksiyonu gerÃ§ekten Ã§aÄŸÄ±r ve sonucunu doÄŸrudan ilet.
-    Her zaman nazik ol. Finansal tavsiye verme. KarmaÅŸÄ±k durumlar iÃ§in uzmana yÃ¶nlendir.
-    Projenin adÄ± FinTrack Finans Takip UygulamasÄ±dÄ±r."""
+    return f"""Sen FinBot'sun. FinTrack kullanıcısı (UserId: {user_id}) için bir finans, üyelik, bütçe ve hesap yönetimi asistanısın.
+    Amacın, kullanıcılara finansal konularda, üyelik durumlarıyla, bütçeleriyle ve hesaplarıyla ilgili yardımcı olmaktır.
+    Kullanılabilir Araçların (Fonksiyonların):
+    {available_tools_str} # Bu artık tüm fonksiyonları içerecek
+    Kullanıcı bir istekte bulunduğunda, eğer uygun bir araç varsa, o aracı çağırmak için bir 'function_call' isteği döndür.
+    Örneğin:
+    - Kullanıcı 'tüm hesaplarımı listele' veya 'hangi banka hesaplarım var?' derse, 'get_user_accounts' fonksiyonunu çağır.
+    - Kullanıcı 'maaş hesabımın bakiyesi nedir?' veya 'ID'si 3 olan hesabımın detaylarını göster' derse, 'get_account_details' fonksiyonunu uygun 'account_id' ile çağır (gerekirse ID'yi kullanıcıdan iste).
+    - Kullanıcı 'yeni bir nakit cüzdanı oluşturmak istiyorum, adı Cep Harçlığı olsun, başlangıç bakiyesi 100 TL' derse, 'create_account' fonksiyonunu kullanmak için gerekli bilgileri (isim, tür, bakiye) çıkarım yap veya kullanıcıdan iste.
+    Dönen verileri kullanıcıya anlaşılır bir şekilde özetleyerek sun. Eğer fonksiyon bir hata döndürürse veya veri bulamazsa, bunu uygun bir şekilde kullanıcıya bildir.
+    Eğer bir fonksiyonu çağırmak için gerekli bilgi eksikse, bu bilgiyi kullanıcıdan İSTE.
+    Yanıtlarında ASLA '(Bu kısımda ... fonksiyonu çağrılır)' gibi parantez içi açıklamalar KULLANMA; fonksiyonu gerçekten çağır ve sonucunu doğrudan ilet.
+    Her zaman nazik ol. Finansal tavsiye verme. Karmaşık durumlar için uzmana yönlendir.
+    Projenin adı FinTrack Finans Takip Uygulamasıdır."""
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest = Body(...)):
@@ -201,7 +202,7 @@ async def chat_endpoint(request: ChatRequest = Body(...)):
                             final_reply_text = f"An argument error occurred while calling the '{function_name}' tool: {str(te)}"
                             error_tool_response_for_history = {
                                 "role": "tool",
-                                "parts": [{"function_response": {"name": function_name, "response": {"error": f"ArgÃ¼man hatasÄ±: {str(te)}" }}}]
+                                "parts": [{"function_response": {"name": function_name, "response": {"error": f"Argüman hatası: {str(te)}" }}}]
                             }
                             current_history.append(error_tool_response_for_history)
                             break 

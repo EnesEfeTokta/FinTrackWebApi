@@ -1,3 +1,5 @@
+# -*- coding: windows-1254 -*-
+
 import logging
 import os
 from typing import List, Dict, Any, Optional
@@ -13,8 +15,8 @@ FINTRACK_API_BASE_URL = os.getenv("FINTRACK_API_BASE_URL", "http://localhost:524
 
 def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "GET", params: Optional[Dict] = None, json_data: Optional[Dict] = None) -> Dict[str, Any] | List[Dict[str, Any]]:
     if not auth_token:
-        logger.error("API isteÄŸi iÃ§in Auth Token saÄŸlanmadÄ±. Endpoint: %s", endpoint)
-        return {"error": "Kimlik doÄŸrulama bilgisi eksik."}
+        logger.error("API isteği için Auth Token sağlanmadı. Endpoint: %s", endpoint)
+        return {"error": "Kimlik doğrulama bilgisi eksik."}
 
     headers = {
         "Authorization": f"Bearer {auth_token}",
@@ -26,7 +28,7 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
     url = f"{FINTRACK_API_BASE_URL}{endpoint}"
     
     try:
-        logger.info(f"Python: FinTrack API'sine istek gÃ¶nderiliyor: {method} {url}, Params: {params}, Data: {json_data}")
+        logger.info(f"Python: FinTrack API'sine istek gönderiliyor: {method} {url}, Params: {params}, Data: {json_data}")
         if method.upper() == "GET":
             response = requests.get(url, headers=headers, params=params, timeout=15)
         elif method.upper() == "POST":
@@ -40,33 +42,33 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
             return {"error": f"Desteklenmeyen HTTP metodu: {method}"}
 
         if response.status_code == 204 and method.upper() == "DELETE":
-            logger.info(f"FinTrack API'den {method} isteÄŸi iÃ§in 204 No Content yanÄ±tÄ± alÄ±ndÄ±. Endpoint: {url}")
-            return {"message": "Ä°ÅŸlem baÅŸarÄ±yla silindi."}
+            logger.info(f"FinTrack API'den {method} isteği için 204 No Content yanıtı alındı. Endpoint: {url}")
+            return {"message": "İşlem başarıyla silindi."}
             
         response.raise_for_status()
         
         if response.status_code == 204:
-             logger.info(f"FinTrack API'den 204 No Content yanÄ±tÄ± alÄ±ndÄ±. Endpoint: {url}")
+             logger.info(f"FinTrack API'den 204 No Content yanıtı alındı. Endpoint: {url}")
              return {} if method.upper() != "GET" or "history" not in endpoint else []
         
         return response.json()
     except requests.exceptions.HTTPError as http_err:
-        logger.error(f"Python: FinTrack API HTTP HatasÄ±: {http_err} - YanÄ±t: {http_err.response.text if http_err.response else 'YanÄ±t yok'}")
+        logger.error(f"Python: FinTrack API HTTP Hatası: {http_err} - Yanıt: {http_err.response.text if http_err.response else 'Yanıt yok'}")
         try:
-            error_detail = http_err.response.json() if http_err.response else {"message": "Sunucudan hata detayÄ± alÄ±namadÄ±."}
-            return {"error": f"API HatasÄ±: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": error_detail}
+            error_detail = http_err.response.json() if http_err.response else {"message": "Sunucudan hata detayı alınamadı."}
+            return {"error": f"API Hatası: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": error_detail}
         except ValueError:
-            return {"error": f"API HatasÄ±: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": http_err.response.text if http_err.response else 'YanÄ±t yok'}
+            return {"error": f"API Hatası: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": http_err.response.text if http_err.response else 'Yanıt yok'}
     except requests.exceptions.RequestException as req_err:
-        logger.error(f"Python: FinTrack API Ä°stek HatasÄ±: {req_err}")
-        return {"error": f"FinTrack API'sine ulaÅŸÄ±lamadÄ±: {req_err}"}
+        logger.error(f"Python: FinTrack API İstek Hatası: {req_err}")
+        return {"error": f"FinTrack API'sine ulaşılamadı: {req_err}"}
     except Exception as e:
-        logger.error(f"Python: FinTrack API isteÄŸinde genel hata: {e}", exc_info=True)
-        return {"error": f"Bilinmeyen bir hata oluÅŸtu: {e}"}
+        logger.error(f"Python: FinTrack API isteğinde genel hata: {e}", exc_info=True)
+        return {"error": f"Bilinmeyen bir hata oluştu: {e}"}
 
 GET_USER_BUDGETS_TOOL = {
     "name": "get_user_budgets",
-    "description": "KullanÄ±cÄ±nÄ±n FinTrack sistemindeki tÃ¼m bÃ¼tÃ§elerini listeler.",
+    "description": "Kullanıcının FinTrack sistemindeki tüm bütçelerini listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {},
@@ -76,13 +78,13 @@ GET_USER_BUDGETS_TOOL = {
 
 GET_BUDGET_DETAILS_TOOL = {
     "name": "get_budget_details",
-    "description": "KullanÄ±cÄ±nÄ±n belirli bir bÃ¼tÃ§esinin detaylarÄ±nÄ± (ID ile) getirir.",
+    "description": "Kullanıcının belirli bir bütçesinin detaylarını (ID ile) getirir.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "budget_id": {
                 "type": "INTEGER",
-                "description": "DetaylarÄ± gÃ¶rÃ¼ntÃ¼lenecek bÃ¼tÃ§enin ID'si."
+                "description": "Detayları görüntülenecek bütçenin ID'si."
             }
         },
         "required": ["budget_id"]
@@ -91,23 +93,23 @@ GET_BUDGET_DETAILS_TOOL = {
 
 CREATE_BUDGET_TOOL = {
     "name": "create_budget",
-    "description": "KullanÄ±cÄ± iÃ§in yeni bir bÃ¼tÃ§e oluÅŸturur.",
+    "description": "Kullanıcı için yeni bir bütçe oluşturur.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
-            "name": {"type": "STRING", "description": "BÃ¼tÃ§enin adÄ± (Ã¶rneÄŸin 'AylÄ±k Harcamalar', 'Tatil Fonu')."},
-            "description": {"type": "STRING", "description": "BÃ¼tÃ§e iÃ§in kÄ±sa bir aÃ§Ä±klama (isteÄŸe baÄŸlÄ±)."},
-            "start_date": {"type": "STRING", "description": "BÃ¼tÃ§enin baÅŸlangÄ±Ã§ tarihi (YYYY-AA-GG formatÄ±nda)."},
-            "end_date": {"type": "STRING", "description": "BÃ¼tÃ§enin bitiÅŸ tarihi (YYYY-AA-GG formatÄ±nda)."},
-            "is_active": {"type": "BOOLEAN", "description": "BÃ¼tÃ§enin aktif olup olmadÄ±ÄŸÄ± (varsayÄ±lan: true)."}
+            "name": {"type": "STRING", "description": "Bütçenin adı (örneğin 'Aylık Harcamalar', 'Tatil Fonu')."},
+            "description": {"type": "STRING", "description": "Bütçe için kısa bir açıklama (isteğe bağlı)."},
+            "start_date": {"type": "STRING", "description": "Bütçenin başlangıç tarihi (YYYY-AA-GG formatında)."},
+            "end_date": {"type": "STRING", "description": "Bütçenin bitiş tarihi (YYYY-AA-GG formatında)."},
+            "is_active": {"type": "BOOLEAN", "description": "Bütçenin aktif olup olmadığı (varsayılan: true)."}
         },
         "required": ["name", "start_date", "end_date"]
     }
 }
 
 def get_user_budgets(auth_token: Optional[str]) -> List[Dict[str, Any]]:
-    """KullanÄ±cÄ±nÄ±n tÃ¼m bÃ¼tÃ§elerini FinTrack API'sinden alÄ±r."""
-    logger.info(f"Python: get_user_budgets Ã§aÄŸrÄ±ldÄ±.")
+    """Kullanıcının tüm bütçelerini FinTrack API'sinden alır."""
+    logger.info(f"Python: get_user_budgets çağrıldı.")
     result = _make_api_request("/api/Budgets/budgets", auth_token)
     return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
 

@@ -138,7 +138,7 @@ namespace FinTrackWebApi.Controller
                                     {
                                         string emailBody = string.Empty;
                                         // TODO: Path 'i dinamik olarak ayarlanacak.
-                                        using (StreamReader reader = new StreamReader(@"C:\Users\EnesEfeTokta\OneDrive\Belgeler\GitHub\FinTrackWebApiRepo\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\MembershipPaymentBillingScheme.html"))
+                                        using (StreamReader reader = new StreamReader(@"C:\Users\alfac\OneDrive\Belgeler\GitHub\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\MembershipPaymentBillingScheme.html"))
                                         {
                                             emailBody = await reader.ReadToEndAsync();
                                         }

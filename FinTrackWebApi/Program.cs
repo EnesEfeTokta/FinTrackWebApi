@@ -1,16 +1,17 @@
-using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using FinTrackWebApi.Services.ChatBotService;
+using FinTrackWebApi.Services.CurrencyServices;
+using FinTrackWebApi.Services.DocumentService;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
-using Microsoft.OpenApi.Models;
-using FinTrackWebApi.Services.DocumentService;
-using QuestPDF.Infrastructure;
-using FinTrackWebApi.Services.CurrencyServices;
 using FinTrackWebApi.Services.PaymentService;
-using FinTrackWebApi.Services.ChatBotService;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,17 @@ builder.Services.Configure<CurrencyFreaksSettings>(builder.Configuration.GetSect
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("PythonChatBotClient");
+
+builder.Services.AddHttpClient("CurrencyFreaksClient", (serviceProvider, client) =>
+{
+    var settings = serviceProvider.GetRequiredService<IOptions<CurrencyFreaksSettings>>().Value;
+
+    if (string.IsNullOrWhiteSpace(settings.BaseUrl))
+    {
+        throw new InvalidOperationException("CurrencyFreaks BaseUrl is not configured in appsettings.json.");
+    }
+    client.BaseAddress = new Uri(settings.BaseUrl);
+});
 
 builder.Services.AddAuthentication(options =>
 {

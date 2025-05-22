@@ -1,3 +1,5 @@
+# -*- coding: windows-1254 -*-
+
 import logging
 import os
 from typing import List, Dict, Any, Optional
@@ -64,7 +66,7 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
 
 GET_USER_ACCOUNTS_TOOL = {
     "name": "get_user_accounts",
-    "description": "KullanÄ±cÄ±nÄ±n FinTrack sistemindeki tÃ¼m finansal hesaplarÄ±nÄ± (Ã¶rneÄŸin banka hesaplarÄ±, cÃ¼zdanlar) ve mevcut bakiyelerini listeler.",
+    "description": "Kullanıcının FinTrack sistemindeki tüm finansal hesaplarını (örneğin banka hesapları, cüzdanlar) ve mevcut bakiyelerini listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {},
@@ -74,13 +76,13 @@ GET_USER_ACCOUNTS_TOOL = {
 
 GET_ACCOUNT_DETAILS_TOOL = {
     "name": "get_account_details",
-    "description": "KullanÄ±cÄ±nÄ±n belirli bir finansal hesabÄ±nÄ±n detaylarÄ±nÄ± (ID ile) ve bakiyesini getirir.",
+    "description": "Kullanıcının belirli bir finansal hesabının detaylarını (ID ile) ve bakiyesini getirir.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "account_id": {
                 "type": "INTEGER",
-                "description": "DetaylarÄ± gÃ¶rÃ¼ntÃ¼lenecek hesabÄ±n ID'si."
+                "description": "Detayları görüntülenecek hesabın ID'si."
             }
         },
         "required": ["account_id"]
@@ -89,13 +91,13 @@ GET_ACCOUNT_DETAILS_TOOL = {
 
 CREATE_ACCOUNT_TOOL = {
     "name": "create_account",
-    "description": "KullanÄ±cÄ± iÃ§in yeni bir finansal hesap (Ã¶rneÄŸin banka hesabÄ±, nakit cÃ¼zdanÄ±) oluÅŸturur.",
+    "description": "Kullanıcı için yeni bir finansal hesap (örneğin banka hesabı, nakit cüzdanı) oluşturur.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
-            "name": {"type": "STRING", "description": "OluÅŸturulacak hesabÄ±n adÄ± (Ã¶rneÄŸin 'MaaÅŸ HesabÄ±m', 'Nakit CÃ¼zdanÄ±')."},
-            "type": {"type": "STRING", "description": "HesabÄ±n tÃ¼rÃ¼ (Ã¶rneÄŸin 'Banka', 'Nakit', 'Kredi KartÄ±', 'YatÄ±rÄ±m'). API'nin kabul ettiÄŸi tÃ¼rleri kullanÄ±n."},
-            "balance": {"type": "NUMBER", "description": "HesabÄ±n baÅŸlangÄ±Ã§ bakiyesi."}
+            "name": {"type": "STRING", "description": "Oluşturulacak hesabın adı (örneğin 'Maaş Hesabım', 'Nakit Cüzdanı')."},
+            "type": {"type": "STRING", "description": "Hesabın türü (örneğin 'Banka', 'Nakit', 'Kredi Kartı', 'Yatırım'). API'nin kabul ettiği türleri kullanın."},
+            "balance": {"type": "NUMBER", "description": "Hesabın başlangıç bakiyesi."}
         },
         "required": ["name", "type", "balance"]
     }
