@@ -7,14 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html" />
-    <None Remove="Services\EmailService\EmailHtmlSchemes\HelloScheme.html" />
-    <None Remove="Services\EmailService\EmailHtmlSchemes\PasswordResetScheme.html" />
-    <None Remove="Services\EmailService\EmailHtmlSchemes\RaporScheme.html" />
-    <None Remove="Services\EmailService\EmailHtmlSchemes\StatusSummaryScheme.html" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
@@ -36,21 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Services\EmailService\EmailHtmlSchemes\HelloScheme.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Services\EmailService\EmailHtmlSchemes\PasswordResetScheme.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Services\EmailService\EmailHtmlSchemes\RaporScheme.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Services\EmailService\EmailHtmlSchemes\StatusSummaryScheme.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+	  <Content Include="Services\EmailService\EmailHtmlSchemes\**\*.html">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
   </ItemGroup>
 
 </Project>

@@ -7,6 +7,7 @@ using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using FinTrackWebApi.Controller;
+using System.IO;
 
 namespace FinTrackWebApi.Controller
 {
@@ -21,19 +22,22 @@ namespace FinTrackWebApi.Controller
         private readonly IEmailSender _emailSender;
         private readonly IOtpService _otpService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public AuthController(
             MyDataContext context,
             IConfiguration configuration,
             IOtpService otpService,
             IEmailSender emailService,
-            ILogger<AuthController> logger) 
+            ILogger<AuthController> logger,
+            IWebHostEnvironment webHostEnvironment) 
         {
             _context = context;
             _configuration = configuration;
             _otpService = otpService;
             _emailSender = emailService;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpPost("initiate-registration")]
@@ -57,8 +61,16 @@ namespace FinTrackWebApi.Controller
             {
                 string emailSubject = "Email Verification Code For FinTrack new Membership";
                 string emailBody = string.Empty;
-                // TODO: Path 'i dinamik olarak ayarlanacak.
-                using (StreamReader reader = new StreamReader(@"C:\Users\alfac\OneDrive\Belgeler\GitHub\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\CodeVerificationScheme.html"))
+
+                string emailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "CodeVerificationScheme.html");
+                if (!System.IO.File.Exists(emailTemplatePath))
+                {
+                    _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                    await _otpService.RemoveOtpAsync(initiateRegistrationDto.Email);
+                    return StatusCode(500, "Email template not found.");
+                }
+
+                using (StreamReader reader = new StreamReader(emailTemplatePath))
                 {
                     emailBody = await reader.ReadToEndAsync();
                 }
@@ -134,8 +146,16 @@ namespace FinTrackWebApi.Controller
                     // Hoşgeldin e-postası gönderiliyor.
                     string welcomeEmailSubject = "Welcome to FinTrack!";
                     string welcomeEmailBody = string.Empty;
-                    // TOOD: Path'i dinamik hale getir.
-                    using (StreamReader reader = new StreamReader(@"C:\Users\alfac\OneDrive\Belgeler\GitHub\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\HelloScheme.html"))
+                    
+                    string welcomeEmailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "HelloScheme.html");
+                    if (!System.IO.File.Exists(welcomeEmailTemplatePath))
+                    {
+                        _logger.LogError("Welcome email template not found at {Path}", welcomeEmailTemplatePath);
+                        await _otpService.RemoveOtpAsync(verifyOtpDto.Email);
+                        return StatusCode(500, "Welcome email template not found.");
+                    }
+
+                    using (StreamReader reader = new StreamReader(welcomeEmailTemplatePath))
                     {
                         welcomeEmailBody = await reader.ReadToEndAsync();
                     }

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+
+  fintrackwebapi:
+    # fintrackwebapi'nin yapılandırması
+    build:
+      context: ./FinTrackWebApi
+      dockerfile: Dockerfile
+    container_name: fintrack_api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FinBotApiUrl=http://finbotwebapi:8000
+      - ConnectionStrings__DefaultConnection=Host=db_postgres;Port=5432;Database=myfintrackdb;Username=postgres;Password=140xxx-+
+    depends_on:
+      - finbotwebapi
+      - db_postgres # Bu doğru
+    networks:
+      - fintrac_network
+
+  finbotwebapi:
+    build:
+      context: ./FinBotWebApi
+      dockerfile: Dockerfile
+    container_name: finbot_api
+    ports:
+      - "5001:8000"
+    env_file:
+      - ./FinBotWebApi/.env
+    networks:
+      - fintrac_network
+
+  db_postgres: # ANAHTAR: "db_postgres" servisi "fintrackwebapi" ve "finbotwebapi" ile AYNI SEVİYEDE OLMALI
+    image: postgres:15
+    container_name: postgres_db_container
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=myfintrackdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=140xxx-+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fintrac_network
+    restart: unless-stopped
+
+networks:
+  fintrac_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

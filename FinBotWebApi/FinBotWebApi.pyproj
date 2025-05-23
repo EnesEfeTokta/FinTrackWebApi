@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".env" />
+    <Content Include="Dockerfile" />
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
