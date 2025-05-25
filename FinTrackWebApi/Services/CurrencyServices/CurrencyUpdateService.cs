@@ -172,7 +172,7 @@ namespace FinTrackWebApi.Services.CurrencyServices
                         dbContext.Currencies.Add(new CurrencyModel
                         {
                             Code = code,
-                            Name = $"Currency {code}", // Veya API'den gelen bir isim varsa o
+                            Name = $"Currency {code ?? "N/A"}", // Veya API'den gelen bir isim varsa o
                             CountryCode = "N/A",      // Varsayılan veya API'den gelen
                             CountryName = "N/A",    // Varsayılan veya API'den gelen
                             Status = "Active",        // Varsayılan
@@ -276,14 +276,13 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
         private async Task UpdateSupportedCurrenciesAsync(MyDataContext dbContext, IHttpClientFactory httpClientFactory, CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Desteklenen para birimleri güncelleniyor...");
             try
             {
                 var client = httpClientFactory.CreateClient("CurrencyFreaksClient");
 
                 if (string.IsNullOrWhiteSpace(_settings.SupportedCurrenciesUrl))
                 {
-                    _logger.LogError("SupportedCurrenciesUrl yapılandırılmamış.");
+                    _logger.LogError("SupportedCurrenciesUrl is not configured.");
                     return;
                 }
 
@@ -310,6 +309,12 @@ namespace FinTrackWebApi.Services.CurrencyServices
                         {
                             string apiCurrencyCode = apiKeyValuePair.Key;
                             SupportedCurrencyDetail apiDetail = apiKeyValuePair.Value;
+
+                            if (string.IsNullOrWhiteSpace(apiCurrencyCode) || string.IsNullOrWhiteSpace(apiDetail.CurrencyName))
+                            {
+                                _logger.LogWarning("Skipping currency with missing code or name: {CurrencyCode}", apiCurrencyCode);
+                                continue;
+                            }
 
                             DateTime? availableFrom = null;
                             if (!string.IsNullOrWhiteSpace(apiDetail.AvailableFromString) &&

@@ -3,6 +3,7 @@ using System;
 using FinTrackWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    partial class MyDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250525102358_InitialCurrencies")]
+    partial class InitialCurrencies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -179,11 +182,11 @@ namespace FinTrackWebApi.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CurrencyId"));
 
-                    b.Property<DateTime?>("AvailableFrom")
+                    b.Property<DateTime>("AvailableFrom")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("AvailableFrom");
 
-                    b.Property<DateTime?>("AvailableUntil")
+                    b.Property<DateTime>("AvailableUntil")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("AvailableUntil");
 
@@ -206,6 +209,7 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("CountryName");
 
                     b.Property<string>("IconUrl")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("IconUrl");

@@ -13,15 +13,19 @@ namespace FinTrackWebApi.Models
         [Column("Code")]
         public string Code { get; set; } = string.Empty;
 
+        [Required]
         [Column("Name")]
-        public string? Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
+        [Required]
         [Column("CountryCode")]
         public string? CountryCode { get; set; }
 
+        [Required]
         [Column("CountryName")]
         public string? CountryName { get; set; }
 
+        [Required]
         [Column("Status")]
         public string? Status { get; set; }
 
@@ -36,6 +40,7 @@ namespace FinTrackWebApi.Models
         [Column("IconUrl")]
         public string? IconUrl { get; set; }
 
+        [Required]
         [Column("CreatedUtc")]
         [DataType(DataType.DateTime)]
         public DateTime LastUpdatedUtc { get; set; }
