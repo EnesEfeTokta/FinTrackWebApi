@@ -21,6 +21,7 @@ namespace FinTrackWebApi.Data
         public DbSet<MembershipPlanModel> MembershipPlans { get; set; }
         public DbSet<UserMembershipModel> UserMemberships { get; set; }
         public DbSet<PaymentModel> Payments { get; set; }
+        public DbSet<NotificationModel> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -176,15 +177,26 @@ namespace FinTrackWebApi.Data
             {
                 entity.ToTable("Currencies");
                 entity.HasKey(c => c.CurrencyId);
-                entity.Property(c => c.CurrencyId).ValueGeneratedOnAdd();
-                entity.Property(c => c.Code).IsRequired().HasMaxLength(20);
-                entity.HasIndex(c => c.Code).IsUnique();
-                entity.Property(c => c.Name).HasMaxLength(100).IsRequired();
-                entity.Property(c => c.CountryCode).HasMaxLength(20);
-                entity.Property(c => c.CountryName).HasMaxLength(100);
-                entity.Property(c => c.Status).HasMaxLength(20);
-                entity.Property(c => c.IconUrl).HasMaxLength(255);
-                entity.Property(c => c.LastUpdatedUtc).IsRequired();
+                entity.Property(c => c.CurrencyId)
+                      .ValueGeneratedOnAdd();
+                entity.Property(c => c.Code)
+                      .IsRequired()
+                      .HasMaxLength(20);
+                entity.HasIndex(c => c.Code)
+                      .IsUnique();
+                entity.Property(c => c.Name)
+                      .HasMaxLength(100)
+                      .IsRequired();
+                entity.Property(c => c.CountryCode)
+                      .HasMaxLength(20);
+                entity.Property(c => c.CountryName)
+                      .HasMaxLength(100);
+                entity.Property(c => c.Status)
+                      .HasMaxLength(20);
+                entity.Property(c => c.IconUrl)
+                      .HasMaxLength(255);
+                entity.Property(c => c.LastUpdatedUtc)
+                      .IsRequired();
             });
 
             modelBuilder.Entity<MembershipPlanModel>(entity =>
@@ -252,6 +264,18 @@ namespace FinTrackWebApi.Data
                       .HasForeignKey(p => p.UserMembershipId)
                       .IsRequired(false)
                       .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<NotificationModel>(entity =>
+            {
+                entity.ToTable("Notifications");
+                entity.HasKey(n => n.NotificationId);
+                entity.Property(n => n.NotificationId).ValueGeneratedOnAdd();
+                entity.Property(n => n.MessageHead).IsRequired().HasMaxLength(200);
+                entity.Property(n => n.MessageBody).IsRequired().HasMaxLength(1000);
+                entity.Property(n => n.CreatedAtUtc).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(n => n.IsRead).IsRequired().HasDefaultValue(false);
+                entity.HasIndex(n => n.UserId);
             });
         }
     }

@@ -3,9 +3,9 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using FinTrackWebApi.Services.DocumentService.Models;
 
-namespace FinTrackWebApi.Services.DocumentService
+namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
-    public class WordDocumentGenerator : IDocumentGenerator
+    public class WordDocumentGenerator_Budget : IDocumentGenerator
     {
         public string FileExtension => ".docx";
         public string MimeType => "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -82,7 +82,7 @@ namespace FinTrackWebApi.Services.DocumentService
                     foreach (var item in reportData.Items)
                     {
                         TableRow dataRow = new TableRow();
-                        AddTableCell(dataRow, (index++).ToString());
+                        AddTableCell(dataRow, index++.ToString());
                         AddTableCell(dataRow, item.Name);
                         AddTableCell(dataRow, item.Description);
                         AddTableCell(dataRow, item.Category);

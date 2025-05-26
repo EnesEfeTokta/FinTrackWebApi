@@ -28,7 +28,7 @@ Bu repository, FinTrack adlı finansal takip uygulamasının backend hizmetlerin
 
 ## Genel Bakış
 
-FinansTakipApp API, modern finansal yönetim ihtiyaçlarına cevap vermek üzere tasarlanmıştır. Güvenli, ölçeklenebilir ve bakımı kolay bir yapı sunmayı hedefler. RESTful prensiplerine uygun olarak tasarlanmış endpoint'ler aracılığıyla frontend uygulamaları (Web, Mobil vb.) veya diğer servisler ile entegre olabilir.
+FinTrack API, kullanıcıların kişisel finanslarını etkin bir şekilde yönetmelerine olanak tanıyan kapsamlı bir finansal takip ve yönetim platformudur. ASP.NET Core ile geliştirilen bu API, bütçe oluşturma, gelir-gider takibi, hesap yönetimi, güncel kur bilgileri ve ChatBot destekli etkileşim gibi zengin özellikler sunar.
 
 ---
 

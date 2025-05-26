@@ -1,4 +1,4 @@
-﻿namespace FinTrackWebApi.Services.DocumentService
+﻿namespace FinTrackWebApi.Services.DocumentService.Generations
 {
     public interface IDocumentGenerator
     {

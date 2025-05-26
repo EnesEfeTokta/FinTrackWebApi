@@ -1,9 +1,9 @@
 ﻿using FinTrackWebApi.Services.DocumentService.Models;
 using ClosedXML.Excel;
 
-namespace FinTrackWebApi.Services.DocumentService
+namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
-    public class XlsxDocumentGenerator : IDocumentGenerator
+    public class XlsxDocumentGenerator_Budget : IDocumentGenerator
     {
         public string FileExtension => ".xlsx";
         public string MimeType => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

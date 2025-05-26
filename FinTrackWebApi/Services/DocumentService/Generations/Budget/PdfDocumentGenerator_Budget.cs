@@ -3,16 +3,16 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using FinTrackWebApi.Services.DocumentService.Models;
 
-namespace FinTrackWebApi.Services.DocumentService
+namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
-    public class PdfDocumentGenerator : IDocumentGenerator
+    public class PdfDocumentGenerator_Budget : IDocumentGenerator
     {
         public string FileExtension => ".pdf";
         public string MimeType => "application/pdf";
 
         public async Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
         {
-            if (data is BudgetReportModel reportData) // Veri tipini kontrol et
+            if (data is BudgetReportModel reportData)
             {
                 var pdfDocument = new BudgetReportPdfDocument(reportData);
 
@@ -124,7 +124,7 @@ namespace FinTrackWebApi.Services.DocumentService
                                 table.Cell().Element(DataCellStyle).Text(item.StartDate.ToString("yyyy-MM-dd"));
                                 table.Cell().Element(DataCellStyle).Text(item.EndDate.ToString("yyyy-MM-dd"));
                                 table.Cell().Element(DataCellStyle).Text(item.CreatedAt.ToString("yyyy-MM-dd"));
-                                table.Cell().Element(DataCellStyle).Text(item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default(DateTime) ? "-" : item.UpdatedAt.ToString("yyyy-MM-dd"));
+                                table.Cell().Element(DataCellStyle).Text(item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default ? "-" : item.UpdatedAt.ToString("yyyy-MM-dd"));
                                 table.Cell().Element(DataCellStyle).AlignRight().Text(item.AllocatedAmount.ToString());
 
                                 static IContainer DataCellStyle(IContainer container) =>

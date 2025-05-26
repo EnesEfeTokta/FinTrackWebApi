@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using FinTrackWebApi.Services.DocumentService.Models;
 
-namespace FinTrackWebApi.Services.DocumentService
+namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
-    public class MarkdownDocumentGenerator : IDocumentGenerator
+    public class MarkdownDocumentGenerator_Budget : IDocumentGenerator
     {
         public string FileExtension => ".md";
         public string MimeType => "text/markdown";
@@ -13,6 +13,7 @@ namespace FinTrackWebApi.Services.DocumentService
             {
                 throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for Markdown generation. Expected BudgetReportModel.", nameof(data));
             }
+
             StringBuilder sb = new StringBuilder();
 
             sb.AppendLine($"# {reportData.ReportTitle}");
@@ -21,6 +22,7 @@ namespace FinTrackWebApi.Services.DocumentService
             sb.AppendLine("## Budget Details");
             sb.AppendLine("| # | Name | Description | Category | Type | Start | End | Created | Updated | Allocated |");
             sb.AppendLine("|---|------|-------------|----------|------|-------|-----|---------|--------|-----------|");
+            
             if (reportData.Items != null && reportData.Items.Any())
             {
                 int index = 1;
@@ -34,8 +36,10 @@ namespace FinTrackWebApi.Services.DocumentService
                     sb.AppendLine($"| {index++} | {name} | {description} | {category} | {item.Type} | {item.StartDate:yyyy-MM-dd} | {item.EndDate:yyyy-MM-dd} | {item.CreatedAt:yyyy-MM-dd} | {updatedAtStr} | {allocatedStr} |");
                 }
             }
+
             return Task.FromResult(Encoding.UTF8.GetBytes(sb.ToString()));
         }
+
         private static string Truncate(string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value) || value.Length <= maxLength)

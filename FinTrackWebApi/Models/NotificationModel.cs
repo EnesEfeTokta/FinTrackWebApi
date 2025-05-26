@@ -8,11 +8,11 @@ namespace FinTrackWebApi.Models
     {
         [Key]
         [Required]
-        public string Id { get; set; } = string.Empty;
+        public string NotificationId { get; set; } = string.Empty;
 
         [Required]
         [ForeignKey("User")]
-        public string UserId { get; set; } = string.Empty;
+        public int UserId { get; set; }
         public virtual UserModel User { get; set; } = null!;
 
         [Required]
@@ -31,9 +31,9 @@ namespace FinTrackWebApi.Models
         public string NotificationType { get; set; } = string.Empty;
 
         [Required]
-        [Column("CreatedAt")]
+        [Column("CreatedAtUtc")]
         [DataType(DataType.DateTime)]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         [Required]
         [Column("IsRead")]

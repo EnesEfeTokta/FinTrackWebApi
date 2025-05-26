@@ -1,23 +1,22 @@
-﻿using System.Text;
-using FinTrackWebApi.Services.DocumentService.Models;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using System.Text;
 
-namespace FinTrackWebApi.Services.DocumentService
+namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
-    public class TextDocumentGenerator : IDocumentGenerator
+    public class TextDocumentGenerator_Transaction
     {
         public string FileExtension => ".txt";
         public string MimeType => "text/plain";
 
         public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
         {
-            if (!(data is BudgetReportModel reportData))
+            if (!(data is TransactionsRaportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for Text generation. Expected BudgetReportModel.", nameof(data));
+                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for Text generation. Expected TransactionsRaportModel.", nameof(data));
             }
 
             StringBuilder sb = new StringBuilder();
 
-            // --- Başlık Bilgileri ---
             sb.AppendLine($"==================================================");
             sb.AppendLine($"          {reportData.ReportTitle}");
             sb.AppendLine($"==================================================");
@@ -26,11 +25,11 @@ namespace FinTrackWebApi.Services.DocumentService
             sb.AppendLine(reportData.Description);
             sb.AppendLine();
 
-            sb.AppendLine("Budget Details:");
+            sb.AppendLine("Transaction Details:");
 
             sb.AppendLine("--------------------------------------------------------------------------------------------------------------------------------------------------------------");
-            sb.AppendFormat("| {0,-3} | {1,-20} | {2,-25} | {3,-15} | {4,-10} | {5,-10} | {6,-10} | {7,-10} | {8,-10} | {9,15} |\n",
-                          "#", "Name", "Description", "Category", "Type", "Start", "End", "Created", "Updated", "Allocated");
+            sb.AppendFormat("| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10} |\n",
+                          "#", "Account Name", "Category", "Amount", "Description", "Transaction");
             sb.AppendLine("--------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             if (reportData.Items != null && reportData.Items.Any())
@@ -38,31 +37,24 @@ namespace FinTrackWebApi.Services.DocumentService
                 int index = 1;
                 foreach (var item in reportData.Items)
                 {
-                    string allocatedStr = item.AllocatedAmount.ToString();
-                    string updatedAtStr = item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default ? "-" : item.UpdatedAt.ToString("yyyy-MM-dd");
-
-                    string name = Truncate(item.Name, 20);
+                    string name = Truncate(item.AccountName, 20);
                     string description = Truncate(item.Description, 25);
-                    string category = Truncate(item.Category, 15);
+                    string category = Truncate(item.Category.ToString(), 15);
 
-                    sb.AppendFormat("| {0,-3} | {1,-20} | {2,-25} | {3,-15} | {4,-10} | {5,-10:yyyy-MM-dd} | {6,-10:yyyy-MM-dd} | {7,-10:yyyy-MM-dd} | {8,-10} | {9,15} |\n",
+                    sb.AppendFormat("| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10:yyyy-MM-dd} |\n",
                                   index++,
                                   name,
-                                  description,
                                   category,
-                                  item.Type,
-                                  item.StartDate,
-                                  item.EndDate,
-                                  item.CreatedAt,
-                                  updatedAtStr,
-                                  allocatedStr);
+                                  item.Amount,
+                                  description,
+                                  item.TransactionDateUtc);
                 }
                 sb.AppendLine("--------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             }
             else
             {
-                sb.AppendLine("No budget details found.");
+                sb.AppendLine("No transaction details found.");
             }
 
 

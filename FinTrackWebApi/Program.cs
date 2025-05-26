@@ -2,6 +2,7 @@ using FinTrackWebApi.Data;
 using FinTrackWebApi.Services.ChatBotService;
 using FinTrackWebApi.Services.CurrencyServices;
 using FinTrackWebApi.Services.DocumentService;
+using FinTrackWebApi.Services.DocumentService.Generations.Budget;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using FinTrackWebApi.Services.PaymentService;
@@ -65,12 +66,12 @@ if (string.IsNullOrEmpty(connectionString))
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IOtpService, OtpService>();
-builder.Services.AddScoped<PdfDocumentGenerator>();
-builder.Services.AddScoped<WordDocumentGenerator>();
-builder.Services.AddScoped<TextDocumentGenerator>();
-builder.Services.AddScoped<MarkdownDocumentGenerator>();
-builder.Services.AddScoped<XlsxDocumentGenerator>();
-builder.Services.AddScoped<XmlDocumentGenerator>();
+builder.Services.AddScoped<PdfDocumentGenerator_Budget>();
+builder.Services.AddScoped<WordDocumentGenerator_Budget>();
+builder.Services.AddScoped<TextDocumentGenerator_Budget>();
+builder.Services.AddScoped<MarkdownDocumentGenerator_Budget>();
+builder.Services.AddScoped<XlsxDocumentGenerator_Budget>();
+builder.Services.AddScoped<XmlDocumentGenerator_Budget>();
 builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
 builder.Services.AddScoped<ICurrencyDataProvider, CurrencyFreaksProvider>();
 builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
