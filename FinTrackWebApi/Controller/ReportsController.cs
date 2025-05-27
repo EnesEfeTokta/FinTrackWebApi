@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Services.DocumentService.Models;
+using FinTrackWebApi.Models;
+using FinTrackWebApi.Services.DocumentService.Generations;
 
 namespace FinTrackWebApi.Controller
 {
@@ -38,6 +40,7 @@ namespace FinTrackWebApi.Controller
             return userId;
         }
 
+        #region Budget Endpoints
         /// <summary>
         /// Kullanıcının bütçe raporunu belirtilen formatta döndürür.
         /// </summary>
@@ -46,8 +49,8 @@ namespace FinTrackWebApi.Controller
         [HttpGet("budget-report/{format}")]
         public async Task<IActionResult> GetBudgetReport(string format)
         {
-            var reportData = await BuildReportDataAsync();
-            return await GenerateAndReturnReport(format, reportData, $"Financial_Budget_Report_{DateTime.Now:yyyyMMdd}");
+            var reportData = await BuildBudgetReportDataAsync();
+            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_{DateTime.Now:yyyyMMdd}");
         }
 
         /// <summary>
@@ -65,9 +68,9 @@ namespace FinTrackWebApi.Controller
                 return BadRequest("Start date must be before end date.");
             }
 
-            var reportData = await BuildReportDataAsync(startDateTime, endDateTime);
+            var reportData = await BuildBudgetReportDataAsync(startDateTime, endDateTime);
 
-            return await GenerateAndReturnReport(format, reportData, $"Financial_Budget_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}");
+            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}");
         }
 
         /// <summary>
@@ -84,10 +87,10 @@ namespace FinTrackWebApi.Controller
                 return BadRequest("Category cannot be null or empty.");
             }
 
-            var reportData = await BuildReportDataAsync();
+            var reportData = await BuildBudgetReportDataAsync();
             reportData.Items = reportData.Items.Where(item => item.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            return await GenerateAndReturnReport(format, reportData, $"Financial_Budget_Report_By_Category_{category}_{DateTime.Now:yyyyMMdd}");
+            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_By_Category_{category}_{DateTime.Now:yyyyMMdd}");
         }
 
         /// <summary>
@@ -104,65 +107,19 @@ namespace FinTrackWebApi.Controller
                 return BadRequest("Type cannot be null or empty.");
             }
 
-            var reportData = await BuildReportDataAsync();
+            var reportData = await BuildBudgetReportDataAsync();
             reportData.Items = reportData.Items.Where(item => item.Type.Equals(type, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            return await GenerateAndReturnReport(format, reportData, $"Financial_Budget_Report_By_Type_{type}_{DateTime.Now:yyyyMMdd}");
+            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_By_Type_{type}_{DateTime.Now:yyyyMMdd}");
         }
 
         /// <summary>
-        /// Belirtilen formatta raporu oluşturur ve döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="reportData">Raporun detayları</param>
-        /// <param name="baseFileName">Dosyanın ismi</param>
-        /// <returns></returns>
-        private async Task<IActionResult> GenerateAndReturnReport(string format, BudgetReportModel? reportData, string baseFileName)
-        {
-            if (reportData == null || !reportData.Items.Any())
-            {
-                return NotFound("No report data found for the specified criteria.");
-            }
-
-            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
-            {
-                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown");
-            }
-
-            try
-            {
-                var (content, mimeType, fileName) = await _documentService.GenerateDocumentAsync(
-                    reportData,
-                    requestedFormat,
-                    baseFileName
-                );
-
-                return File(content, mimeType, fileName);
-            }
-            catch (NotSupportedException ex)
-            {
-                _logger.LogWarning("Format generation not supported: {Message}", ex.Message);
-                return BadRequest(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning("Invalid data for report generation: {Message}", ex.Message);
-                return BadRequest($"Invalid data for {format} report generation: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
-                return StatusCode(500, $"An error occurred while generating the {format} report.");
-            }
-        }
-
-        /// <summary>
-        /// Rapor verilerini oluşturur.
+        /// Başlangıç ve bitiş tarihleri belirtilirse, o tarihler arasındaki bütçeleri getirir.
         /// </summary>
         /// <param name="start">Başlangıç tarihi</param>
         /// <param name="end">Biriş tarihi</param>
         /// <returns></returns>
-        private async Task<BudgetReportModel?> BuildReportDataAsync(DateTime? start = null, DateTime? end = null)
+        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(DateTime? start = null, DateTime? end = null)
         {
             int userId = GetAuthenticatedUserId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
@@ -208,7 +165,7 @@ namespace FinTrackWebApi.Controller
                 return report;
             }
 
-            report.Items = budgetCategoriesData.Select(bc => new BudgetReportTableItem // DTO Adını kontrol et
+            report.Items = budgetCategoriesData.Select(bc => new BudgetReportTableItem
             {
                 Name = bc.Budget.Name,
                 Description = bc.Budget.Description ?? "-",
@@ -219,6 +176,189 @@ namespace FinTrackWebApi.Controller
                 CreatedAt = bc.Budget.CreatedAtUtc,
                 UpdatedAt = bc.Budget.UpdatedAtUtc ?? DateTime.MinValue,
                 AllocatedAmount = bc.AllocatedAmount
+            }).ToList();
+
+            return report;
+        }
+        #endregion
+
+        #region Transaction Endpoints
+        /// <summary>
+        /// Kullanıcının bütçe raporunu belirtilen formatta döndürür.
+        /// </summary>
+        /// <param name="format">Çıktı formatı</param>
+        /// <returns></returns>
+        [HttpGet("transaction-report/{format}")]
+        public async Task<IActionResult> GetTransactionReport(string format)
+        {
+            var reportData = await BuildTransactinReportDataAsync();
+            return await GenerateAndReturnReport(format, DocumentType.Transaction.ToString(), reportData, $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}");
+        }
+        #endregion
+
+        /// <summary>
+        /// Belirtilen formatta raporu oluşturur ve döndürür.
+        /// </summary>
+        /// <param name="format">Çıktı formatı</param>
+        /// <param name="reportData">Raporun detayları</param>
+        /// <param name="baseFileName">Dosyanın ismi</param>
+        /// <returns></returns>
+        private async Task<IActionResult> GenerateAndReturnReport(string format, string type, BudgetReportModel? reportData, string baseFileName)
+        {
+            if (reportData == null || !reportData.Items.Any())
+            {
+                return NotFound("No report data found for the specified criteria.");
+            }
+
+            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
+            {
+                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown");
+            }
+
+            if (!Enum.TryParse(type, true, out Services.DocumentService.DocumentType requestedType))
+            {
+                return BadRequest("Invalid or unsupported type requested. Supported types: Budget, Transaction, Account");
+            }
+
+            try
+            {
+                var (content, mimeType, fileName) = await _documentService.GenerateDocumentAsync(
+                    reportData,
+                    requestedFormat,
+                    requestedType,
+                    baseFileName
+                );
+
+                return File(content, mimeType, fileName);
+            }
+            catch (NotSupportedException ex)
+            {
+                _logger.LogWarning("Format generation not supported: {Message}", ex.Message);
+                return BadRequest(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Invalid data for report generation: {Message}", ex.Message);
+                return BadRequest($"Invalid data for {format} report generation: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
+                return StatusCode(500, $"An error occurred while generating the {format} report.");
+            }
+        }
+
+        /// <summary>
+        /// Belirtilen formatta raporu oluşturur ve döndürür.
+        /// </summary>
+        /// <param name="format">Çıktı formatı</param>
+        /// <param name="reportData">Raporun detayları</param>
+        /// <param name="baseFileName">Dosyanın ismi</param>
+        /// <returns></returns>
+        private async Task<IActionResult> GenerateAndReturnReport(string format, string type, TransactionsRaportModel? reportData, string baseFileName)
+        {
+            if (reportData == null || !reportData.Items.Any())
+            {
+                return NotFound("No report data found for the specified criteria.");
+            }
+
+            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
+            {
+                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown");
+            }
+
+            if (!Enum.TryParse(type, true, out Services.DocumentService.DocumentType requestedType))
+            {
+                return BadRequest("Invalid or unsupported type requested. Supported types: Budget, Transaction, Account");
+            }
+
+            try
+            {
+                var (content, mimeType, fileName) = await _documentService.GenerateDocumentAsync(
+                    reportData,
+                    requestedFormat,
+                    requestedType,
+                    baseFileName
+                );
+
+                return File(content, mimeType, fileName);
+            }
+            catch (NotSupportedException ex)
+            {
+                _logger.LogWarning("Format generation not supported: {Message}", ex.Message);
+                return BadRequest(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Invalid data for report generation: {Message}", ex.Message);
+                return BadRequest($"Invalid data for {format} report generation: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
+                return StatusCode(500, $"An error occurred while generating the {format} report.");
+            }
+        }
+
+        /// <summary>
+        /// Başlangıç ve bitiş tarihleri belirtilirse, o tarihler arasındaki gelir ve giderleri getirir.
+        /// </summary>
+        /// <param name="start">Başlangıç tarihi</param>
+        /// <param name="end">Biriş tarihi</param>
+        /// <returns></returns>
+        private async Task<TransactionsRaportModel?> BuildTransactinReportDataAsync(DateTime? start = null, DateTime? end = null)
+        {
+            int userId = GetAuthenticatedUserId();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null)
+            {
+                _logger.LogError("User not found for ID: {UserId} while building report.", userId);
+                return null;
+            }
+
+            var report = new TransactionsRaportModel
+            {
+                ReportTitle = start.HasValue && end.HasValue
+                    ? $"Financial Transaction Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
+                    : "Financial Transaction Report (All Time)",
+                Description = $"Transaction details for user {user.Username}."
+            };
+
+            DateTime? startUtc = start.HasValue ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc) : null;
+            DateTime? endUtc = end.HasValue ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1) : null;
+
+            var query = _context.Transactions
+                .Include(bc => bc.Account)
+                .Include(bc => bc.Category)
+                .Where(bc => bc.User.UserId == userId);
+
+            if (startUtc.HasValue && endUtc.HasValue)
+            {
+                query = query.Where(bc => bc.TransactionDateUtc >= startUtc.Value &&
+                                          bc.TransactionDateUtc <= endUtc.Value);
+            }
+
+            var transactionCategoriesData = await query
+                .OrderBy(bc => bc.TransactionDateUtc)
+                .ThenBy(bc => bc.Account.Name)
+                .ThenBy(bc => bc.Category.Name)
+                .AsNoTracking()
+                .ToListAsync();
+
+            if (!transactionCategoriesData.Any())
+            {
+                _logger.LogInformation("No transaction categories found for user {UserName} for the given criteria.", user.Username);
+                return report;
+            }
+
+            report.Items = transactionCategoriesData.Select(bc => new TransactionRaportTableItem
+            {
+                AccountName = bc.Account.Name,
+                Description = bc.Description ?? "-",
+                CategoryName =  bc.Category.Name,
+                Amount = bc.Amount,
+                TransactionDateUtc = bc.TransactionDateUtc
             }).ToList();
 
             return report;

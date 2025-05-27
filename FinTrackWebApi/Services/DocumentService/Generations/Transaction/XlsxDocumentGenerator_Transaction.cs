@@ -81,7 +81,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                         worksheet.Cell(currentRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                         worksheet.Cell(currentRow, 2).Value = item.AccountName;
-                        worksheet.Cell(currentRow, 3).Value = item.Category.ToString();
+                        worksheet.Cell(currentRow, 3).Value = item.CategoryName;
 
                         worksheet.Cell(currentRow, 4).Value = item.Amount;
                         worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0.00";

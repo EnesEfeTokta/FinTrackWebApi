@@ -3,7 +3,7 @@ using System.Text;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
-    public class TextDocumentGenerator_Transaction
+    public class TextDocumentGenerator_Transaction : IDocumentGenerator
     {
         public string FileExtension => ".txt";
         public string MimeType => "text/plain";
@@ -39,7 +39,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 {
                     string name = Truncate(item.AccountName, 20);
                     string description = Truncate(item.Description, 25);
-                    string category = Truncate(item.Category.ToString(), 15);
+                    string category = Truncate(item.CategoryName, 15);
 
                     sb.AppendFormat("| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10:yyyy-MM-dd} |\n",
                                   index++,

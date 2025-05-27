@@ -1,8 +1,9 @@
 ﻿using FinTrackWebApi.Models;
+using FinTrackWebApi.Services.DocumentService.Generations;
 
 namespace FinTrackWebApi.Services.DocumentService.Models
 {
-    public class TransactionsRaportModel
+    public class TransactionsRaportModel : IReportModel
     {
         public string ReportTitle { get; set; } = "Default Report";
         public string Description { get; set; } = string.Empty;
@@ -13,7 +14,7 @@ namespace FinTrackWebApi.Services.DocumentService.Models
     public class TransactionRaportTableItem
     {
         public string AccountName { get; set; } = String.Empty;
-        public CategoryType Category { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public string Description { get; set; } = string.Empty;
         public DateTime TransactionDateUtc { get; set; }

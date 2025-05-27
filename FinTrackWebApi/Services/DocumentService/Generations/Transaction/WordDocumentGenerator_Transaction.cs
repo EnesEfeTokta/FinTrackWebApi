@@ -84,7 +84,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                             TableRow dataRow = new TableRow();
                             AddTableCell(dataRow, index++.ToString(), fontSize: "18");
                             AddTableCell(dataRow, item.AccountName, fontSize: "18");
-                            AddTableCell(dataRow, item.Category.ToString(), fontSize: "18");
+                            AddTableCell(dataRow, item.CategoryName, fontSize: "18");
                             AddTableCell(dataRow, item.Amount.ToString("N2"), JustificationValues.Right, fontSize: "18"); 
                             AddTableCell(dataRow, item.Description, fontSize: "18");
                             AddTableCell(dataRow, item.TransactionDateUtc.ToString("yyyy-MM-dd"), JustificationValues.Center, fontSize: "18");

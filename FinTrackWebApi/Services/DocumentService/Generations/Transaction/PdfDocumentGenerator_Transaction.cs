@@ -113,7 +113,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                                 {
                                     table.Cell().Element(DataCellStyle).Text(index++.ToString());
                                     table.Cell().Element(DataCellStyle).Text(item.AccountName);
-                                    table.Cell().Element(DataCellStyle).Text(item.Category.ToString());
+                                    table.Cell().Element(DataCellStyle).Text(item.CategoryName);
                                     table.Cell().Element(DataCellStyle).AlignRight().Text(item.Amount.ToString("N2"));
                                     table.Cell().Element(DataCellStyle).Text(item.Description);
                                     table.Cell().Element(DataCellStyle).Text(item.TransactionDateUtc.ToString("yyyy-MM-dd"));

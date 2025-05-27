@@ -32,7 +32,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 {
                     string name = Truncate(item.AccountName, 20);
                     string description = Truncate(item.Description, 25);
-                    string category = Truncate(item.Category.ToString(), 15);
+                    string category = Truncate(item.CategoryName, 15);
                     sb.AppendLine($"| {index++} | {name} | {category} | {item.Amount} | {description} | {item.TransactionDateUtc} |");
                 }
             }
