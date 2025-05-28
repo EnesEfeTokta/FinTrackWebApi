@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Borç Teklifi Bildirimi</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 0;
+        }
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+        }
+        .header {
+            background-color: #24292e;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 130px;
+                margin: 0 auto;
+            }
+
+        .hero {
+            padding: 35px 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .hero h1 {
+                font-size: 26px;
+                color: #1f2328;
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-weight: 600;
+            }
+
+            .hero p {
+                font-size: 17px;
+                color: #586069;
+                margin: 0 0 25px;
+                line-height: 1.6;
+            }
+
+            .hero .btn {
+                display: inline-block;
+                padding: 14px 28px;
+                background-color: #28a745;
+                color: #fff;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+            .hero .btn-secondary {
+                display: inline-block;
+                padding: 12px 24px;
+                background-color: #f6f8fa;
+                color: #24292e;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 15px;
+                border: 1px solid #d1d5da;
+                margin-left: 10px;
+            }
+
+        .debt-details {
+            padding: 25px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .debt-details h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .debt-details .detail-item {
+                margin-bottom: 12px;
+                font-size: 16px;
+                color: #24292e;
+            }
+
+                .debt-details .detail-item strong {
+                    color: #000;
+                    min-width: 140px;
+                    display: inline-block;
+                }
+
+                .debt-details .detail-item span {
+                    color: #586069;
+                }
+
+        .video-info {
+            padding: 25px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .video-info h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .video-info p {
+                font-size: 16px;
+                color: #586069;
+                line-height: 1.6;
+                margin-top: 0;
+            }
+
+            .video-info .icon-text {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+                .video-info .icon-text img {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 10px;
+                }
+
+        .next-steps {
+            padding: 25px;
+        }
+
+            .next-steps h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+            .step-item .step-number {
+                background-color: #0366d6;
+                color: white;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                font-weight: bold;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }
+
+            .step-item .step-content p {
+                margin: 0;
+                font-size: 16px;
+                color: #24292e;
+                line-height: 1.5;
+            }
+
+            .step-item .step-content strong {
+                color: #1f2328;
+            }
+
+        .closing {
+            padding: 25px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .closing a {
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        .footer {
+            background: #f6f8fa;
+            color: #586069;
+            font-size: 12px;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .footer a {
+                color: #586069;
+                text-decoration: underline;
+            }
+
+            .footer .disclaimer {
+                margin-top: 10px;
+                font-style: italic;
+                color: #6a737d;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="width:100%; background-color: #f6f8fa;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Hero -->
+                    <tr>
+                        <td class="hero">
+                            <h1>Merhaba [BORROWER_NAME], Yeni Bir Borç Teklifiniz Var!</h1>
+                            <p>FinTrack platformu üzerinden <strong>[LENDER_NAME]</strong> tarafından size bir borç teklifi gönderildi. Lütfen aşağıdaki detayları inceleyerek teklifi değerlendirin.</p>
+                            <a href="[REVIEW_OFFER_LINK]" class="btn">Teklifi Şimdi İncele</a>
+                        </td>
+                    </tr>
+
+                    <!-- Debt Details Section -->
+                    <tr>
+                        <td class="debt-details">
+                            <h2>Teklif Detayları:</h2>
+                            <div class="detail-item"><strong>Teklifi Yapan:</strong> <span>[DETAIL_LENDER_NAME]</span></div>
+                            <div class="detail-item"><strong>Talep Edilen Miktar:</strong> <span>[DETAIL_DEBT_AMOUNT] [DETAIL_DEBT_CURRENCY]</span></div>
+                            <div class="detail-item"><strong>Önerilen Son Ödeme Tarihi:</strong> <span>[DETAIL_DEBT_DUE_DATE]</span></div>
+                            <div class="detail-item"><strong>Açıklama:</strong> <span>[DETAIL_DEBT_DESCRIPTION]</span></div>
+                        </td>
+                    </tr>
+
+                    <!-- Video Information Section (Bu kısım sizin sisteminize özel) -->
+                    <tr>
+                        <td class="video-info">
+                            <h2><img src="https://cdn-icons-png.flaticon.com/512/1087/1087815.png" alt="Video Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Video ile Güvence</h2>
+                            <p>Bu borçlanma sürecinde, güvence amacıyla bir video kaydı yüklemeniz istenecektir. Bu video, borcun koşullarını kabul ettiğinizi ve geri ödeme taahhüdünüzü teyit edecektir. Lütfen teklifi kabul etmeniz durumunda bu adımı tamamlamaya hazır olun.</p>
+                            <p>Video yükleme işlemi basittir ve platformumuz üzerinden güvenli bir şekilde gerçekleştirilir. Yüklediğiniz video, yalnızca ilgili taraflar (Borç Veren ve Sistem Operatörü) ve gerekli durumlarda (örneğin, ödeme anlaşmazlığı) erişilebilir olacaktır.</p>
+                        </td>
+                    </tr>
+
+                    <!-- Next Steps Section -->
+                    <tr>
+                        <td class="next-steps">
+                            <h2>Sonraki Adımlarınız:</h2>
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <p><strong>Teklifi Değerlendirin:</strong> Yukarıdaki "Teklifi Şimdi İncele" butonuna tıklayarak FinTrack platformundaki teklif detaylarını ve koşullarını dikkatlice gözden geçirin.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <p><strong>Kararınızı Verin:</strong> Teklifi kabul edebilir veya reddedebilirsiniz. Kararınızı platform üzerinden belirtin.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <p><strong>Kabul Ederseniz Video Yükleyin:</strong> Teklifi kabul etmeniz durumunda, sistem sizden güvence videosunu yüklemenizi isteyecektir. Bu, sürecin önemli bir parçasıdır.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <p><strong>Operatör Onayını Bekleyin:</strong> Siz teklifi kabul edip videoyu yükledikten sonra, başvurunuz bir FinTrack operatörü tarafından incelenerek onay sürecine alınacaktır.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Closing & Support -->
+                    <tr>
+                        <td class="closing">
+                            <p>Bu süreçle ilgili herhangi bir sorunuz varsa, lütfen <a href="[SUPPORT_LINK]">Destek Ekibimizle</a> iletişime geçmekten çekinmeyin.</p>
+                            <p>Finansal işlemlerinizde başarılar dileriz,<br><strong>FinTrack Ekibi</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            Bu e-posta, FinTrack üzerinden size gönderilen bir borç teklifiyle ilgili olarak gönderilmiştir.<br>
+                            © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
+                            <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[PRIVACY_POLICY_LINK]">Gizlilik Politikası</a>
+                            <p class="disclaimer">FinTrack, güvenli borç alıp verme süreçlerini kolaylaştırmak amacıyla geliştirilmiş bir platformdur. Lütfen tüm işlemleri dikkatli bir şekilde yapınız.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

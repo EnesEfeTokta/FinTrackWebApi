@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Services.DocumentService.Models;
-using FinTrackWebApi.Models;
-using FinTrackWebApi.Services.DocumentService.Generations;
 
 namespace FinTrackWebApi.Controller
 {
@@ -180,21 +178,6 @@ namespace FinTrackWebApi.Controller
 
             return report;
         }
-        #endregion
-
-        #region Transaction Endpoints
-        /// <summary>
-        /// Kullanıcının bütçe raporunu belirtilen formatta döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <returns></returns>
-        [HttpGet("transaction-report/{format}")]
-        public async Task<IActionResult> GetTransactionReport(string format)
-        {
-            var reportData = await BuildTransactinReportDataAsync();
-            return await GenerateAndReturnReport(format, DocumentType.Transaction.ToString(), reportData, $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}");
-        }
-        #endregion
 
         /// <summary>
         /// Belirtilen formatta raporu oluşturur ve döndürür.
@@ -246,6 +229,40 @@ namespace FinTrackWebApi.Controller
                 _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
                 return StatusCode(500, $"An error occurred while generating the {format} report.");
             }
+        }
+        #endregion
+
+        #region Transaction Endpoints
+        /// <summary>
+        /// Kullanıcının gelir giderlerin raporunu belirtilen formatta döndürür.
+        /// </summary>
+        /// <param name="format">Çıktı formatı</param>
+        /// <returns></returns>
+        [HttpGet("transaction-report/{format}")]
+        public async Task<IActionResult> GetTransactionReport(string format)
+        {
+            var reportData = await BuildTransactionReportDataAsync();
+            return await GenerateAndReturnReport(format, DocumentType.Transaction.ToString(), reportData, $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}");
+        }
+
+        /// <summary>
+        /// Kullanıcının  gelir giderlerin raporunu belirtilen tarih aralığında döndürür.
+        /// </summary>
+        /// <param name="format">Çıktı formatı</param>
+        /// <param name="startDateTime">Başlangıç tarihi</param>
+        /// <param name="endDateTime">Bitiş tarihi</param>
+        /// <returns></returns>
+        [HttpGet("transaction-report-by-date/{format}")]
+        public async Task<IActionResult> GetTransactionReportByDate([FromQuery] string format, DateTime startDateTime, DateTime endDateTime)
+        {
+            if (startDateTime >= endDateTime)
+            {
+                return BadRequest("Start date must be before end date.");
+            }
+
+            var reportData = await BuildTransactionReportDataAsync(startDateTime, endDateTime);
+
+            return await GenerateAndReturnReport(format, DocumentType.Transaction.ToString(), reportData, $"Financial_Transaction_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}");
         }
 
         /// <summary>
@@ -306,7 +323,7 @@ namespace FinTrackWebApi.Controller
         /// <param name="start">Başlangıç tarihi</param>
         /// <param name="end">Biriş tarihi</param>
         /// <returns></returns>
-        private async Task<TransactionsRaportModel?> BuildTransactinReportDataAsync(DateTime? start = null, DateTime? end = null)
+        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(DateTime? start = null, DateTime? end = null)
         {
             int userId = GetAuthenticatedUserId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
@@ -363,5 +380,6 @@ namespace FinTrackWebApi.Controller
 
             return report;
         }
+        #endregion
     }
 }

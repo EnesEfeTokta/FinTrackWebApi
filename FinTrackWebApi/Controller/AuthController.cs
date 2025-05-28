@@ -6,8 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
-using FinTrackWebApi.Controller;
-using System.IO;
 
 namespace FinTrackWebApi.Controller
 {

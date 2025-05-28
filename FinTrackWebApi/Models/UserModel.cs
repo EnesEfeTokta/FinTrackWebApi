@@ -40,5 +40,11 @@ namespace FinTrackWebApi.Models
 
         public virtual ICollection<UserMembershipModel> UserMemberships { get; set; } = new List<UserMembershipModel>();
         public virtual ICollection<PaymentModel> Payments { get; set; } = new List<PaymentModel>();
+
+        public virtual ICollection<NotificationModel> Notifications { get; set; } = new List<NotificationModel>();
+
+        public virtual ICollection<DebtModel> DebtsAsLender { get; set; } = new List<DebtModel>();
+        public virtual ICollection<DebtModel> DebtsAsBorrower { get; set; } = new List<DebtModel>();
+        public virtual ICollection<VideoMetadataModel> UploadedVideos { get; set; } = new List<VideoMetadataModel>();
     }
 }

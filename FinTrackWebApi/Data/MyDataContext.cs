@@ -22,6 +22,8 @@ namespace FinTrackWebApi.Data
         public DbSet<UserMembershipModel> UserMemberships { get; set; }
         public DbSet<PaymentModel> Payments { get; set; }
         public DbSet<NotificationModel> Notifications { get; set; }
+        public DbSet<DebtModel> Debts { get; set; }
+        public DbSet<VideoMetadataModel> VideoMetadatas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,6 +71,26 @@ namespace FinTrackWebApi.Data
                       .WithOne(p => p.User)
                       .HasForeignKey(p => p.UserId)
                       .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasMany(u => u.Notifications)
+                        .WithOne(n => n.User)
+                        .HasForeignKey(n => n.UserId)
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(u => u.DebtsAsLender)
+                        .WithOne(d => d.Lender)
+                        .HasForeignKey(d => d.LenderId)
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(u => u.DebtsAsBorrower)
+                        .WithOne(d => d.Borrower)
+                        .HasForeignKey(d => d.BorrowerId)
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasMany(u => u.UploadedVideos)
+                        .WithOne(v => v.UploadedUser)
+                        .HasForeignKey(v => v.UploadedByUserId)
+                        .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<OtpVerificationModel>(entity =>
@@ -276,6 +298,62 @@ namespace FinTrackWebApi.Data
                 entity.Property(n => n.CreatedAtUtc).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(n => n.IsRead).IsRequired().HasDefaultValue(false);
                 entity.HasIndex(n => n.UserId);
+            });
+
+            modelBuilder.Entity<DebtModel>(entity =>
+            {
+                entity.ToTable("Debts");
+                entity.HasKey(d => d.DebtId);
+                entity.Property(d => d.DebtId).ValueGeneratedOnAdd();
+
+                entity.Property(d => d.Amount).HasColumnType("decimal(18, 2)").IsRequired();
+
+                entity.HasOne(d => d.CurrencyModel)
+                      .WithMany()
+                      .HasForeignKey(d => d.CurrencyId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(d => d.Description).HasMaxLength(500).IsRequired();
+                entity.Property(d => d.CreateAtUtc).IsRequired();
+                entity.Property(d => d.DueDateUtc).IsRequired();
+                entity.Property(d => d.Status)
+                      .HasConversion<string>()
+                      .HasMaxLength(50)
+                      .IsRequired();
+
+                entity.HasOne(d => d.Lender)
+                      .WithMany(u => u.DebtsAsLender)
+                      .HasForeignKey(d => d.LenderId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.Borrower)
+                      .WithMany(u => u.DebtsAsBorrower)
+                      .HasForeignKey(d => d.BorrowerId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.VideoMetadata)
+                      .WithOne(vm => vm.Debt)
+                      .HasForeignKey<DebtModel>(d => d.VideoMetadataId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<VideoMetadataModel>(entity =>
+            {
+                entity.ToTable("VideoMetadatas");
+                entity.HasKey(v => v.VideoMetadataId);
+                entity.Property(v => v.VideoMetadataId).ValueGeneratedOnAdd();
+
+                entity.Property(v => v.StoredFileName).IsRequired().HasMaxLength(255);
+                entity.Property(v => v.FilePath).IsRequired().HasMaxLength(500);
+
+                entity.Property(v => v.StorageType)
+                      .HasConversion<string>()
+                      .HasMaxLength(50)
+                      .IsRequired(false);
             });
         }
     }

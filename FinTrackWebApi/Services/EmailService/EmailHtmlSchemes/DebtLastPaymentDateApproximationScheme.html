@@ -1,0 +1,351 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Ödeme Hatırlatıcısı: Vadesi Geçmiş Borç</title>
+    <style>
+        /* === Stil tanımlamaları önceki şablonlarla aynı kalacak === */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+        }
+
+        .header {
+            background-color: #24292e;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 130px;
+                margin: 0 auto;
+            }
+
+        .hero {
+            padding: 35px 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .hero h1 {
+                font-size: 26px;
+                color: #d73a49; /* Uyarı için kırmızı tonu */
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-weight: 600;
+            }
+
+            .hero p {
+                font-size: 17px;
+                color: #586069;
+                margin: 0 0 25px;
+                line-height: 1.6;
+            }
+
+            .hero .btn {
+                display: inline-block;
+                padding: 14px 28px;
+                background-color: #d73a49; /* Acil eylem için kırmızı buton */
+                color: #fff;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+            .hero .btn-secondary { /* Detayları görüntüleme butonu için */
+                display: inline-block;
+                padding: 12px 24px;
+                background-color: #f6f8fa;
+                color: #24292e;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 15px;
+                border: 1px solid #d1d5da;
+                margin-top: 10px; /* Ana butondan biraz ayırmak için */
+            }
+
+
+        .overdue-details { /* Vadesi geçmiş detaylar için özel bölüm */
+            padding: 25px;
+            background-color: #fffbea; /* Hafif sarı bir uyarı arka planı */
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .overdue-details h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .overdue-details .detail-item {
+                margin-bottom: 12px;
+                font-size: 16px;
+                color: #24292e;
+            }
+
+                .overdue-details .detail-item strong {
+                    color: #000;
+                    min-width: 160px; /* Etiketler için biraz daha geniş alan */
+                    display: inline-block;
+                }
+
+                .overdue-details .detail-item span {
+                    color: #586069;
+                }
+
+                .overdue-details .detail-item .amount-due { /* Ödenecek tutar için vurgu */
+                    font-weight: bold;
+                    color: #d73a49;
+                }
+
+        .consequences-info { /* Sonuçlar ve ek bilgiler için bölüm */
+            padding: 25px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .consequences-info h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .consequences-info p {
+                font-size: 16px;
+                color: #586069;
+                line-height: 1.6;
+                margin-top: 0;
+            }
+
+            .consequences-info .icon-text {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+                .consequences-info .icon-text img {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 10px;
+                }
+
+        .next-steps {
+            padding: 25px;
+        }
+
+            .next-steps h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+            .step-item .step-number {
+                background-color: #d73a49; /* Uyarı için adım numarası rengi */
+                color: white;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                font-weight: bold;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }
+
+            .step-item .step-content p {
+                margin: 0;
+                font-size: 16px;
+                color: #24292e;
+                line-height: 1.5;
+            }
+
+            .step-item .step-content strong {
+                color: #1f2328;
+            }
+
+        .closing {
+            padding: 25px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .closing a {
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        .footer {
+            background: #f6f8fa;
+            color: #586069;
+            font-size: 12px;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .footer a {
+                color: #586069;
+                text-decoration: underline;
+            }
+
+            .footer .disclaimer {
+                margin-top: 10px;
+                font-style: italic;
+                color: #6a737d;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="width:100%; background-color: #f6f8fa;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header: Logo Alanı -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Hero: Ana Başlık ve Acil Durum Mesajı -->
+                    <tr>
+                        <td class="hero">
+                            <h1>Ödemeniz Vadesini Geçti, [BORROWER_NAME]!</h1>
+                            <p>
+                                FinTrack platformu üzerinden <strong>[LENDER_NAME]</strong> adlı kullanıcıya olan <strong>[AGREEMENT_ID]</strong> numaralı borcunuzun son ödeme tarihi geçmiştir.
+                                Lütfen ödemenizi en kısa sürede yapınız.
+                            </p>
+                            <a href="[MAKE_PAYMENT_LINK]" class="btn">Hemen Ödeme Yap</a>
+                            <br>
+                            <a href="[VIEW_AGREEMENT_LINK]" class="btn-secondary">Anlaşma Detaylarını Görüntüle</a>
+                        </td>
+                    </tr>
+
+                    <!-- Overdue Details Section: Vadesi Geçmiş Borcun Detayları -->
+                    <tr>
+                        <td class="overdue-details">
+                            <h2>Geciken Ödeme Detayları:</h2>
+                            <div class="detail-item"><strong>Borç Veren:</strong> <span>[DETAIL_LENDER_NAME]</span></div>
+                            <div class="detail-item"><strong>Borç Alan:</strong> <span>[DETAIL_BORROWER_NAME]</span></div>
+                            <div class="detail-item"><strong>Anlaşma ID:</strong> <span>[DETAIL_AGREEMENT_ID]</span></div>
+                            <div class="detail-item"><strong>Asıl Vade Tarihi:</strong> <span>[ORIGINAL_DUE_DATE]</span></div>
+                            <div class="detail-item"><strong>Gecikme Süresi:</strong> <span>[DAYS_OVERDUE] gün</span></div>
+                            <div class="detail-item"><strong>Ödenmesi Gereken Tutar:</strong> <span class="amount-due">[OVERDUE_AMOUNT] [CURRENCY]</span></div>
+                            <!-- Eğer varsa, gecikme faizi/ücreti de eklenebilir -->
+                            <div class="detail-item"><strong>Gecikme Ücreti (varsa):</strong> <span>[LATE_FEE_AMOUNT_INFO]</span></div>
+                        </td>
+                    </tr>
+
+                    <!-- Consequences Information Section: Gecikmenin Olası Sonuçları -->
+                    <tr>
+                        <td class="consequences-info">
+                            <!-- Uyarı ikonu, flaticon.com'dan alınmış örnek bir ikondur. -->
+                            <h2><img src="https://cdn-icons-png.flaticon.com/512/564/564619.png" alt="Uyarı Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Önemli Hatırlatma</h2>
+                            <p>
+                                Ödemenizin gecikmesi, anlaşma koşullarına bağlı olarak ek gecikme ücretlerine tabi olmanıza neden olabilir.
+                                Ayrıca, platformumuzdaki kredi geçmişinizi ve gelecekteki borçlanma olanaklarınızı olumsuz etkileyebilir.
+                            </p>
+                            <p>
+                                Gecikme politikamız hakkında daha fazla bilgi için lütfen <a href="[LATE_FEE_POLICY_LINK]">Gecikme Politikası</a> sayfamızı ziyaret edin.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Next Steps Section: Borçlunun Yapması Gerekenler -->
+                    <tr>
+                        <td class="next-steps">
+                            <h2>Ne Yapmalısınız?</h2>
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <p><strong>Ödemeyi Gerçekleştirin:</strong> Yukarıdaki "Hemen Ödeme Yap" butonunu kullanarak veya platformumuzdaki ilgili anlaşma üzerinden ödemenizi derhal yapın.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <p><strong>Durumu Bildirin:</strong> Eğer ödemeyle ilgili bir sorun yaşıyorsanız veya bir yanlışlık olduğunu düşünüyorsanız, lütfen durumu açıklamak için <a href="[SUPPORT_LINK]">Destek Ekibimizle</a> veya doğrudan borç veren ile iletişime geçin.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <p><strong>Anlaşmayı Gözden Geçirin:</strong> Ödeme koşulları ve olası gecikme ücretleri hakkında bilgi sahibi olmak için <a href="[VIEW_AGREEMENT_LINK_2]">anlaşma detaylarınızı</a> tekrar inceleyin.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Closing & Support: Kapanış Mesajı -->
+                    <tr>
+                        <td class="closing">
+                            <p>Bu konuyu acilen ele almanızı rica ederiz. Ödemenizle ilgili herhangi bir sorunuz veya yardıma ihtiyacınız olursa, <a href="[SUPPORT_LINK_2]">Destek Ekibimiz</a> size yardımcı olmaktan memnuniyet duyacaktır.</p>
+                            <p>Anlayışınız için teşekkür ederiz,<br><strong>FinTrack Ekibi</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer: Telif Hakkı ve Diğer Bağlantılar -->
+                    <tr>
+                        <td class="footer">
+                            Bu e-posta, FinTrack platformu üzerinden vadesi geçmiş bir borcunuzla ilgili olarak otomatik olarak gönderilmiştir.<br>
+                            © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
+                            <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[PRIVACY_POLICY_LINK]">Gizlilik Politikası</a>
+                            <p class="disclaimer">FinTrack, borç alıp verme süreçlerinde taraflar arasında aracı bir platformdur. Ödeme yükümlülüklerinizi zamanında yerine getirmeniz, platformdaki güvenilirliğiniz için önemlidir.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

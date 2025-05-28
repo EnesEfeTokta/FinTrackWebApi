@@ -7,6 +7,7 @@ using FinTrackWebApi.Services.DocumentService.Generations.Transaction;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using FinTrackWebApi.Services.PaymentService;
+using FinTrackWebApi.Services.SecureDebtService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -85,6 +86,9 @@ builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService
 
 builder.Services.AddScoped<ICurrencyDataProvider, CurrencyFreaksProvider>();
 builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
+
+builder.Services.AddScoped<ISecureDebtService, SecureDebtService>();
+
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
