@@ -14,6 +14,7 @@ namespace FinTrackWebApi.Controller
 {
     [Route("api/stripe/webhook")]
     [ApiController]
+    [Authorize(Roles = "User,Admin")]
     public class StripeWebhookController : ControllerBase
     {
         private readonly StripeSettings _stripeSettings;

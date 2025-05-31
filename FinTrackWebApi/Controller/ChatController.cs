@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 
-[Authorize]
+[Authorize(Roles = "User,Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class ChatController : ControllerBase

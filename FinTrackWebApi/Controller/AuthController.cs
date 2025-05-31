@@ -1,16 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Models;
-using FinTrackWebApi.Data;
-using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
-    [ApiController]
+    [Authorize(Roles = "User,Admin")]
     public class AuthController : ControllerBase
     {
         private readonly MyDataContext _context;
@@ -28,7 +30,7 @@ namespace FinTrackWebApi.Controller
             IOtpService otpService,
             IEmailSender emailService,
             ILogger<AuthController> logger,
-            IWebHostEnvironment webHostEnvironment) 
+            IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _configuration = configuration;
@@ -38,15 +40,15 @@ namespace FinTrackWebApi.Controller
             _webHostEnvironment = webHostEnvironment;
         }
 
-        [HttpPost("initiate-registration")]
-        public async Task<IActionResult> InitiateRegistration([FromBody] InitiateRegistrationDto initiateRegistrationDto)
+        [HttpPost("user/initiate-registration")]
+        public async Task<IActionResult> UserInitiateRegistration([FromBody] InitiateRegistrationDto initiateRegistrationDto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == initiateRegistrationDto.Email))
             {
                 _logger.LogWarning("Registration initiation failed: Email {Email} already exists.", initiateRegistrationDto.Email);
                 return BadRequest("This email address is already registered.");
             }
-            
+
             string otp = _otpService.GenerateOtp();
             DateTime expiryTime = DateTime.UtcNow.AddMinutes(10);
             string hashOtpCde = BCrypt.Net.BCrypt.HashPassword(otp);
@@ -94,8 +96,8 @@ namespace FinTrackWebApi.Controller
         }
 
         // OTP doğrulama işlemi yapılıyor.
-        [HttpPost("verify-otp")]
-        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto verifyOtpDto)
+        [HttpPost("user/verify-otp")]
+        public async Task<IActionResult> UserVerifyOtp([FromBody] VerifyOtpRequestDto verifyOtpDto)
         {
             OtpVerificationModel result = await _otpService.VerifyOtpAsync(verifyOtpDto.Email, verifyOtpDto.Code);
 
@@ -144,7 +146,7 @@ namespace FinTrackWebApi.Controller
                     // Hoşgeldin e-postası gönderiliyor.
                     string welcomeEmailSubject = "Welcome to FinTrack!";
                     string welcomeEmailBody = string.Empty;
-                    
+
                     string welcomeEmailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "HelloScheme.html");
                     if (!System.IO.File.Exists(welcomeEmailTemplatePath))
                     {
@@ -180,8 +182,8 @@ namespace FinTrackWebApi.Controller
         }
 
         // Kullanıcı giriş işlemi yapılıyor.
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        [HttpPost("user/login")]
+        public async Task<IActionResult> UserLogin([FromBody] LoginDto loginDto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
@@ -200,10 +202,54 @@ namespace FinTrackWebApi.Controller
                 await _context.SaveChangesAsync();
             }
 
-            Token token = TokenHandler.CreateToken(_configuration, user); // JWT token oluşturuluyor.
+            var userRoles = new List<string> { "User" };
+            Token token = TokenHandler.CreateToken(_configuration, user.UserId, user.Username, user.Email, userRoles); // JWT token oluşturuluyor.
 
             // Başarılı giriş sonrası kullanıcı bilgileri döndürülüyor.
-            return Ok(new { user.UserId, user.Username, user.Email, user.ProfilePicture, AccessToken = token.AccessToken});
+            return Ok(new { user.UserId, user.Username, user.Email, user.ProfilePicture, AccessToken = token.AccessToken });
+        }
+
+        // TODO: Kullanıcı şifresini sıfırlama işlemi yapılacak
+        // TODO: Kullanıcı çıkış yapabilecektir.
+
+        [HttpPost("employee/login")]
+        public async Task<IActionResult> EmployeeLogin([FromBody] LoginDto loginDto)
+        {
+            var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == loginDto.Email);
+
+
+            if (employee == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, employee.Password))
+            {
+                return Unauthorized("Invalid credentials");
+            }
+
+            var employeeRoles = new List<string> { employee.EmployeeStatus.ToString() };
+            Token token = TokenHandler.CreateToken(_configuration, employee.EmployeeId, employee.Name, employee.Email, employeeRoles);
+
+            return Ok(new { employee.EmployeeId, employee.Name, employee.Email, employee.ProfilePictureUrl, AccessToken = token.AccessToken });
+        }
+
+        [HttpPost("employee/initiate-registration")]
+        //[Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EmployeeInitiateRegistration([FromBody]  EmployeesModel employeeDto)
+        {
+            if (await _context.Employees.AnyAsync(e => e.Email == employeeDto.Email))
+            {
+                _logger.LogWarning("Employee registration initiation failed: Email {Email} already exists.", employeeDto.Email);
+                return BadRequest("This email address is already registered.");
+            }
+
+            try
+            {
+                await _context.Employees.AddAsync(employeeDto);
+                _context.SaveChanges();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initiate employee registration for {Email}.", employeeDto.Email);
+                return StatusCode(500, "An error occurred while initiating employee registration.");
+            }
         }
     }
 }

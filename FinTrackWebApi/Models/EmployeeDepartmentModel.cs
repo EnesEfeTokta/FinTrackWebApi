@@ -6,17 +6,18 @@ namespace FinTrackWebApi.Models
     public class EmployeeDepartmentModel
     {
         [Key]
+        [Required]
         public int EmployeeDepartmentId { get; set; }
 
         [Required]
         [ForeignKey("EmployeeId")]
         public int EmployeeId { get; set; }
-        public EmployeesModel Employee { get; set; } = new EmployeesModel();
+        public EmployeesModel? Employee { get; set; }
 
         [Required]
         [ForeignKey("DepartmentId")]
         public int DepartmentId { get; set; }
-        public DepartmentModel Department { get; set; } = new DepartmentModel();
+        public DepartmentModel? Department { get; set; }
 
         [Required]
         [Column("CreatedAtUtc")]

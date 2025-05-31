@@ -454,10 +454,16 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("Notes");
 
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Password");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("PhoneNumber");
 
                     b.Property<string>("ProfilePictureUrl")
@@ -480,6 +486,9 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("UpdatedBy");
 
                     b.HasKey("EmployeeId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Employees", (string)null);
                 });

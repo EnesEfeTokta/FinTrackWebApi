@@ -367,6 +367,9 @@ namespace FinTrackWebApi.Data
                 entity.Property(e => e.EmployeeId).ValueGeneratedOnAdd();
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+                entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
                 entity.Property(e => e.EmployeeStatus).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.HireDate).IsRequired();
                 entity.Property(e => e.Salary).HasColumnType("decimal(18, 2)").IsRequired();

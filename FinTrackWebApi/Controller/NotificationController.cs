@@ -11,7 +11,7 @@ namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public class NotificationController : ControllerBase
     {
         private readonly MyDataContext _context;

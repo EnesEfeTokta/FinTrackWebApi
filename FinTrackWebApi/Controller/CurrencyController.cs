@@ -8,7 +8,7 @@ namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "User,Admin")]
     public class CurrencyController : ControllerBase
     {
         private readonly MyDataContext _context;

@@ -11,7 +11,7 @@ namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class MembershipController : ControllerBase
     {
         private readonly MyDataContext _context;

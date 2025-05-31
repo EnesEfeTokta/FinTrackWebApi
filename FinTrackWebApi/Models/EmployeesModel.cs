@@ -22,6 +22,11 @@ namespace FinTrackWebApi.Models
         public string Email { get; set; } = string.Empty;
 
         [Required]
+        [Column("Password")]
+        [MaxLength(255)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
         [Column("PhoneNumber")]
         [MaxLength(50)]
         public string PhoneNumber { get; set; } = string.Empty;
@@ -82,6 +87,7 @@ namespace FinTrackWebApi.Models
         CTO,
         Support,
         DataAnalyst,
+        Admin,
         None
     }
 }

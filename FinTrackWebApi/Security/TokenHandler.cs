@@ -1,4 +1,5 @@
-﻿using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,7 +10,7 @@ namespace FinTrackWebApi.Security
 {
     public static class TokenHandler
     {
-        public static Token CreateToken(IConfiguration configuration, UserModel user)
+        public static Token CreateToken(IConfiguration configuration, int id, string name, string email, IEnumerable<string> roles)
         {
             Token token = new Token();
 
@@ -18,11 +19,18 @@ namespace FinTrackWebApi.Security
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()), // Kullanıcı ID'si
-                new Claim(ClaimTypes.Name, user.Username),                   // Kullanıcı Adı
-                new Claim(ClaimTypes.Email, user.Email)                     // E-posta
-                // TODO: Gerekirse başka claimler (örneğin roller) eklenebilir
+                new Claim(ClaimTypes.NameIdentifier, id.ToString()), // Kullanıcı ID'si
+                new Claim(ClaimTypes.Name, name),                   // Kullanıcı Adı
+                new Claim(ClaimTypes.Email, email)                     // E-posta
             };
+
+            if (roles != null && roles.Any())
+            {
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
 
             token.Expiration = DateTime.UtcNow.AddMinutes(Convert.ToDouble(configuration["Token:Expiration"]));
 
