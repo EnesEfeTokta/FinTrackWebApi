@@ -25,6 +25,10 @@ namespace FinTrackWebApi.Data
         public DbSet<DebtModel> Debts { get; set; }
         public DbSet<VideoMetadataModel> VideoMetadatas { get; set; }
 
+        public DbSet<EmployeesModel> Employees { get; set; }
+        public DbSet<DepartmentModel> Departments { get; set; }
+        public DbSet<EmployeeDepartmentModel> EmployeeDepartments { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -354,6 +358,40 @@ namespace FinTrackWebApi.Data
                       .HasConversion<string>()
                       .HasMaxLength(50)
                       .IsRequired(false);
+            });
+
+            modelBuilder.Entity<EmployeesModel>(entity =>
+            {
+                entity.ToTable("Employees");
+                entity.HasKey(e => e.EmployeeId);
+                entity.Property(e => e.EmployeeId).ValueGeneratedOnAdd();
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.EmployeeStatus).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.HireDate).IsRequired();
+                entity.Property(e => e.Salary).HasColumnType("decimal(18, 2)").IsRequired();
+            });
+
+            modelBuilder.Entity<DepartmentModel>(entity =>
+            {
+                entity.ToTable("Departments");
+                entity.HasKey(d => d.DepartmentId);
+                entity.Property(d => d.DepartmentId).ValueGeneratedOnAdd();
+                entity.Property(d => d.Name).IsRequired().HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<EmployeeDepartmentModel>(entity =>
+            {
+                entity.ToTable("EmployeeDepartments");
+                entity.HasKey(ed => new { ed.EmployeeId, ed.DepartmentId });
+                entity.HasOne(ed => ed.Employee)
+                      .WithMany(e => e.EmployeeDepartments)
+                      .HasForeignKey(ed => ed.EmployeeId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(ed => ed.Department)
+                      .WithMany(d => d.EmployeeDepartments)
+                      .HasForeignKey(ed => ed.DepartmentId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

@@ -31,6 +31,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Borç teklifi oluşturma metodu.
         public async Task<CreateDebtOfferResult> CreateDebtOfferAsync(
             string lenderUserId,
             string borrowerEmail,
@@ -74,6 +75,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 await _context.Debts.AddAsync(debt);
                 await _context.SaveChangesAsync();
 
+                // E-Posta bildirimini gönderme.
                 string subject = "Request New Secured Debt";
                 string emailBody = string.Empty;
                 
@@ -101,6 +103,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 await _emailSender.SendEmailAsync(borrower.Email, subject, emailBody);
                 _logger.LogInformation("Borç teklifi (ID: {DebtId}) başarıyla oluşturuldu ve {BorrowerEmail} adresine bildirim gönderildi.", debt.DebtId, borrower.Email);
 
+                // TODO: Eğer borç veren kullanıcıya da bildirim göndermek gerekli. Bunun için Bildirim servisi oluşturulmalı.
                 return new CreateDebtOfferResult { Success = true, Message = "Borç teklifi başarıyla oluşturuldu ve borç alacak kişiye bildirildi.", CreatedDebt = debt };
             }
             catch (DbUpdateException dbEx)
@@ -115,6 +118,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
             }
         }
 
+        // Borç bilgilerini alma metotları.
         public async Task<DebtModel?> GetDebtByIdAsync(int debtId)
         {
             try
@@ -132,6 +136,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
             }
         }
 
+        // Kullanıcıya ait borçları alma metodu.
         public async Task<List<DebtModel>> GetDebtsByUserIdAsync(int userId)
         {
             try
@@ -147,6 +152,40 @@ namespace FinTrackWebApi.Services.SecureDebtService
             {
                 _logger.LogError(ex, "Kullanıcı borçları alınırken hata oluştu.");
                 return new List<DebtModel>();
+            }
+        }
+
+        // Borç teklifini kabul etme metodu.
+        public async Task<bool> AcceptDebtOfferAsync(int debtId, string borrowerUserId)
+        {
+            var debt = await _context.Debts.FindAsync(debtId);
+            if (debt == null)
+            {
+                _logger.LogWarning("Borç teklifi bulunamadı: {DebtId}", debtId);
+                return false;
+            }
+            if (debt.BorrowerId.ToString() != borrowerUserId)
+            {
+                _logger.LogWarning("Borç teklifi kabul edilemedi. Kullanıcı yetkisi uyuşmuyor: {BorrowerUserId}", borrowerUserId);
+                return false;
+            }
+
+            // TODO: Borcun onaylanması için borç alanın videosu alınması ve doğrulanması gerekiyor.
+
+            debt.Status = DebtStatus.PendingOperatorApproval;
+            try
+            {
+                _context.Debts.Update(debt);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Borç teklifi (ID: {DebtId}) başarıyla kabul edildi. Operatör onayı bekleniliyor.", debt.DebtId);
+
+                // TODO: Borç veren kullanıcıya bildirim gönderilebilir. Bunun için Bildirim servisi oluşturulmalı.
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Borç teklifi kabul edilirken hata oluştu.");
+                return false;
             }
         }
     }
