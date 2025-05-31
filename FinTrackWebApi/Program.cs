@@ -87,7 +87,7 @@ builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService
 builder.Services.AddScoped<ICurrencyDataProvider, CurrencyFreaksProvider>();
 builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
 
-builder.Services.AddScoped<ISecureDebtService, SecureDebtService>();
+//builder.Services.AddScoped<ISecureDebtService, SecureDebtService>();
 
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
