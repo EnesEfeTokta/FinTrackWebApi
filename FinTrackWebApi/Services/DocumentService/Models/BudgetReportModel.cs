@@ -1,6 +1,8 @@
-﻿namespace FinTrackWebApi.Services.DocumentService.Models
+﻿using FinTrackWebApi.Services.DocumentService.Generations;
+
+namespace FinTrackWebApi.Services.DocumentService.Models
 {
-    public class BudgetReportModel
+    public class BudgetReportModel : IReportModel
     {
         public string ReportTitle { get; set; } = "Default Report";
         public string Description { get; set; } = string.Empty;

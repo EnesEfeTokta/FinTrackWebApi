@@ -33,7 +33,7 @@ namespace FinTrackWebApi.Models
         public DateTime TransactionDateUtc { get; set; }
 
         [Required]
-        [Column("TransactionType")]
+        [Column("Description")]
         public string Description { get; set; } = null!;
 
         [Required]

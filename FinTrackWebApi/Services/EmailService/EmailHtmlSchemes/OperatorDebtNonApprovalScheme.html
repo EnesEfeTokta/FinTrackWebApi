@@ -1,0 +1,354 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Borç Talebi Reddedildi</title>
+    <style>
+        /* === Stil tanımlamaları önceki şablonlarla aynı kalacak === */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+        }
+
+        .header {
+            background-color: #24292e;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 130px;
+                margin: 0 auto;
+            }
+
+        .hero {
+            padding: 35px 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .hero h1 {
+                font-size: 26px;
+                color: #cb2431; /* Reddetme için dikkat çekici bir renk */
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-weight: 600;
+            }
+
+            .hero p {
+                font-size: 17px;
+                color: #586069;
+                margin: 0 0 25px;
+                line-height: 1.6;
+            }
+
+            .hero .btn {
+                display: inline-block;
+                padding: 14px 28px;
+                background-color: #0366d6; /* Detayları görüntüleme için standart mavi */
+                color: #fff;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+        .rejection-details { /* Reddetme detayları için özel bölüm */
+            padding: 25px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .rejection-details h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .rejection-details .detail-item {
+                margin-bottom: 12px;
+                font-size: 16px;
+                color: #24292e;
+            }
+
+                .rejection-details .detail-item strong {
+                    color: #000;
+                    min-width: 150px;
+                    display: inline-block;
+                }
+
+                .rejection-details .detail-item span {
+                    color: #586069;
+                }
+
+            .rejection-details .reason { /* Reddetme nedeni için özel stil */
+                margin-top: 15px;
+                padding: 10px;
+                background-color: #fff9ea; /* Hafif sarı uyarı arka planı */
+                border: 1px solid #ffd333; /* Sarı uyarı kenarlığı */
+                border-radius: 4px;
+            }
+
+                .rejection-details .reason strong {
+                    color: #d73a49; /* Kırmızımsı bir renk */
+                }
+
+
+        .info-section { /* Genel bilgilendirme için */
+            padding: 25px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .info-section h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .info-section p {
+                font-size: 16px;
+                color: #586069;
+                line-height: 1.6;
+                margin-top: 0;
+            }
+
+            .info-section .icon-text {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+                .info-section .icon-text img {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 10px;
+                }
+
+        .next-steps {
+            padding: 25px;
+        }
+
+            .next-steps h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+            .step-item .step-number {
+                background-color: #0366d6;
+                color: white;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                font-weight: bold;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }
+
+            .step-item .step-content p {
+                margin: 0;
+                font-size: 16px;
+                color: #24292e;
+                line-height: 1.5;
+            }
+
+            .step-item .step-content strong {
+                color: #1f2328;
+            }
+
+        .closing {
+            padding: 25px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .closing a {
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        .footer {
+            background: #f6f8fa;
+            color: #586069;
+            font-size: 12px;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .footer a {
+                color: #586069;
+                text-decoration: underline;
+            }
+
+            .footer .disclaimer {
+                margin-top: 10px;
+                font-style: italic;
+                color: #6a737d;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="width:100%; background-color: #f6f8fa;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header: Logo Alanı -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Hero: Ana Başlık ve Red Mesajı -->
+                    <tr>
+                        <td class="hero">
+                            <h1>Merhaba [USER_NAME], Borç Talebiniz Reddedildi</h1>
+                            <p>
+                                <strong>[LENDER_NAME_OR_REQUESTER]</strong> ile <strong>[BORROWER_NAME_OR_COUNTERPARTY]</strong> arasındaki borçlanma talebi, FinTrack operatörü tarafından incelenmiş ve maalesef onaylanamamıştır.
+                                Detayları aşağıda bulabilirsiniz.
+                            </p>
+                            <a href="[VIEW_REJECTION_DETAILS_LINK]" class="btn">Red Detaylarını Görüntüle</a>
+                        </td>
+                    </tr>
+
+                    <!-- Rejection Details Section: Reddedilen Talebin Detayları ve Nedeni -->
+                    <tr>
+                        <td class="rejection-details">
+                            <h2>Reddedilen Talep Detayları:</h2>
+                            <div class="detail-item"><strong>Teklif Sahibi:</strong> <span>[DETAIL_LENDER_NAME]</span></div>
+                            <div class="detail-item"><strong>Karşı Taraf:</strong> <span>[DETAIL_BORROWER_NAME]</span></div>
+                            <div class="detail-item"><strong>Talep Edilen Miktar:</strong> <span>[DETAIL_DEBT_AMOUNT] [DETAIL_DEBT_CURRENCY]</span></div>
+                            <div class="detail-item"><strong>Önerilen Son Ödeme Tarihi:</strong> <span>[DETAIL_DEBT_DUE_DATE]</span></div>
+                            <div class="detail-item"><strong>Açıklama:</strong> <span>[DETAIL_DEBT_DESCRIPTION]</span></div>
+                            <div class="detail-item"><strong>Red Tarihi:</strong> <span>[REJECTION_DATE]</span></div>
+                            <div class="detail-item"><strong>Talep ID:</strong> <span>[REQUEST_ID]</span></div>
+                            <div class="reason">
+                                <strong>Reddetme Nedeni:</strong>
+                                <p>[REJECTION_REASON_EXPLANATION]</p>
+                                <!-- Örnek: "Yüklenen güvence videosu kalite standartlarımızı karşılamamaktadır." -->
+                                <!-- Örnek: "Başvuru sahibinin kredi geçmişi politikalarımızla uyumlu bulunmamıştır." -->
+                                <!-- Örnek: "Eksik veya hatalı bilgi girişi tespit edilmiştir." -->
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Info Section: Genel Bilgilendirme (Video vb. ile ilgili değilse genel bir mesaj) -->
+                    <tr>
+                        <td class="info-section">
+                            <!-- Bilgi ikonu, flaticon.com'dan alınmış örnek bir ikondur. -->
+                            <h2><img src="https://cdn-icons-png.flaticon.com/512/151/151775.png" alt="Info Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Önemli Bilgilendirme</h2>
+                            <p>
+                                FinTrack olarak, platformumuzdaki tüm işlemlerin güvenli ve şeffaf bir şekilde yürütülmesini sağlamak için titizlikle çalışıyoruz.
+                                Reddedilme nedenini dikkatlice incelemenizi öneririz.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Next Steps Section: Kullanıcının Yapabilecekleri -->
+                    <tr>
+                        <td class="next-steps">
+                            <h2>Şimdi Ne Yapabilirsiniz?</h2>
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <p><strong>Red Nedenini Anlayın:</strong> Yukarıdaki "Red Detaylarını Görüntüle" butonuna tıklayarak veya e-postadaki açıklamayı okuyarak reddedilme sebebini tam olarak öğrenin.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <p><strong>Gerekirse Düzeltme Yapın:</strong> Eğer reddetme nedeni sizin tarafınızdan düzeltilebilecek bir durumsa (örneğin eksik belge, hatalı video), gerekli düzenlemeleri yaparak <a href="[RESUBMIT_PROCESS_LINK_OR_INFO]">yeni bir talep oluşturabilir</a> veya mevcut talebi güncelleyebilirsiniz (eğer sistem izin veriyorsa).</p>
+                                    <!-- [RESUBMIT_PROCESS_LINK_OR_INFO] placeholder'ı: Yeni talep oluşturma sayfasına link veya nasıl yapılacağına dair kısa bilgi -->
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <p><strong>Farklı Koşullarla Deneyin:</strong> Reddedilme nedeni, teklifin koşullarıyla (tutar, vade vb.) ilgiliyse, taraflar anlaşarak farklı koşullarda yeni bir teklif süreci başlatabilirler.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <p><strong>Destek Alın:</strong> Reddetme nedeni hakkında daha fazla bilgiye ihtiyacınız varsa veya süreçle ilgili sorularınız olursa, lütfen <a href="[SUPPORT_LINK]">Destek Ekibimizle</a> iletişime geçmekten çekinmeyin.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Closing & Support: Kapanış Mesajı -->
+                    <tr>
+                        <td class="closing">
+                            <p>Bu durumun hayal kırıklığı yaratabileceğinin farkındayız. FinTrack platformunu kullandığınız ve anlayışınız için teşekkür ederiz.</p>
+                            <p>Saygılarımızla,<br><strong>FinTrack Ekibi</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer: Telif Hakkı ve Diğer Bağlantılar -->
+                    <tr>
+                        <td class="footer">
+                            Bu e-posta, FinTrack üzerinden gönderilen bir borç talebinin reddedilmesiyle ilgili olarak gönderilmiştir.<br>
+                            © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
+                            <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[PRIVACY_POLICY_LINK]">Gizlilik Politikası</a>
+                            <p class="disclaimer">FinTrack, güvenli borç alıp verme süreçlerini kolaylaştırmayı amaçlar. Reddedilme nedenleri genellikle platform politikaları veya sağlanan bilgilerin yetersizliği ile ilgilidir.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

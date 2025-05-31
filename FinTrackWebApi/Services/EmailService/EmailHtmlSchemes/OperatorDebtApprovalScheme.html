@@ -1,0 +1,338 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Borç Anlaşması Onaylandı</title>
+    <style>
+        /* === Stil tanımlamaları önceki şablonla aynı kalacak === */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+        }
+
+        .header {
+            background-color: #24292e;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 130px;
+                margin: 0 auto;
+            }
+
+        .hero {
+            padding: 35px 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .hero h1 {
+                font-size: 26px;
+                color: #1f2328;
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-weight: 600;
+            }
+
+            .hero p {
+                font-size: 17px;
+                color: #586069;
+                margin: 0 0 25px;
+                line-height: 1.6;
+            }
+
+            .hero .btn {
+                display: inline-block;
+                padding: 14px 28px;
+                background-color: #28a745; /* Onay için yeşil tonu uygun */
+                color: #fff;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+        .agreement-details { /* Borç detayları yerine anlaşma detayları */
+            padding: 25px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .agreement-details h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .agreement-details .detail-item {
+                margin-bottom: 12px;
+                font-size: 16px;
+                color: #24292e;
+            }
+
+                .agreement-details .detail-item strong {
+                    color: #000;
+                    min-width: 150px; /* Biraz daha genişletilebilir */
+                    display: inline-block;
+                }
+
+                .agreement-details .detail-item span {
+                    color: #586069;
+                }
+
+        .confirmation-info { /* Onay ile ilgili ek bilgiler için yeni bölüm */
+            padding: 25px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .confirmation-info h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .confirmation-info p {
+                font-size: 16px;
+                color: #586069;
+                line-height: 1.6;
+                margin-top: 0;
+            }
+
+            .confirmation-info .icon-text {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+                .confirmation-info .icon-text img {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 10px;
+                }
+
+        .next-steps {
+            padding: 25px;
+        }
+
+            .next-steps h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+            .step-item .step-number {
+                background-color: #0366d6; /* Adım numarası rengi */
+                color: white;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                font-weight: bold;
+                margin-right: 15px;
+                flex-shrink: 0;
+            }
+
+            .step-item .step-content p {
+                margin: 0;
+                font-size: 16px;
+                color: #24292e;
+                line-height: 1.5;
+            }
+
+            .step-item .step-content strong {
+                color: #1f2328;
+            }
+
+        .closing {
+            padding: 25px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .closing a {
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        .footer {
+            background: #f6f8fa;
+            color: #586069;
+            font-size: 12px;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .footer a {
+                color: #586069;
+                text-decoration: underline;
+            }
+
+            .footer .disclaimer {
+                margin-top: 10px;
+                font-style: italic;
+                color: #6a737d;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="width:100%; background-color: #f6f8fa;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header: Logo Alanı -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Hero: Ana Başlık ve Onay Mesajı -->
+                    <tr>
+                        <td class="hero">
+                            <!-- Dinamik Başlık: Alıcıya göre (Borç Alan/Veren) veya genel olabilir.
+                                 Şimdilik genel bir başlık kullanılıyor. -->
+                            <h1>Merhaba [USER_NAME], Borç Anlaşmanız Onaylandı!</h1>
+                            <p>
+                                <strong>[LENDER_NAME]</strong> ile <strong>[BORROWER_NAME]</strong> arasındaki borç anlaşması, FinTrack operatörü tarafından incelenmiş ve onaylanmıştır.
+                                Anlaşma detaylarını aşağıda bulabilir ve platform üzerinden takip edebilirsiniz.
+                            </p>
+                            <a href="[VIEW_AGREEMENT_LINK]" class="btn">Anlaşma Detaylarını Görüntüle</a>
+                        </td>
+                    </tr>
+
+                    <!-- Agreement Details Section: Onaylanan Anlaşmanın Detayları -->
+                    <tr>
+                        <td class="agreement-details">
+                            <h2>Onaylanan Anlaşma Detayları:</h2>
+                            <div class="detail-item"><strong>Borç Veren:</strong> <span>[DETAIL_LENDER_NAME]</span></div>
+                            <div class="detail-item"><strong>Borç Alan:</strong> <span>[DETAIL_BORROWER_NAME]</span></div>
+                            <div class="detail-item"><strong>Anlaşma Tutarı:</strong> <span>[DETAIL_DEBT_AMOUNT] [DETAIL_DEBT_CURRENCY]</span></div>
+                            <div class="detail-item"><strong>Son Ödeme Tarihi:</strong> <span>[DETAIL_DEBT_DUE_DATE]</span></div>
+                            <div class="detail-item"><strong>Açıklama:</strong> <span>[DETAIL_DEBT_DESCRIPTION]</span></div>
+                            <div class="detail-item"><strong>Onay Tarihi:</strong> <span>[APPROVAL_DATE]</span></div>
+                            <div class="detail-item"><strong>Anlaşma ID:</strong> <span>[AGREEMENT_ID]</span></div>
+                        </td>
+                    </tr>
+
+                    <!-- Confirmation Information Section: Onay ve video ile ilgili bilgilendirme -->
+                    <tr>
+                        <td class="confirmation-info">
+                            <!-- Video ikonu, flaticon.com'dan alınmış örnek bir ikondur. Kendi ikonunuzu kullanabilirsiniz. -->
+                            <h2><img src="https://cdn-icons-png.flaticon.com/512/138/138348.png" alt="Onay Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Onay Süreci Tamamlandı</h2>
+                            <p>
+                                Borç alan tarafından yüklenen güvence videosu incelenmiş ve borç verme koşulları her iki tarafça kabul edildiği teyit edilmiştir.
+                                Bu anlaşma artık FinTrack platformunda aktif durumdadır.
+                            </p>
+                        </td>
+                    </tr>
+
+
+                    <!-- Next Steps Section: Taraflar İçin Sonraki Adımlar -->
+                    <tr>
+                        <td class="next-steps">
+                            <h2>Bundan Sonra Ne Olacak?</h2>
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <p><strong>Anlaşma Aktif:</strong> Borç anlaşması şu anda yürürlüktedir. Borç veren, kararlaştırılan tutarı borç alana [TRANSFER_METHOD_INFO] ile transfer edebilir/etmiştir.</p>
+                                    <!-- [TRANSFER_METHOD_INFO] placeholder'ı: "platform üzerinden", "doğrudan", "belirtilen hesap numarasına" gibi bilgiler içerebilir -->
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <p><strong>Ödeme Takibi:</strong> Borç alan, ödeme planına göre geri ödemeleri [PAYMENT_METHOD_INFO] ile yapmalıdır. Tüm ödemeler FinTrack üzerinden takip edilebilir.</p>
+                                    <!-- [PAYMENT_METHOD_INFO] placeholder'ı: "platform üzerinden", "belirtilen hesaba" gibi bilgiler içerebilir -->
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <p><strong>İletişim:</strong> Anlaşmayla ilgili herhangi bir iletişim veya değişiklik talebi için FinTrack platformunu kullanabilirsiniz.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">4</div>
+                                <div class="step-content">
+                                    <p><strong>Destek:</strong> Herhangi bir sorun veya anlaşmazlık durumunda <a href="[SUPPORT_LINK]">Destek Ekibimizle</a> iletişime geçebilirsiniz.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Closing & Support: Kapanış Mesajı ve Destek Bilgisi -->
+                    <tr>
+                        <td class="closing">
+                            <p>Bu borç anlaşmasının her iki taraf için de hayırlı olmasını dileriz.</p>
+                            <p>Finansal işlemlerinizde güven ve şeffaflık için FinTrack'i tercih ettiğiniz için teşekkür ederiz.<br><strong>FinTrack Ekibi</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer: Telif Hakkı ve Diğer Bağlantılar -->
+                    <tr>
+                        <td class="footer">
+                            Bu e-posta, FinTrack üzerinden gerçekleştirilen ve onaylanan bir borç anlaşmasıyla ilgili olarak gönderilmiştir.<br>
+                            © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
+                            <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[PRIVACY_POLICY_LINK]">Gizlilik Politikası</a>
+                            <p class="disclaimer">FinTrack, borç alıp verme süreçlerini güvenli ve şeffaf bir şekilde yönetmenize yardımcı olur. Lütfen tüm işlem detaylarını dikkatlice inceleyiniz.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

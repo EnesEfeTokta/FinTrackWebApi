@@ -10,34 +10,39 @@ namespace FinTrackWebApi.Models
         public int CurrencyId { get; set; }
 
         [Required]
-        [StringLength(10)]
-        [Column(TypeName = "varchar(10)")]
+        [Column("Code")]
         public string Code { get; set; } = string.Empty;
 
-        [StringLength(100)]
-        [Column(TypeName = "varchar(100)")]
-        public string? Name { get; set; }
+        [Required]
+        [Column("Name")]
+        public string Name { get; set; } = string.Empty;
 
-        [StringLength(10)]
-        [Column(TypeName = "varchar(10)")]
+        [Required]
+        [Column("CountryCode")]
         public string? CountryCode { get; set; }
 
-        [StringLength(100)]
-        [Column(TypeName = "varchar(100)")]
+        [Required]
+        [Column("CountryName")]
         public string? CountryName { get; set; }
 
-        [StringLength(20)]
-        [Column(TypeName = "varchar(20)")]
+        [Required]
+        [Column("Status")]
         public string? Status { get; set; }
 
+        [Column("AvailableFrom")]
+        [DataType(DataType.Date)]
         public DateTime? AvailableFrom { get; set; }
 
+        [Column("AvailableUntil")]
+        [DataType(DataType.Date)]
         public DateTime? AvailableUntil { get; set; }
 
-        [StringLength(255)]
-        [Column(TypeName = "varchar(255)")]
+        [Column("IconUrl")]
         public string? IconUrl { get; set; }
 
+        [Required]
+        [Column("CreatedUtc")]
+        [DataType(DataType.DateTime)]
         public DateTime LastUpdatedUtc { get; set; }
 
         public virtual ICollection<ExchangeRateModel> ExchangeRates { get; set; } = new List<ExchangeRateModel>();

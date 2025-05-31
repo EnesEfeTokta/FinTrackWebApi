@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Ödeme Alındı Bildirimi</title>
+    <style>
+        /* === Stil tanımlamaları önceki şablonlarla aynı kalacak === */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e1e4e8;
+        }
+
+        .header {
+            background-color: #24292e;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 130px;
+                margin: 0 auto;
+            }
+
+        .hero {
+            padding: 35px 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .hero h1 {
+                font-size: 26px;
+                color: #28a745; /* Başarı için yeşil tonu */
+                margin-top: 0;
+                margin-bottom: 12px;
+                font-weight: 600;
+            }
+
+            .hero p {
+                font-size: 17px;
+                color: #586069;
+                margin: 0 0 25px;
+                line-height: 1.6;
+            }
+
+            .hero .btn {
+                display: inline-block;
+                padding: 14px 28px;
+                background-color: #28a745; /* Başarı/onay için yeşil buton */
+                color: #fff;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+        .payment-details { /* Ödeme detayları için özel bölüm */
+            padding: 25px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .payment-details h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .payment-details .detail-item {
+                margin-bottom: 12px;
+                font-size: 16px;
+                color: #24292e;
+            }
+
+                .payment-details .detail-item strong {
+                    color: #000;
+                    min-width: 160px;
+                    display: inline-block;
+                }
+
+                .payment-details .detail-item span {
+                    color: #586069;
+                }
+
+                .payment-details .detail-item .paid-amount { /* Ödenen tutar için vurgu */
+                    font-weight: bold;
+                    color: #28a745; /* Yeşil ile vurgu */
+                }
+
+        .account-summary { /* Hesap özeti ve bilgilendirme */
+            padding: 25px;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .account-summary h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .account-summary p {
+                font-size: 16px;
+                color: #586069;
+                line-height: 1.6;
+                margin-top: 0;
+            }
+
+            .account-summary .icon-text {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+                .account-summary .icon-text img {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 10px;
+                }
+
+        .closing {
+            padding: 25px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .closing a {
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        .footer {
+            background: #f6f8fa;
+            color: #586069;
+            font-size: 12px;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e1e4e8;
+        }
+
+            .footer a {
+                color: #586069;
+                text-decoration: underline;
+            }
+
+            .footer .disclaimer {
+                margin-top: 10px;
+                font-style: italic;
+                color: #6a737d;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="width:100%; background-color: #f6f8fa;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header: Logo Alanı -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Hero: Ana Başlık ve Ödeme Alındı Mesajı -->
+                    <tr>
+                        <td class="hero">
+                            <h1>Merhaba [LENDER_NAME], Bir Ödeme Aldınız!</h1>
+                            <p>
+                                <strong>[BORROWER_NAME]</strong> adlı kullanıcı, <strong>[AGREEMENT_ID]</strong> numaralı anlaşmanız için bir ödeme gerçekleştirdi.
+                                Ödeme detaylarını aşağıda ve FinTrack platformunda bulabilirsiniz.
+                            </p>
+                            <a href="[VIEW_PAYMENT_DETAILS_LINK]" class="btn">Ödeme Detaylarını Görüntüle</a>
+                        </td>
+                    </tr>
+
+                    <!-- Payment Details Section: Alınan Ödemenin Detayları -->
+                    <tr>
+                        <td class="payment-details">
+                            <h2>Alınan Ödeme Detayları:</h2>
+                            <div class="detail-item"><strong>Borç Alan:</strong> <span>[DETAIL_BORROWER_NAME]</span></div>
+                            <div class="detail-item"><strong>Anlaşma ID:</strong> <span>[DETAIL_AGREEMENT_ID]</span></div>
+                            <div class="detail-item"><strong>Ödeme Tarihi:</strong> <span>[PAYMENT_DATE]</span></div>
+                            <div class="detail-item"><strong>Ödenen Tutar:</strong> <span class="paid-amount">[PAID_AMOUNT] [CURRENCY]</span></div>
+                            <div class="detail-item"><strong>Ödeme Yöntemi:</strong> <span>[PAYMENT_METHOD]</span></div>
+                            <!-- Kalan bakiye bilgisi önemli -->
+                            <div class="detail-item"><strong>Kalan Bakiye:</strong> <span>[REMAINING_BALANCE] [CURRENCY]</span></div>
+                            <div class="detail-item"><strong>Ödeme Açıklaması (varsa):</strong> <span>[PAYMENT_DESCRIPTION]</span></div>
+                        </td>
+                    </tr>
+
+                    <!-- Account Summary & Information Section: Hesap Durumu ve Bilgilendirme -->
+                    <tr>
+                        <td class="account-summary">
+                            <!-- Başarı/Onay ikonu, flaticon.com'dan alınmış örnek bir ikondur. -->
+                            <h2><img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Onay Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Hesap Özeti ve Bilgilendirme</h2>
+                            <p>
+                                Alınan ödeme, FinTrack hesabınıza veya belirttiğiniz banka hesabınıza [TRANSFER_STATUS_INFO] yansıtılmıştır/yansıtılacaktır.
+                                <!-- [TRANSFER_STATUS_INFO] placeholder'ı: "anında", "işlem sonrası", "1 iş günü içinde" gibi bilgiler içerebilir -->
+                            </p>
+                            <p>
+                                <strong>[PAYMENT_STATUS_MESSAGE]</strong>
+                            </p>
+                            <p>
+                                Tüm işlemlerinizi ve güncel bakiye durumunuzu FinTrack platformu üzerinden <a href="[TRANSACTION_HISTORY_LINK]">İşlem Geçmişi</a> sayfasından takip edebilirsiniz.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Closing & Support: Kapanış Mesajı -->
+                    <tr>
+                        <td class="closing">
+                            <p>Finansal işlemlerinizi yönetmek için FinTrack'i tercih ettiğiniz için teşekkür ederiz.</p>
+                            <p>Herhangi bir sorunuz veya yardıma ihtiyacınız olursa, lütfen <a href="[SUPPORT_LINK]">Destek Ekibimizle</a> iletişime geçmekten çekinmeyin.<br><strong>FinTrack Ekibi</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer: Telif Hakkı ve Diğer Bağlantılar -->
+                    <tr>
+                        <td class="footer">
+                            Bu e-posta, FinTrack platformu üzerinden size yapılan bir ödemeyle ilgili olarak otomatik olarak gönderilmiştir.<br>
+                            © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
+                            <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[PRIVACY_POLICY_LINK]">Gizlilik Politikası</a>
+                            <p class="disclaimer">Ödeme bilgileri sistemimizdeki kayıtlara göre düzenlenmiştir. Herhangi bir uyuşmazlık durumunda lütfen destek ekibimizle iletişime geçiniz.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

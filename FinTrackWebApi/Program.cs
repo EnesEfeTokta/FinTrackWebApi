@@ -1,50 +1,43 @@
-using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using FinTrackWebApi.Services.ChatBotService;
+using FinTrackWebApi.Services.CurrencyServices;
+using FinTrackWebApi.Services.DocumentService;
+using FinTrackWebApi.Services.DocumentService.Generations.Budget;
+using FinTrackWebApi.Services.DocumentService.Generations.Transaction;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
-using Microsoft.OpenApi.Models;
-using FinTrackWebApi.Services.DocumentService;
-using QuestPDF.Infrastructure;
-using FinTrackWebApi.Services.CurrencyServices;
+using FinTrackWebApi.Services.PaymentService;
+using FinTrackWebApi.Services.SecureDebtService;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 QuestPDF.Settings.License = LicenseType.Community;
 
-builder.Services.Configure<CurrencyFreaksSettings>(builder.Configuration.GetSection("CurrencyFreaks"));
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
+builder.Services.Configure<CurrencyFreaksSettings>(builder.Configuration.GetSection("CurrencyFreaks"));
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("PythonChatBotClient");
 
 builder.Services.AddHttpClient("CurrencyFreaksClient", (serviceProvider, client) =>
 {
-    // Ayarlarý IOptions ile güvenli bir þekilde al
     var settings = serviceProvider.GetRequiredService<IOptions<CurrencyFreaksSettings>>().Value;
 
-    // BaseUrl ayarlanmýþsa HttpClient'ýn BaseAddress'ini ayarla
-    if (!string.IsNullOrWhiteSpace(settings.BaseUrl))
+    if (string.IsNullOrWhiteSpace(settings.BaseUrl))
     {
-        // Uri'nin geçerli olduðundan emin olalým
-        if (Uri.TryCreate(settings.BaseUrl, UriKind.Absolute, out var baseUri))
-        {
-            client.BaseAddress = baseUri;
-        }
-        else
-        {
-            // Loglama veya hata fýrlatma eklenebilir
-            Console.Error.WriteLine($"Geçersiz BaseUrl formatý: {settings.BaseUrl}");
-        }
+        throw new InvalidOperationException("CurrencyFreaks BaseUrl is not configured in appsettings.json.");
     }
-    else
-    {
-        Console.Error.WriteLine("CurrencyFreaks BaseUrl yapýlandýrýlmamýþ!");
-        // Loglama eklenebilir
-    }
-    // Gerekirse diðer HttpClient ayarlarý (Timeout, Default Headers vb.)
-    // client.Timeout = TimeSpan.FromSeconds(30);
+    client.BaseAddress = new Uri(settings.BaseUrl);
 });
 
 builder.Services.AddAuthentication(options =>
@@ -62,42 +55,53 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Token:Issuer"],
             ValidAudience = builder.Configuration["Token:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Token:SecurityKey"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Token:SecurityKey"] ?? throw new InvalidOperationException("Token:SecurityKey is not configured."))),
             ClockSkew = TimeSpan.Zero
         };
     });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("DefaultConnection connection string is not configured.");
+}
 
-// --- Servisler ---
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 
-builder.Services.AddScoped<PdfDocumentGenerator>();
-builder.Services.AddScoped<WordDocumentGenerator>();
-builder.Services.AddScoped<TextDocumentGenerator>();
-builder.Services.AddScoped<MarkdownDocumentGenerator>();
-builder.Services.AddScoped<XlsxDocumentGenerator>();
-builder.Services.AddScoped<XmlDocumentGenerator>();
+builder.Services.AddScoped<PdfDocumentGenerator_Budget>();
+builder.Services.AddScoped<WordDocumentGenerator_Budget>();
+builder.Services.AddScoped<TextDocumentGenerator_Budget>();
+builder.Services.AddScoped<MarkdownDocumentGenerator_Budget>();
+builder.Services.AddScoped<XlsxDocumentGenerator_Budget>();
+builder.Services.AddScoped<XmlDocumentGenerator_Budget>();
+builder.Services.AddScoped<PdfDocumentGenerator_Transaction>();
+builder.Services.AddScoped<WordDocumentGenerator_Transaction>();
+builder.Services.AddScoped<TextDocumentGenerator_Transaction>();
+builder.Services.AddScoped<MarkdownDocumentGenerator_Transaction>();
+builder.Services.AddScoped<XlsxDocumentGenerator_Transaction>();
+builder.Services.AddScoped<XmlDocumentGenerator_Transaction>();
 
 builder.Services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
 
 builder.Services.AddScoped<ICurrencyDataProvider, CurrencyFreaksProvider>();
 builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
 
-// --- Arkaplan Servisleri ---
+//builder.Services.AddScoped<ISecureDebtService, SecureDebtService>();
+
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
+builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
 
 builder.Services.AddDbContext<MyDataContext>(options =>
     options.UseNpgsql(connectionString));
+
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "FinTrack API", Version = "v1" });
-
     options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -109,7 +113,6 @@ builder.Services.AddSwaggerGen(options =>
                       "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
                       "Example: \"Bearer 12345abcdef\""
     });
-
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -126,8 +129,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddScoped<IChatBotService, ChatBotService>();
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -135,13 +140,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
