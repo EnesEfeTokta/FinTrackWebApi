@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
 using System.Text;
+using FinTrackWebApi.Services.MediaEncryptionService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,6 +94,8 @@ builder.Services.AddScoped<ICurrencyService, CurrencyCacheService>();
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
+
+builder.Services.AddScoped<IMediaEncryptionService, MediaEncryptionService>();
 
 builder.Services.AddDbContext<MyDataContext>(options =>
     options.UseNpgsql(connectionString));

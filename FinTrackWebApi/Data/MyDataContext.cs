@@ -350,14 +350,12 @@ namespace FinTrackWebApi.Data
                 entity.ToTable("VideoMetadatas");
                 entity.HasKey(v => v.VideoMetadataId);
                 entity.Property(v => v.VideoMetadataId).ValueGeneratedOnAdd();
-
-                entity.Property(v => v.StoredFileName).IsRequired().HasMaxLength(255);
-                entity.Property(v => v.FilePath).IsRequired().HasMaxLength(500);
-
-                entity.Property(v => v.StorageType)
-                      .HasConversion<string>()
-                      .HasMaxLength(50)
-                      .IsRequired(false);
+                entity.Property(e => e.Status).HasConversion<string>();
+                entity.Property(e => e.StorageType).HasConversion<string>();
+                entity.HasOne(entity => entity.UploadedUser)
+                      .WithMany(user => user.UploadedVideos)
+                      .HasForeignKey(entity => entity.UploadedByUserId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<EmployeesModel>(entity =>

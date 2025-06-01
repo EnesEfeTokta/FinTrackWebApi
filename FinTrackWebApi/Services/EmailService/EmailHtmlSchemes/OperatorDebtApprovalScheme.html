@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinTrack Borç Anlaşması Onaylandı</title>
+    <title>FinTrack - Anlaşmanız Onaylandı ve Video Erişim Anahtarınız</title>
     <style>
-        /* === Stil tanımlamaları önceki şablonla aynı kalacak === */
         body {
             margin: 0;
             padding: 0;
@@ -80,14 +79,19 @@
             .hero .btn {
                 display: inline-block;
                 padding: 14px 28px;
-                background-color: #28a745; /* Onay için yeşil tonu uygun */
+                background-color: #28a745;
                 color: #fff;
                 border-radius: 6px;
                 font-weight: bold;
                 font-size: 16px;
             }
 
-        .agreement-details { /* Borç detayları yerine anlaşma detayları */
+        .section-divider {
+            border-bottom: 1px dashed #d0d7de;
+            margin: 20px 25px;
+        }
+
+        .agreement-details {
             padding: 25px;
             background-color: #f9f9f9;
             border-bottom: 1px solid #e1e4e8;
@@ -109,7 +113,7 @@
 
                 .agreement-details .detail-item strong {
                     color: #000;
-                    min-width: 150px; /* Biraz daha genişletilebilir */
+                    min-width: 150px;
                     display: inline-block;
                 }
 
@@ -117,7 +121,71 @@
                     color: #586069;
                 }
 
-        .confirmation-info { /* Onay ile ilgili ek bilgiler için yeni bölüm */
+        .video-key-section {
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+            .video-key-section h2 {
+                font-size: 20px;
+                color: #24292e;
+                margin-bottom: 10px;
+            }
+
+            .video-key-section p {
+                font-size: 16px;
+                color: #586069;
+                margin: 0 0 20px;
+                line-height: 1.5;
+            }
+
+        .key-box {
+            background-color: #fffbdd;
+            border: 1px dashed #ffc107;
+            padding: 15px;
+            margin: 20px auto;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            border-radius: 4px;
+            word-break: break-all;
+            max-width: 90%;
+            box-sizing: border-box;
+        }
+
+        .warning-section {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 25px 0 25px;
+            border-radius: 4px;
+        }
+
+            .warning-section h3 {
+                margin-top: 0;
+                color: #c62828;
+                font-size: 18px;
+            }
+
+            .warning-section p {
+                font-size: 15px;
+                color: #5f5f5f;
+                margin-bottom: 5px;
+            }
+
+            .warning-section ul {
+                padding-left: 20px;
+                margin-top: 0;
+                font-size: 15px;
+                color: #5f5f5f;
+            }
+
+            .warning-section li {
+                margin-bottom: 5px;
+            }
+
+        .confirmation-info {
             padding: 25px;
             border-bottom: 1px solid #e1e4e8;
         }
@@ -167,7 +235,7 @@
         }
 
             .step-item .step-number {
-                background-color: #0366d6; /* Adım numarası rengi */
+                background-color: #0366d6;
                 color: white;
                 border-radius: 50%;
                 width: 30px;
@@ -230,29 +298,21 @@
         <tr>
             <td>
                 <table role="presentation" class="email-container">
-
-                    <!-- Header: Logo Alanı -->
                     <tr>
                         <td class="header">
                             <img src="[LOGO_URL]" alt="FinTrack Logo">
                         </td>
                     </tr>
-
-                    <!-- Hero: Ana Başlık ve Onay Mesajı -->
                     <tr>
                         <td class="hero">
-                            <!-- Dinamik Başlık: Alıcıya göre (Borç Alan/Veren) veya genel olabilir.
-                                 Şimdilik genel bir başlık kullanılıyor. -->
-                            <h1>Merhaba [USER_NAME], Borç Anlaşmanız Onaylandı!</h1>
+                            <h1>Merhaba [USER_NAME], Anlaşmanız Onaylandı!</h1>
                             <p>
-                                <strong>[LENDER_NAME]</strong> ile <strong>[BORROWER_NAME]</strong> arasındaki borç anlaşması, FinTrack operatörü tarafından incelenmiş ve onaylanmıştır.
-                                Anlaşma detaylarını aşağıda bulabilir ve platform üzerinden takip edebilirsiniz.
+                                <strong>[LENDER_NAME]</strong> ile aranızdaki borç anlaşması FinTrack operatörü tarafından incelenmiş ve onaylanmıştır.
+                                Yüklediğiniz güvence videosu için erişim anahtarınız da aşağıda belirtilmiştir.
                             </p>
                             <a href="[VIEW_AGREEMENT_LINK]" class="btn">Anlaşma Detaylarını Görüntüle</a>
                         </td>
                     </tr>
-
-                    <!-- Agreement Details Section: Onaylanan Anlaşmanın Detayları -->
                     <tr>
                         <td class="agreement-details">
                             <h2>Onaylanan Anlaşma Detayları:</h2>
@@ -265,42 +325,59 @@
                             <div class="detail-item"><strong>Anlaşma ID:</strong> <span>[AGREEMENT_ID]</span></div>
                         </td>
                     </tr>
-
-                    <!-- Confirmation Information Section: Onay ve video ile ilgili bilgilendirme -->
+                    <tr>
+                        <td class="video-key-section">
+                            <h2>"[VIDEO_FILE_NAME]" Videonuz İçin Erişim Anahtarı</h2>
+                            <p>Bu anahtar, yüklediğiniz güvence videosunu izleyebilmeniz için gereklidir.</p>
+                            <div class="key-box">
+                                [ENCRYPTION_KEY]
+                            </div>
+                            <p style="font-size:14px; margin-top:15px;">Anahtarı videoyu izlemek istediğinizde ilgili alana girmeniz yeterlidir.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="warning-section">
+                                <h3>Video Erişim Anahtarı İçin Önemli Güvenlik Bilgileri!</h3>
+                                <p>Lütfen aşağıdaki uyarılara dikkat ediniz:</p>
+                                <ul>
+                                    <li><strong>Gizlilik:</strong> Bu video erişim anahtarı size özeldir. Lütfen kimseyle paylaşmayınız.</li>
+                                    <li><strong>Saklama:</strong> Bu anahtarı güvenli bir yerde saklayınız. Kaybetmeniz durumunda videonuza erişiminizi yitirebilirsiniz.</li>
+                                    <li><strong>Sorumluluk:</strong> FinTrack, bu anahtarın yetkisiz kişilerle paylaşılması veya kaybedilmesi sonucu oluşabilecek durumlardan sorumlu değildir.</li>
+                                    <li><strong>Destek:</strong> Bu anahtarı asla FinTrack destek ekibi dahil kimseye e-posta veya mesaj yoluyla vermeyiniz.</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr><td class="section-divider"></td></tr>
                     <tr>
                         <td class="confirmation-info">
-                            <!-- Video ikonu, flaticon.com'dan alınmış örnek bir ikondur. Kendi ikonunuzu kullanabilirsiniz. -->
-                            <h2><img src="https://cdn-icons-png.flaticon.com/512/138/138348.png" alt="Onay Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Onay Süreci Tamamlandı</h2>
+                            <h2><img src="https://cdn-icons-png.flaticon.com/512/138/138348.png" alt="Onay Icon" style="width:24px; height:24px; vertical-align: middle; margin-right: 8px;"> Onay Süreci ve Güvence Videosu</h2>
                             <p>
-                                Borç alan tarafından yüklenen güvence videosu incelenmiş ve borç verme koşulları her iki tarafça kabul edildiği teyit edilmiştir.
+                                Borç anlaşması için yüklediğiniz güvence videosu ("<strong>[VIDEO_FILE_NAME]</strong>") incelenmiş ve borç verme koşulları her iki tarafça kabul edildiği teyit edilmiştir.
                                 Bu anlaşma artık FinTrack platformunda aktif durumdadır.
                             </p>
                         </td>
                     </tr>
-
-
-                    <!-- Next Steps Section: Taraflar İçin Sonraki Adımlar -->
                     <tr>
                         <td class="next-steps">
                             <h2>Bundan Sonra Ne Olacak?</h2>
                             <div class="step-item">
                                 <div class="step-number">1</div>
                                 <div class="step-content">
-                                    <p><strong>Anlaşma Aktif:</strong> Borç anlaşması şu anda yürürlüktedir. Borç veren, kararlaştırılan tutarı borç alana [TRANSFER_METHOD_INFO] ile transfer edebilir/etmiştir.</p>
-                                    <!-- [TRANSFER_METHOD_INFO] placeholder'ı: "platform üzerinden", "doğrudan", "belirtilen hesap numarasına" gibi bilgiler içerebilir -->
+                                    <p><strong>Anlaşma Aktif:</strong> Borç anlaşması şu anda yürürlüktedir. Borç veren, kararlaştırılan tutarı size [TRANSFER_METHOD_INFO] ile transfer edebilir/etmiştir.</p>
                                 </div>
                             </div>
                             <div class="step-item">
                                 <div class="step-number">2</div>
                                 <div class="step-content">
-                                    <p><strong>Ödeme Takibi:</strong> Borç alan, ödeme planına göre geri ödemeleri [PAYMENT_METHOD_INFO] ile yapmalıdır. Tüm ödemeler FinTrack üzerinden takip edilebilir.</p>
-                                    <!-- [PAYMENT_METHOD_INFO] placeholder'ı: "platform üzerinden", "belirtilen hesaba" gibi bilgiler içerebilir -->
+                                    <p><strong>Ödeme Takibi:</strong> Ödeme planına göre geri ödemelerinizi [PAYMENT_METHOD_INFO] ile yapmalısınız. Tüm ödemeler FinTrack üzerinden takip edilebilir.</p>
                                 </div>
                             </div>
                             <div class="step-item">
                                 <div class="step-number">3</div>
                                 <div class="step-content">
-                                    <p><strong>İletişim:</strong> Anlaşmayla ilgili herhangi bir iletişim veya değişiklik talebi için FinTrack platformunu kullanabilirsiniz.</p>
+                                    <p><strong>İletişim ve Video Erişimi:</strong> Anlaşmayla ilgili herhangi bir iletişim veya değişiklik talebi için FinTrack platformunu kullanabilirsiniz. Güvence videonuza yukarıda verilen anahtar ile erişebilirsiniz.</p>
                                 </div>
                             </div>
                             <div class="step-item">
@@ -311,25 +388,20 @@
                             </div>
                         </td>
                     </tr>
-
-                    <!-- Closing & Support: Kapanış Mesajı ve Destek Bilgisi -->
                     <tr>
                         <td class="closing">
                             <p>Bu borç anlaşmasının her iki taraf için de hayırlı olmasını dileriz.</p>
                             <p>Finansal işlemlerinizde güven ve şeffaflık için FinTrack'i tercih ettiğiniz için teşekkür ederiz.<br><strong>FinTrack Ekibi</strong></p>
                         </td>
                     </tr>
-
-                    <!-- Footer: Telif Hakkı ve Diğer Bağlantılar -->
                     <tr>
                         <td class="footer">
-                            Bu e-posta, FinTrack üzerinden gerçekleştirilen ve onaylanan bir borç anlaşmasıyla ilgili olarak gönderilmiştir.<br>
+                            Bu e-posta, FinTrack üzerinden gerçekleştirilen ve onaylanan bir borç anlaşmasıyla ve ilgili video erişim anahtarınızla ilgili olarak gönderilmiştir.<br>
                             © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
                             <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[PRIVACY_POLICY_LINK]">Gizlilik Politikası</a>
                             <p class="disclaimer">FinTrack, borç alıp verme süreçlerini güvenli ve şeffaf bir şekilde yönetmenize yardımcı olur. Lütfen tüm işlem detaylarını dikkatlice inceleyiniz.</p>
                         </td>
                     </tr>
-
                 </table>
             </td>
         </tr>

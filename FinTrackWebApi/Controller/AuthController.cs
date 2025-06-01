@@ -12,7 +12,7 @@ using System.Collections.Generic;
 namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "User,Admin")]
+    [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly MyDataContext _context;
@@ -227,29 +227,6 @@ namespace FinTrackWebApi.Controller
             Token token = TokenHandler.CreateToken(_configuration, employee.EmployeeId, employee.Name, employee.Email, employeeRoles);
 
             return Ok(new { employee.EmployeeId, employee.Name, employee.Email, employee.ProfilePictureUrl, AccessToken = token.AccessToken });
-        }
-
-        [HttpPost("employee/initiate-registration")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<IActionResult> EmployeeInitiateRegistration([FromBody]  EmployeesModel employeeDto)
-        {
-            if (await _context.Employees.AnyAsync(e => e.Email == employeeDto.Email))
-            {
-                _logger.LogWarning("Employee registration initiation failed: Email {Email} already exists.", employeeDto.Email);
-                return BadRequest("This email address is already registered.");
-            }
-
-            try
-            {
-                await _context.Employees.AddAsync(employeeDto);
-                _context.SaveChanges();
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to initiate employee registration for {Email}.", employeeDto.Email);
-                return StatusCode(500, "An error occurred while initiating employee registration.");
-            }
         }
     }
 }

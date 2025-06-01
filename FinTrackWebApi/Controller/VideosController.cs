@@ -1,0 +1,257 @@
+﻿using DocumentFormat.OpenXml.Presentation;
+using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Models;
+using FinTrackWebApi.Services.EmailService;
+using FinTrackWebApi.Services.MediaEncryptionService;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace FinTrackWebApi.Controller
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class VideosController : ControllerBase
+    {
+        private readonly MyDataContext _context;
+        private readonly ILogger<VideosController> _logger;
+        private readonly IMediaEncryptionService _mediaEncryptionService;
+        private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        private readonly string _unapprovedVideosPath;
+        private readonly string _encryptedVideosPath;
+
+        public VideosController(MyDataContext context, ILogger<VideosController> logger, IMediaEncryptionService mediaEncryptionService, IEmailSender emailSender, IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
+        {
+            _context = context;
+            _logger = logger;
+            _mediaEncryptionService = mediaEncryptionService;
+            _emailSender = emailSender;
+            _configuration = configuration;
+            _webHostEnvironment = webHostEnvironment;
+
+            _unapprovedVideosPath = _configuration["FilePaths:UnapprovedVideos"] ?? "Null";
+            _encryptedVideosPath = _configuration["FilePaths:EncryptedVideos"] ?? "Null";
+
+            if(!Directory.Exists(_unapprovedVideosPath))
+                Directory.CreateDirectory(_unapprovedVideosPath);
+            if (!Directory.Exists(_encryptedVideosPath))
+                Directory.CreateDirectory(_encryptedVideosPath);
+        }
+
+        private int GetUserIdFromClaims()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
+            if (userIdClaim == null)
+            {
+                throw new UnauthorizedAccessException("Kullanıcı kimliği bulunamadı.");
+            }
+            return int.Parse(userIdClaim.Value);
+        }
+
+        [HttpPost("user-upload-video")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> UploadVideo(IFormFile file, int debtId)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("Dosya boş veya geçersiz.");
+            }
+
+            int userId = GetUserIdFromClaims();
+
+            var videoId = Guid.NewGuid();
+            var orginalFileName = Path.GetFileName(file.FileName);
+            var storedFileName = $"{videoId}_{orginalFileName}";
+            var unencryptedFilePath = Path.Combine(_unapprovedVideosPath, storedFileName);
+
+            try
+            {
+                using (var stream = new FileStream(unencryptedFilePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var videoMetadata = new VideoMetadataModel
+                {
+                    DebtId = debtId,
+                    UploadedByUserId = userId,
+                    OriginalFileName = orginalFileName,
+                    StoredFileName = storedFileName,
+                    UnencryptedFilePath = unencryptedFilePath,
+                    FileSize = file.Length,
+                    ContentType = file.ContentType,
+                    UploadDateUtc = DateTime.UtcNow,
+                    Status = VideoStatus.PendingApproval,
+                    EncryptionKeyHash = _mediaEncryptionService.HashKey(_mediaEncryptionService.GenerateRandomKey(20)),
+                    EncryptionSalt = _mediaEncryptionService.GenerateSalt(),
+                    EncryptionIV = _mediaEncryptionService.GenerateIV()
+                };
+
+                await _context.VideoMetadatas.AddAsync(videoMetadata);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata);
+                return Ok(new { Message = "Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata } );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Dosya kaydedilirken hata oluştu.");
+                return StatusCode(500, "Dosya kaydedilirken hata oluştu.");
+            }
+        }
+
+        [HttpPost("video-approve/{videoId}")]
+        [Authorize(Roles = "Admin,VideoApproval")]
+        public async Task<IActionResult> ApproveAndEncryptVideo([FromRoute] int videoId)
+        {
+            var videoMetadata = await _context.VideoMetadatas
+                .Include(v => v.Debt)
+                .Include(v => v.UploadedUser)
+                .FirstOrDefaultAsync(v => v.VideoMetadataId == videoId);
+
+            if (videoMetadata == null)
+            {
+                return NotFound("Video metadata bulunamadı.");
+            }
+            if (videoMetadata.Status != VideoStatus.PendingApproval)
+            {
+                return BadRequest("Video zaten onaylanmış veya reddedilmiş.");
+            }
+
+            try
+            {
+                if (string.IsNullOrEmpty(videoMetadata.UnencryptedFilePath) || !System.IO.File.Exists(videoMetadata.UnencryptedFilePath))
+                {
+                    videoMetadata.Status = VideoStatus.ProcessingError;
+                    await _context.SaveChangesAsync();
+                    return NotFound("Şifrelenmemiş video dosyası bulunamadı.");
+                }
+
+                videoMetadata.Status = VideoStatus.ProcessingEncryption;
+                await _context.SaveChangesAsync();
+
+                string userPasswordKey = _mediaEncryptionService.GenerateRandomKey(20);
+                string salt = _mediaEncryptionService.GenerateSalt();
+                string iv = _mediaEncryptionService.GenerateIV();
+
+                var encryptedFileName = $"enc_{videoMetadata.StoredFileName}";
+                var encryptedFilePath = Path.Combine(_encryptedVideosPath, encryptedFileName);
+
+                await _mediaEncryptionService.EncryptFileAsync(videoMetadata.UnencryptedFilePath, encryptedFilePath, userPasswordKey, salt, iv);
+
+                videoMetadata.EncryptedFilePath = encryptedFilePath;
+                videoMetadata.EncryptionKeyHash = _mediaEncryptionService.HashKey(userPasswordKey);
+                videoMetadata.EncryptionSalt = salt;
+                videoMetadata.EncryptionIV = iv;
+                videoMetadata.Status = VideoStatus.Encrypted;
+                videoMetadata.StorageType = VideoStorageType.EncryptedFileSystem;
+
+                System.IO.File.Delete(videoMetadata.UnencryptedFilePath);
+                videoMetadata.UnencryptedFilePath = "This file is now encrypted.";
+
+                await _context.SaveChangesAsync();
+
+                try
+                {
+                    string emailSubject = "Debt Video Approved and Encrypted";
+                    string emailBody = string.Empty;
+
+                    string emailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "CodeVerificationScheme.html");
+                    if (!System.IO.File.Exists(emailTemplatePath))
+                    {
+                        _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                        return StatusCode(500, "Email template not found.");
+                    }
+
+                    using (StreamReader reader = new StreamReader(emailTemplatePath))
+                    {
+                        emailBody = await reader.ReadToEndAsync();
+                    }
+
+                    emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.OriginalFileName);
+                    emailBody = emailBody.Replace("[VIDEO_FILE_SIZE]", videoMetadata.FileSize.ToString() ?? "N/A");
+                    emailBody = emailBody.Replace("[USER_NAME]", videoMetadata.UploadedUser?.Username);
+                    emailBody = emailBody.Replace("[LENDER_NAME]", videoMetadata.Debt?.Lender.Username);
+                    emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", videoMetadata.Debt?.Lender.Username ?? "N/A");
+                    emailBody = emailBody.Replace("[DETAIL_BORROWER_NAME]", videoMetadata.Debt?.Borrower.Username ?? "N/A");
+                    emailBody = emailBody.Replace("[DETAIL_DEBT_AMOUNT]", videoMetadata.Debt?.Amount.ToString());
+                    emailBody = emailBody.Replace("[DETAIL_DEBT_CURRENCY]", videoMetadata.Debt?.CurrencyModel?.Code ?? "N/A");
+                    emailBody = emailBody.Replace("[DETAIL_DEBT_DUE_DATE]", videoMetadata.Debt?.DueDateUtc.ToString() ?? "N/A");
+                    emailBody = emailBody.Replace("[DETAIL_DEBT_DESCRIPTION]", videoMetadata.Debt?.Description);
+                    emailBody = emailBody.Replace("[APPROVAL_DATE]", DateTime.UtcNow.ToString());
+                    emailBody = emailBody.Replace("[AGREEMENT_ID]", videoMetadata.Debt?.DebtId.ToString());
+
+                    emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.OriginalFileName ?? "N/A");
+                    emailBody = emailBody.Replace("[ENCRYPTION_KEY]", userPasswordKey ?? "N/A");
+
+                    emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+                    await _emailSender.SendEmailAsync(videoMetadata.UploadedUser?.Email ?? "Null", emailSubject, emailBody);
+
+                    _logger.LogInformation("Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}", videoMetadata.UploadedUser?.Email);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogError(emailEx, "E-posta gönderilirken hata oluştu.");
+                    return StatusCode(500, "E-posta gönderilirken hata oluştu.");
+                }
+
+                _logger.LogInformation("Video başarıyla onaylandı ve şifrelendi: {VideoMetadata}", videoMetadata);
+                return Ok(new { Message = "Video başarıyla onaylandı ve şifrelendi.", videoMetadata });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Video şifrelenirken hata oluştu.");
+                videoMetadata.Status = VideoStatus.ProcessingError;
+                await _context.SaveChangesAsync();
+                return StatusCode(500, "Video şifrelenirken hata oluştu.");
+            }
+        }
+
+        [HttpGet("video-metadata-stream/{videoId}")]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> StreamVideo([FromRoute] int id, [FromQuery] string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return BadRequest("Şifreleme anahtarı (key) gereklidir.");
+
+            var video = await _context.VideoMetadatas.FindAsync(id);
+            if (video == null) return NotFound("Video bulunamadı.");
+
+            if (video.Status != VideoStatus.Encrypted ||
+                string.IsNullOrEmpty(video.EncryptedFilePath) ||
+                string.IsNullOrEmpty(video.EncryptionKeyHash) ||
+                string.IsNullOrEmpty(video.EncryptionSalt) ||
+                string.IsNullOrEmpty(video.EncryptionIV))
+            {
+                return BadRequest("Video izlenmeye uygun değil veya gerekli şifreleme bilgileri eksik.");
+            }
+
+            var providedKeyHash = _mediaEncryptionService.HashKey(key);
+            if (providedKeyHash != video.EncryptionKeyHash)
+            {
+                return Unauthorized("Geçersiz şifreleme anahtarı.");
+            }
+
+            try
+            {
+                var decryptedStream = _mediaEncryptionService.GetDecryptedVideoStream(video.EncryptedFilePath, key, video.EncryptionSalt, video.EncryptionIV);
+                if (decryptedStream == null)
+                {
+                    return NotFound("Şifrelenmiş video dosyası bulunamadı veya şifre çözülemedi.");
+                }
+                return File(decryptedStream, video.ContentType, video.OriginalFileName ?? "video.mp4");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Video akışı sırasında hata oluştu.");
+                return StatusCode(500, "Video akışı sırasında hata oluştu.");
+            }
+        }
+    }
+}

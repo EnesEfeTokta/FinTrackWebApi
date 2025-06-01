@@ -67,6 +67,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 DueDateUtc = DateTime.SpecifyKind(dueDate, DateTimeKind.Unspecified).ToUniversalTime(),
                 Description = description ?? "Açıklama yok.",
                 CreateAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
                 Status = DebtStatus.PendingBorrowerAcceptance
             };
 

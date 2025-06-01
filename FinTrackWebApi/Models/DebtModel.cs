@@ -44,6 +44,11 @@ namespace FinTrackWebApi.Models
         public DateTime CreateAtUtc { get; set; } = DateTime.UtcNow;
 
         [Required]
+        [Column("UpdatedAtUtc")]
+        [DataType(DataType.DateTime)]
+        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+
+        [Required]
         [Column("DueDateUtc")]
         [DataType(DataType.DateTime)]
         public DateTime DueDateUtc { get; set; }
