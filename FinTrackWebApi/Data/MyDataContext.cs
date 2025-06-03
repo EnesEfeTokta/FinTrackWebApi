@@ -1,13 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
-using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Data
 {
-    public class MyDataContext : DbContext
+    public class MyDataContext : IdentityDbContext<UserModel, IdentityRole<int>, int>
     {
         public MyDataContext(DbContextOptions<MyDataContext> options) : base(options) { }
 
-        public DbSet<UserModel> Users { get; set; }
         public DbSet<OtpVerificationModel> OtpVerification { get; set; }
         public DbSet<UserSettingsModel> UserSettings { get; set; }
         public DbSet<CategoryModel> Categories { get; set; }
@@ -36,10 +37,6 @@ namespace FinTrackWebApi.Data
             modelBuilder.Entity<UserModel>(entity =>
             {
                 entity.ToTable("Users");
-                entity.HasKey(u => u.UserId);
-                entity.Property(u => u.UserId).ValueGeneratedOnAdd();
-
-                entity.HasIndex(u => u.Email).IsUnique();
 
                 entity.HasOne(u => u.Settings)
                       .WithOne(s => s.User)

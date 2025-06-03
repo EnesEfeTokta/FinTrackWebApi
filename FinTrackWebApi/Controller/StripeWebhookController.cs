@@ -145,7 +145,7 @@ namespace FinTrackWebApi.Controller
                                         }
 
                                         emailBody = emailBody.Replace("[LOGO_URL]", "null"); // TODO: Gerçek logo URL'niz.
-                                        emailBody = emailBody.Replace("[UserName]", userMembership.User.Username ?? "Valued User");
+                                        emailBody = emailBody.Replace("[Username]", userMembership.User.UserName ?? "Valued User");
                                         emailBody = emailBody.Replace("[MembershipPlanName]", userMembership.Plan?.Name ?? "N/A");
                                         emailBody = emailBody.Replace("[DASHBOARD_LINK]", "https://yourdomain.com/dashboard"); // Gerçek dashboard linkiniz
 

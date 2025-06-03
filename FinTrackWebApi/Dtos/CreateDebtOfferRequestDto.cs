@@ -2,9 +2,7 @@
 {
     public class CreateDebtOfferRequestDto
     {
-        public string LenderId { get; set; } = string.Empty;
-
-        public string BorrowerId { get; set; } = string.Empty;
+        public int BorrowerId { get; set; }
 
         public decimal Amount { get; set; }
 

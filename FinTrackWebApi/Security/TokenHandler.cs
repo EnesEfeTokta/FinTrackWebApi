@@ -1,6 +1,4 @@
-﻿using FinTrackWebApi.Dtos;
-using FinTrackWebApi.Models;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -14,7 +12,9 @@ namespace FinTrackWebApi.Security
         {
             Token token = new Token();
 
-            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Token:SecurityKey"] ?? "null"));
+            string securityKeyString = configuration["Token:SecurityKey"] ?? throw new InvalidOperationException("Token:SecurityKey is not configured or null in TokenHandler.");
+            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKeyString));
+
             SigningCredentials signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
@@ -32,7 +32,7 @@ namespace FinTrackWebApi.Security
                 }
             }
 
-            token.Expiration = DateTime.UtcNow.AddMinutes(Convert.ToDouble(configuration["Token:Expiration"]));
+            token.Expiration = DateTime.UtcNow.AddMinutes(Convert.ToDouble(configuration["Token:Expiration"] ?? "60"));
 
             JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(
                 issuer: configuration["Token:Issuer"],

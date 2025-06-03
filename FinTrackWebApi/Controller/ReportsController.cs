@@ -27,15 +27,15 @@ namespace FinTrackWebApi.Controller
         /// <summary>
         /// JWT token ile kimlik doğrulaması yapılmış kullanıcının ID'sini alır.
         /// </summary>
-        private int GetAuthenticatedUserId()
+        private int GetAuthenticatedId()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(IdClaim) || !int.TryParse(IdClaim, out int Id))
             {
                 _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid.");
                 throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
             }
-            return userId;
+            return Id;
         }
 
         #region Budget Endpoints
@@ -119,12 +119,12 @@ namespace FinTrackWebApi.Controller
         /// <returns></returns>
         private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(DateTime? start = null, DateTime? end = null)
         {
-            int userId = GetAuthenticatedUserId();
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+            int Id = GetAuthenticatedId();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == Id);
 
             if (user == null)
             {
-                _logger.LogError("User not found for ID: {UserId} while building report.", userId);
+                _logger.LogError("User not found for ID: {Id} while building report.", Id);
                 return null;
             }
 
@@ -133,7 +133,7 @@ namespace FinTrackWebApi.Controller
                 ReportTitle = start.HasValue && end.HasValue
                     ? $"Financial Budget Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
                     : "Financial Budget Report (All Time)",
-                Description = $"Budget details for user {user.Username}."
+                Description = $"Budget details for user {user.UserName}."
             };
 
             DateTime? startUtc = start.HasValue ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc) : null;
@@ -142,7 +142,7 @@ namespace FinTrackWebApi.Controller
             var query = _context.BudgetCategories
                 .Include(bc => bc.Budget)
                 .Include(bc => bc.Category)
-                .Where(bc => bc.Budget.UserId == userId);
+                .Where(bc => bc.Budget.UserId == Id);
 
             if (startUtc.HasValue && endUtc.HasValue)
             {
@@ -159,7 +159,7 @@ namespace FinTrackWebApi.Controller
 
             if (!budgetCategoriesData.Any())
             {
-                _logger.LogInformation("No budget categories found for user {UserName} for the given criteria.", user.Username);
+                _logger.LogInformation("No budget categories found for user {UserName} for the given criteria.", user.UserName);
                 return report;
             }
 
@@ -325,12 +325,12 @@ namespace FinTrackWebApi.Controller
         /// <returns></returns>
         private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(DateTime? start = null, DateTime? end = null)
         {
-            int userId = GetAuthenticatedUserId();
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+            int Id = GetAuthenticatedId();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == Id);
 
             if (user == null)
             {
-                _logger.LogError("User not found for ID: {UserId} while building report.", userId);
+                _logger.LogError("User not found for ID: {Id} while building report.", Id);
                 return null;
             }
 
@@ -339,7 +339,7 @@ namespace FinTrackWebApi.Controller
                 ReportTitle = start.HasValue && end.HasValue
                     ? $"Financial Transaction Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
                     : "Financial Transaction Report (All Time)",
-                Description = $"Transaction details for user {user.Username}."
+                Description = $"Transaction details for user {user.UserName}."
             };
 
             DateTime? startUtc = start.HasValue ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc) : null;
@@ -348,7 +348,7 @@ namespace FinTrackWebApi.Controller
             var query = _context.Transactions
                 .Include(bc => bc.Account)
                 .Include(bc => bc.Category)
-                .Where(bc => bc.User.UserId == userId);
+                .Where(bc => bc.User.Id == Id);
 
             if (startUtc.HasValue && endUtc.HasValue)
             {
@@ -365,7 +365,7 @@ namespace FinTrackWebApi.Controller
 
             if (!transactionCategoriesData.Any())
             {
-                _logger.LogInformation("No transaction categories found for user {UserName} for the given criteria.", user.Username);
+                _logger.LogInformation("No transaction categories found for user {UserName} for the given criteria.", user.UserName);
                 return report;
             }
 

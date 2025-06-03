@@ -33,14 +33,14 @@ namespace FinTrackWebApi.Services.SecureDebtService
 
         // Borç teklifi oluşturma metodu.
         public async Task<CreateDebtOfferResult> CreateDebtOfferAsync(
-            string lenderUserId,
+            string lenderId,
             string borrowerEmail,
             decimal amount,
             CurrencyModel currency,
             DateTime dueDate,
             string? description)
         {
-            var lender = await _userManager.FindByIdAsync(lenderUserId);
+            var lender = await _userManager.FindByIdAsync(lenderId);
             if (lender == null)
             {
                 return new CreateDebtOfferResult { Success = false, Message = "Borç veren kullanıcı bulunamadı." };
@@ -53,15 +53,15 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 return new CreateDebtOfferResult { Success = false, Message = $"'{borrowerEmail}' e-posta adresine sahip kullanıcı bulunamadı." };
             }
 
-            if (lender.UserId == borrower.UserId)
+            if (lender.Id == borrower.Id)
             {
                 return new CreateDebtOfferResult { Success = false, Message = "Kendinize borç teklif edemezsiniz." };
             }
 
             var debt = new DebtModel
             {
-                LenderId = lender.UserId,
-                BorrowerId = borrower.UserId,
+                LenderId = lender.Id,
+                BorrowerId = borrower.Id,
                 Amount = amount,
                 CurrencyModel = currency,
                 DueDateUtc = DateTime.SpecifyKind(dueDate, DateTimeKind.Unspecified).ToUniversalTime(),
@@ -92,16 +92,16 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     emailBody = await reader.ReadToEndAsync();
                 }
 
-                emailBody.Replace("[BORROWER_NAME]", borrower.Username);
-                emailBody = emailBody.Replace("[LENDER_NAME]", lender.Username);
-                emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", lender.Username);
+                emailBody = emailBody.Replace("[BORROWER_NAME]", borrower.UserName);
+                emailBody = emailBody.Replace("[LENDER_NAME]", lender.UserName);
+                emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", lender.UserName);
                 emailBody = emailBody.Replace("[DETAIL_DEBT_AMOUNT]", debt.Amount.ToString());
                 emailBody = emailBody.Replace("[DETAIL_DEBT_CURRENCY]", debt.CurrencyModel?.Name ?? "Bilinmiyor");
                 emailBody = emailBody.Replace("[DETAIL_DEBT_DUE_DATE]", debt.DueDateUtc.ToString("yyyy-MM-dd HH:mm:ss"));
                 emailBody = emailBody.Replace("[DETAIL_DEBT_DESCRIPTION]", debt.Description);
                 emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
 
-                await _emailSender.SendEmailAsync(borrower.Email, subject, emailBody);
+                await _emailSender.SendEmailAsync(borrower.Email ?? throw new ArgumentException("We need the borrower's email address."), subject, emailBody);
                 _logger.LogInformation("Borç teklifi (ID: {DebtId}) başarıyla oluşturuldu ve {BorrowerEmail} adresine bildirim gönderildi.", debt.DebtId, borrower.Email);
 
                 // TODO: Eğer borç veren kullanıcıya da bildirim göndermek gerekli. Bunun için Bildirim servisi oluşturulmalı.
@@ -138,7 +138,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
         }
 
         // Kullanıcıya ait borçları alma metodu.
-        public async Task<List<DebtModel>> GetDebtsByUserIdAsync(int userId)
+        public async Task<List<DebtModel>> GetDebtsByIdAsync(int Id)
         {
             try
             {
@@ -146,7 +146,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     .Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
-                    .Where(d => d.LenderId == userId || d.BorrowerId == userId)
+                    .Where(d => d.LenderId == Id || d.BorrowerId == Id)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -157,7 +157,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
         }
 
         // Borç teklifini kabul etme metodu.
-        public async Task<bool> AcceptDebtOfferAsync(int debtId, string borrowerUserId)
+        public async Task<bool> AcceptDebtOfferAsync(int debtId, string borrowerId)
         {
             var debt = await _context.Debts.FindAsync(debtId);
             if (debt == null)
@@ -165,9 +165,9 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 _logger.LogWarning("Borç teklifi bulunamadı: {DebtId}", debtId);
                 return false;
             }
-            if (debt.BorrowerId.ToString() != borrowerUserId)
+            if (debt.BorrowerId.ToString() != borrowerId)
             {
-                _logger.LogWarning("Borç teklifi kabul edilemedi. Kullanıcı yetkisi uyuşmuyor: {BorrowerUserId}", borrowerUserId);
+                _logger.LogWarning("Borç teklifi kabul edilemedi. Kullanıcı yetkisi uyuşmuyor: {BorrowerId}", borrowerId);
                 return false;
             }
 

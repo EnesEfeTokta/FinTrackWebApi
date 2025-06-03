@@ -4,10 +4,10 @@ using FinTrackWebApi.Models;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+
 
 namespace FinTrackWebApi.Controller
 {
@@ -16,13 +16,13 @@ namespace FinTrackWebApi.Controller
     public class AuthController : ControllerBase
     {
         private readonly MyDataContext _context;
-
         private readonly IConfiguration _configuration;
-
         private readonly IEmailSender _emailSender;
         private readonly IOtpService _otpService;
         private readonly ILogger<AuthController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly UserManager<UserModel> _userManager;
+        private readonly SignInManager<UserModel> _signInManager;
 
         public AuthController(
             MyDataContext context,
@@ -30,7 +30,9 @@ namespace FinTrackWebApi.Controller
             IOtpService otpService,
             IEmailSender emailService,
             ILogger<AuthController> logger,
-            IWebHostEnvironment webHostEnvironment)
+            IWebHostEnvironment webHostEnvironment,
+            UserManager<UserModel> userManager,
+            SignInManager<UserModel> signInManager)
         {
             _context = context;
             _configuration = configuration;
@@ -38,195 +40,278 @@ namespace FinTrackWebApi.Controller
             _emailSender = emailService;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpPost("user/initiate-registration")]
-        public async Task<IActionResult> UserInitiateRegistration([FromBody] InitiateRegistrationDto initiateRegistrationDto)
+        public async Task<IActionResult> UserInitiateRegistration([FromBody] InitiateRegistrationDto initiateDto)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == initiateRegistrationDto.Email))
+            if (initiateDto == null || string.IsNullOrWhiteSpace(initiateDto.Email) ||
+                string.IsNullOrWhiteSpace(initiateDto.Username) || string.IsNullOrWhiteSpace(initiateDto.Password))
             {
-                _logger.LogWarning("Registration initiation failed: Email {Email} already exists.", initiateRegistrationDto.Email);
-                return BadRequest("This email address is already registered.");
+                return BadRequest(new { Message = "Email, Username, and Password are required." });
+            }
+
+            if (await _userManager.FindByEmailAsync(initiateDto.Email) != null)
+            {
+                _logger.LogWarning("Registration initiation failed: Email {Email} already exists in Identity.", initiateDto.Email);
+                return BadRequest(new { Message = "This email address is already registered." });
+            }
+            if (await _userManager.FindByNameAsync(initiateDto.Username) != null)
+            {
+                _logger.LogWarning("Registration initiation failed: Username {Username} already exists in Identity.", initiateDto.Username);
+                return BadRequest(new { Message = "This username is already taken." });
             }
 
             string otp = _otpService.GenerateOtp();
-            DateTime expiryTime = DateTime.UtcNow.AddMinutes(10);
-            string hashOtpCde = BCrypt.Net.BCrypt.HashPassword(otp);
+            DateTime expiryTime = DateTime.UtcNow.AddMinutes(5);
+            string hashedOtp = BCrypt.Net.BCrypt.HashPassword(otp);
 
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(initiateRegistrationDto.PasswordHash);
+            bool stored = await _otpService.StoreOtpAsync(
+                initiateDto.Email,
+                hashedOtp,
+                initiateDto.Username,
+                initiateDto.Password,
+                initiateDto.ProfilePicture,
+                expiryTime
+            );
 
-            bool stored = await _otpService.StoreOtpAsync(initiateRegistrationDto.Email, hashOtpCde, initiateRegistrationDto.Username, passwordHash, initiateRegistrationDto.ProfilePicture);
+            if (!stored)
+            {
+                _logger.LogError("Failed to store OTP for {Email}.", initiateDto.Email);
+                return StatusCode(500, new { Message = "An error occurred while initiating registration. Please try again." });
+            }
 
             try
             {
                 string emailSubject = "Email Verification Code For FinTrack new Membership";
                 string emailBody = string.Empty;
-
                 string emailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "CodeVerificationScheme.html");
+
                 if (!System.IO.File.Exists(emailTemplatePath))
                 {
                     _logger.LogError("Email template not found at {Path}", emailTemplatePath);
-                    await _otpService.RemoveOtpAsync(initiateRegistrationDto.Email);
-                    return StatusCode(500, "Email template not found.");
+                    await _otpService.RemoveOtpAsync(initiateDto.Email);
+                    return StatusCode(500, new { Message = "Email template not found." });
                 }
-
                 using (StreamReader reader = new StreamReader(emailTemplatePath))
                 {
                     emailBody = await reader.ReadToEndAsync();
                 }
-
-                emailBody = emailBody.Replace("[UserName]", initiateRegistrationDto.Username);
+                emailBody = emailBody.Replace("[UserName]", initiateDto.Username);
                 emailBody = emailBody.Replace("[VERIFICATION_CODE]", otp);
-
                 emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
 
-                await _emailSender.SendEmailAsync(initiateRegistrationDto.Email, emailSubject, emailBody);
+                await _emailSender.SendEmailAsync(initiateDto.Email, emailSubject, emailBody);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send verification email to {Email}.", initiateRegistrationDto.Email);
-
-                // E-posta gönderilemezse, oluşturulan geçici OTP kaydını temizle!
-                await _otpService.RemoveOtpAsync(initiateRegistrationDto.Email);
-                return StatusCode(500, "Failed to send verification email. Please check the address and try again.");
+                _logger.LogError(ex, "Failed to send verification email to {Email}.", initiateDto.Email);
+                await _otpService.RemoveOtpAsync(initiateDto.Email);
+                return StatusCode(500, new { Message = "Failed to send verification email. Please check the address and try again." });
             }
 
-            _logger.LogInformation("OTP sent to {Email}.", initiateRegistrationDto.Email);
-            return Ok(new { Message = "OTP sent to your email address." });
+            _logger.LogInformation("OTP sent to {Email} for registration initiation.", initiateDto.Email);
+            return Ok(new { Message = "OTP has been sent to your email address. Please verify to complete registration." });
         }
 
-        // OTP doğrulama işlemi yapılıyor.
-        [HttpPost("user/verify-otp")]
-        public async Task<IActionResult> UserVerifyOtp([FromBody] VerifyOtpRequestDto verifyOtpDto)
+        [HttpPost("user/verify-otp-and-register")]
+        public async Task<IActionResult> UserVerifyOtpAndRegister([FromBody] VerifyOtpRequestDto verifyDto)
         {
-            OtpVerificationModel result = await _otpService.VerifyOtpAsync(verifyOtpDto.Email, verifyOtpDto.Code);
-
-            if (result == null)
+            if (verifyDto == null || string.IsNullOrWhiteSpace(verifyDto.Email) || string.IsNullOrWhiteSpace(verifyDto.Code))
             {
-                _logger.LogWarning("OTP verification failed for {Email}.", verifyOtpDto.Email);
-                return BadRequest("Invalid OTP code.");
+                return BadRequest(new { Message = "Email and OTP code are required." });
             }
-            _logger.LogInformation("OTP verified successfully for {Email}.", verifyOtpDto.Email);
+
+            OtpVerificationModel? otpData = await _otpService.VerifyOtpAsync(verifyDto.Email, verifyDto.Code);
+
+            if (otpData == null)
+            {
+                _logger.LogWarning("OTP verification failed for {Email} or OTP is invalid/expired.", verifyDto.Email);
+                return BadRequest(new { Message = "Invalid or expired OTP code." });
+            }
+
+            _logger.LogInformation("OTP verified successfully for {Email}.", verifyDto.Email);
 
             try
             {
-                UserModel newUser = new UserModel
+                var newUser = new UserModel
                 {
-                    Username = result.Username,
-                    Email = result.Email,
-                    PasswordHash = result.PasswordHash,
-                    ProfilePicture = result.ProfilePicture
+                    UserName = otpData.Username,
+                    Email = otpData.Email,
+                    EmailConfirmed = true,
+                    ProfilePicture = otpData.ProfilePicture ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740",
+                    CreateAt = DateTime.UtcNow
                 };
-                await _context.Users.AddAsync(newUser);
-                await _context.SaveChangesAsync();
 
-                try
+                IdentityResult result = await _userManager.CreateAsync(newUser, otpData.TemporaryPlainPassword);
+
+                if (result.Succeeded)
                 {
-                    // Kullanıcı ayarları oluşturuluyor.
-                    UserSettingsModel userSettings = new UserSettingsModel
+                    _logger.LogInformation("User {Email} created successfully using UserManager. UserId: {UserId}", newUser.Email, newUser.Id);
+                    var roleResult = await _userManager.AddToRoleAsync(newUser, "User");
+                    if (!roleResult.Succeeded)
                     {
-                        UserId = newUser.UserId,
-                        EntryDate = DateTime.UtcNow,
-                        Notification = true,
-                        Currency = "USD",
-                        Language = "en",
-                        Theme = "light"
-                    };
-                    await _context.UserSettings.AddAsync(userSettings);
-                    await _context.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create user settings for {Email}.", verifyOtpDto.Email);
-                    return StatusCode(500, "An error occurred while creating user settings.");
-                }
-
-                try
-                {
-                    // Hoşgeldin e-postası gönderiliyor.
-                    string welcomeEmailSubject = "Welcome to FinTrack!";
-                    string welcomeEmailBody = string.Empty;
-
-                    string welcomeEmailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "HelloScheme.html");
-                    if (!System.IO.File.Exists(welcomeEmailTemplatePath))
-                    {
-                        _logger.LogError("Welcome email template not found at {Path}", welcomeEmailTemplatePath);
-                        await _otpService.RemoveOtpAsync(verifyOtpDto.Email);
-                        return StatusCode(500, "Welcome email template not found.");
+                        _logger.LogWarning("Failed to add user {Email} to 'User' role. Errors: {Errors}", newUser.Email, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
                     }
 
-                    using (StreamReader reader = new StreamReader(welcomeEmailTemplatePath))
+                    await _otpService.RemoveOtpAsync(verifyDto.Email);
+
+                    try
                     {
-                        welcomeEmailBody = await reader.ReadToEndAsync();
+                        UserSettingsModel userSettings = new UserSettingsModel
+                        {
+                            UserId = newUser.Id,
+                            EntryDate = DateTime.UtcNow,
+                            Notification = true,
+                            Currency = "USD",
+                            Language = "en",
+                            Theme = "light"
+                        };
+                        await _context.UserSettings.AddAsync(userSettings);
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation("UserSettings created for UserId: {UserId}", newUser.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to create user settings for UserId: {UserId}", newUser.Id);
                     }
 
-                    welcomeEmailBody = welcomeEmailBody.Replace("[UserName]", result.Username);
-                    welcomeEmailBody = welcomeEmailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+                    try
+                    {
+                        string welcomeEmailSubject = "Welcome to FinTrack!";
+                        string welcomeEmailBody = string.Empty;
+                        string welcomeEmailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "HelloScheme.html");
 
-                    await _emailSender.SendEmailAsync(result.Email, welcomeEmailSubject, welcomeEmailBody);
-                    _logger.LogInformation("Welcome email sent to {Email}.", result.Email);
+                        if (!System.IO.File.Exists(welcomeEmailTemplatePath))
+                        {
+                            _logger.LogError("Welcome email template not found at {Path}", welcomeEmailTemplatePath);
+                        }
+                        else
+                        {
+                            using (StreamReader reader = new StreamReader(welcomeEmailTemplatePath))
+                            {
+                                welcomeEmailBody = await reader.ReadToEndAsync();
+                            }
+                            welcomeEmailBody = welcomeEmailBody.Replace("[UserName]", newUser.UserName);
+                            welcomeEmailBody = welcomeEmailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+                            await _emailSender.SendEmailAsync(newUser.Email, welcomeEmailSubject, welcomeEmailBody);
+                            _logger.LogInformation("Welcome email sent to {Email}.", newUser.Email);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error sending welcome email to {Email}", newUser.Email);
+                    }
+
+
+                    return Ok(new { Message = "User registration successful. You can now log in.", UserId = newUser.Id });
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "Failed to send welcome email to {Email}.", result.Email);
-                    return StatusCode(500, "Failed to send welcome email.");
+                    _logger.LogError("Failed to create Identity user for {Email}. Errors: {Errors}", verifyDto.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                    return BadRequest(new { Message = "User registration failed.", Errors = result.Errors.Select(e => e.Description) });
                 }
-
-                return Ok(new { Message = "Registration successful." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to register user with email {Email}.", verifyOtpDto.Email);
-                return StatusCode(500, "An error occurred while registering the user.");
+                _logger.LogError(ex, "An unexpected error occurred during user registration for {Email}.", verifyDto.Email);
+                if (otpData != null) await _otpService.RemoveOtpAsync(otpData.Email);
+                return StatusCode(500, new { Message = "An unexpected error occurred during registration." });
             }
         }
 
-        // Kullanıcı giriş işlemi yapılıyor.
         [HttpPost("user/login")]
         public async Task<IActionResult> UserLogin([FromBody] LoginDto loginDto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
-
-            // Kullanıcı bulunamazsa veya şifre yanlışsa hata döndürülüyor.
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+            if (loginDto == null || string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
             {
-                return Unauthorized("Invalid credentials");
+                return BadRequest(new { Message = "Email and Password are required." });
             }
 
-            // Kullanıcının giriş tarihi kayıt ediliyor.
-            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s => s.UserId == user.UserId);
+            var user = await _userManager.FindByEmailAsync(loginDto.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("Login attempt for email {Email} failed: User not found.", loginDto.Email);
+                return Unauthorized(new { Message = "Invalid credentials." });
+            }
 
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, lockoutOnFailure: true);
+            if (!result.Succeeded)
+            {
+                if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("User account locked out for email {Email}.", loginDto.Email);
+                    return Unauthorized(new { Message = $"Account locked out. Please try again later. (Until: {user.LockoutEnd?.ToLocalTime()})", IsLockedOut = true, LockoutEndDateUtc = user.LockoutEnd });
+                }
+                if (result.IsNotAllowed)
+                {
+                    _logger.LogWarning("Login not allowed for email {Email} (e.g., email not confirmed, if configured).", loginDto.Email);
+                    return Unauthorized(new { Message = "Login not allowed. Please confirm your email or contact support." });
+                }
+                _logger.LogWarning("Login attempt for email {Email} failed: Invalid password. AccessFailedCount: {AccessFailedCount}", loginDto.Email, user.AccessFailedCount);
+                return Unauthorized(new { Message = "Invalid credentials." });
+            }
+
+            _logger.LogInformation("User {Email} logged in successfully.", loginDto.Email);
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            Token generatedToken = TokenHandler.CreateToken(
+                _configuration,
+                user.Id,
+                user.UserName ?? "",
+                user.Email ?? "",
+                userRoles
+            );
+
+            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s => s.UserId == user.Id);
             if (userSettings != null)
             {
                 userSettings.EntryDate = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
 
-            var userRoles = new List<string> { "User" };
-            Token token = TokenHandler.CreateToken(_configuration, user.UserId, user.Username, user.Email, userRoles); // JWT token oluşturuluyor.
-
-            // Başarılı giriş sonrası kullanıcı bilgileri döndürülüyor.
-            return Ok(new { user.UserId, user.Username, user.Email, user.ProfilePicture, AccessToken = token.AccessToken });
+            return Ok(new
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                ProfilePicture = user.ProfilePicture,
+                AccessToken = generatedToken.AccessToken,
+                RefreshToken = generatedToken.RefreshToken,
+                Roles = userRoles
+            });
         }
-
-        // TODO: Kullanıcı şifresini sıfırlama işlemi yapılacak
-        // TODO: Kullanıcı çıkış yapabilecektir.
 
         [HttpPost("employee/login")]
         public async Task<IActionResult> EmployeeLogin([FromBody] LoginDto loginDto)
         {
             var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Email == loginDto.Email);
 
-
             if (employee == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, employee.Password))
             {
-                return Unauthorized("Invalid credentials");
+                return Unauthorized("Invalid credentials for employee.");
             }
 
-            var employeeRoles = new List<string> { employee.EmployeeStatus.ToString() };
-            Token token = TokenHandler.CreateToken(_configuration, employee.EmployeeId, employee.Name, employee.Email, employeeRoles);
+            var employeeRoles = new List<string> { employee.EmployeeStatus.ToString() ?? "Employee" };
 
-            return Ok(new { employee.EmployeeId, employee.Name, employee.Email, employee.ProfilePictureUrl, AccessToken = token.AccessToken });
+            Token generatedToken = TokenHandler.CreateToken(
+                _configuration,
+                employee.EmployeeId,
+                employee.Name,
+                employee.Email,
+                employeeRoles
+            );
+
+            return Ok(new
+            {
+                employee.EmployeeId,
+                employee.Name,
+                employee.Email,
+                AccessToken = generatedToken.AccessToken,
+                RefreshToken = generatedToken.RefreshToken
+            });
         }
     }
 }

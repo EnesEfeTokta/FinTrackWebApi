@@ -19,10 +19,9 @@ namespace FinTrackWebApi.Models
         public int BorrowerId { get; set; }
         public virtual UserModel Borrower { get; set; } = new UserModel();
 
-        [Required]
         [ForeignKey("VideoMetadataId")]
-        public int VideoMetadataId { get; set; }
-        public virtual VideoMetadataModel VideoMetadata { get; set; } = new VideoMetadataModel();
+        public int? VideoMetadataId { get; set; }
+        public virtual VideoMetadataModel? VideoMetadata { get; set; }
 
         [Required]
         [ForeignKey("CurrencyId")]

@@ -175,10 +175,10 @@ namespace FinTrackWebApi.Controller
 
                     emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.OriginalFileName);
                     emailBody = emailBody.Replace("[VIDEO_FILE_SIZE]", videoMetadata.FileSize.ToString() ?? "N/A");
-                    emailBody = emailBody.Replace("[USER_NAME]", videoMetadata.UploadedUser?.Username);
-                    emailBody = emailBody.Replace("[LENDER_NAME]", videoMetadata.Debt?.Lender.Username);
-                    emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", videoMetadata.Debt?.Lender.Username ?? "N/A");
-                    emailBody = emailBody.Replace("[DETAIL_BORROWER_NAME]", videoMetadata.Debt?.Borrower.Username ?? "N/A");
+                    emailBody = emailBody.Replace("[USER_NAME]", videoMetadata.UploadedUser?.UserName);
+                    emailBody = emailBody.Replace("[LENDER_NAME]", videoMetadata.Debt?.Lender.UserName);
+                    emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", videoMetadata.Debt?.Lender.UserName ?? "N/A");
+                    emailBody = emailBody.Replace("[DETAIL_BORROWER_NAME]", videoMetadata.Debt?.Borrower.UserName ?? "N/A");
                     emailBody = emailBody.Replace("[DETAIL_DEBT_AMOUNT]", videoMetadata.Debt?.Amount.ToString());
                     emailBody = emailBody.Replace("[DETAIL_DEBT_CURRENCY]", videoMetadata.Debt?.CurrencyModel?.Code ?? "N/A");
                     emailBody = emailBody.Replace("[DETAIL_DEBT_DUE_DATE]", videoMetadata.Debt?.DueDateUtc.ToString() ?? "N/A");

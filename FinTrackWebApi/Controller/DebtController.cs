@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Services.SecureDebtService;
 
 namespace FinTrackWebApi.Controller
 {
@@ -16,28 +17,30 @@ namespace FinTrackWebApi.Controller
     {
         private readonly MyDataContext _context;
         private readonly ILogger<DebtController> _logger;
+        private readonly ISecureDebtService _secureDebtService;
 
-        public DebtController(MyDataContext context, ILogger<DebtController> logger)
+        public DebtController(MyDataContext context, ILogger<DebtController> logger, ISecureDebtService secureDebtService)
         {
             _context = context;
             _logger = logger;
+            _secureDebtService = secureDebtService;
         }
 
-        private int GetAuthenticatedUserId()
+        private int GetAuthenticatedId()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out int userId))
+            var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(IdClaim, out int Id))
             {
                 throw new UnauthorizedAccessException("Invalid user ID in token.");
             }
-            return userId;
+            return Id;
         }
 
         // Kullanıcı borçlarını listeleme metodu.
         [HttpGet("user-debts")]
         public async Task<IActionResult> GetUserDebtsAsync()
         {
-            int userId = GetAuthenticatedUserId();
+            int Id = GetAuthenticatedId();
             try
             {
                 var debts = await _context.Debts
@@ -45,7 +48,7 @@ namespace FinTrackWebApi.Controller
                     .Include(d => d.Borrower)
                     .Include(d => d.VideoMetadata)
                     .Include(d => d.CurrencyModel)
-                    .Where(d => d.Lender.UserId == userId || d.Borrower.UserId == userId)
+                    .Where(d => d.Lender.Id == Id || d.Borrower.Id == Id)
                     .ToListAsync();
 
                 return Ok(debts);
@@ -66,36 +69,32 @@ namespace FinTrackWebApi.Controller
                 return BadRequest("Invalid debt offer request.");
             }
 
-            int userId = GetAuthenticatedUserId();
+            int Id = GetAuthenticatedId();
             var borrower = await _context.Users.FindAsync(request.BorrowerId);
-            if (borrower == null || borrower.UserId == userId)
+            if (borrower == null || borrower.Id == Id)
             {
                 return BadRequest("Invalid borrower specified.");
             }
 
-            var lender = await _context.Users.FindAsync(userId);
+            var lender = await _context.Users.FindAsync(Id);
             if (lender == null)
             {
                 return Unauthorized("Lender not found.");
             }
 
-            var debt = new DebtModel
-            {
-                LenderId = lender.UserId,
-                BorrowerId = borrower.UserId,
-                Amount = request.Amount,
-                CurrencyModel = await _context.Currencies.FirstOrDefaultAsync(c => c.Code == request.CurrencyCode) ?? throw new ArgumentException("Invalid currency code."),
-                DueDateUtc = DateTime.SpecifyKind(request.DueDateUtc, DateTimeKind.Unspecified).ToUniversalTime(),
-                Description = request.Description,
-                CreateAtUtc = DateTime.UtcNow,
-                UpdatedAtUtc = DateTime.UtcNow,
-                Status = DebtStatus.PendingBorrowerAcceptance
-            };
-
             try
             {
-                _context.Debts.Add(debt);
-                await _context.SaveChangesAsync();
+                CurrencyModel currencyModel =  await _context.Currencies.FirstOrDefaultAsync(c => c.Code == request.CurrencyCode) ?? throw new ArgumentException("Invalid currency code.");
+                
+                await _secureDebtService.CreateDebtOfferAsync(
+                    lender.Id.ToString(),
+                    borrower.Email ?? throw new ArgumentException("We need the borrower's email address."),
+                    request.Amount,
+                    currencyModel,
+                    request.DueDateUtc,
+                    request.Description);
+
+
             }
             catch (Exception ex)
             {
@@ -103,7 +102,19 @@ namespace FinTrackWebApi.Controller
                 return StatusCode(500, "Internal server error while creating debt offer.");
             }
 
-            return CreatedAtAction(nameof(GetUserDebtsAsync), new { id = debt.DebtId }, debt);
+            return Ok(new
+            {
+                Message = "Debt offer created successfully.",
+                Debt = new
+                {
+                    LenderId = Id,
+                    BorrowerId = request.BorrowerId,
+                    Amount = request.Amount,
+                    CurrencyCode = request.CurrencyCode,
+                    DueDateUtc = request.DueDateUtc,
+                    Description = request.Description
+                }
+            });
         }
     }
 }
