@@ -11,6 +11,7 @@
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -31,6 +32,10 @@
 	  <Content Include="Services\EmailService\EmailHtmlSchemes\**\*.html">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
   </ItemGroup>
 
 </Project>

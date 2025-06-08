@@ -1,5 +1,4 @@
-﻿using FinTrackWebApi.Models;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -9,22 +8,31 @@ namespace FinTrackWebApi.Security
 {
     public static class TokenHandler
     {
-        public static Token CreateToken(IConfiguration configuration, UserModel user)
+        public static Token CreateToken(IConfiguration configuration, int id, string name, string email, IEnumerable<string> roles)
         {
             Token token = new Token();
 
-            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Token:SecurityKey"] ?? "null"));
+            string securityKeyString = configuration["Token:SecurityKey"] ?? throw new InvalidOperationException("Token:SecurityKey is not configured or null in TokenHandler.");
+            SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityKeyString));
+
             SigningCredentials signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()), // Kullanıcı ID'si
-                new Claim(ClaimTypes.Name, user.Username),                   // Kullanıcı Adı
-                new Claim(ClaimTypes.Email, user.Email)                     // E-posta
-                // TODO: Gerekirse başka claimler (örneğin roller) eklenebilir
+                new Claim(ClaimTypes.NameIdentifier, id.ToString()), // Kullanıcı ID'si
+                new Claim(ClaimTypes.Name, name),                   // Kullanıcı Adı
+                new Claim(ClaimTypes.Email, email)                     // E-posta
             };
 
-            token.Expiration = DateTime.UtcNow.AddMinutes(Convert.ToDouble(configuration["Token:Expiration"]));
+            if (roles != null && roles.Any())
+            {
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
+
+            token.Expiration = DateTime.UtcNow.AddMinutes(Convert.ToDouble(configuration["Token:Expiration"] ?? "60"));
 
             JwtSecurityToken jwtSecurityToken = new JwtSecurityToken(
                 issuer: configuration["Token:Issuer"],
