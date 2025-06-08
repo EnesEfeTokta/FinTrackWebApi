@@ -355,6 +355,8 @@ namespace FinTrackWebApi.Data
                 entity.HasKey(dvm => dvm.DebtVideoMetadataId);
                 entity.Property(dvm => dvm.DebtVideoMetadataId).ValueGeneratedOnAdd();
 
+                entity.Property(dvm => dvm.Status).HasConversion<string>();
+
                 entity.HasOne(dvm => dvm.Debt)
                       .WithMany(d => d.DebtVideoMetadatas)
                       .HasForeignKey(dvm => dvm.DebtId)

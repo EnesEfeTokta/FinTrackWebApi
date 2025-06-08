@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
@@ -44,14 +45,14 @@ namespace FinTrackWebApi.Controller
                 Directory.CreateDirectory(_encryptedVideosPath);
         }
 
-        private int GetUserIdFromClaims()
+        private int GetAuthenticatedId()
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId");
-            if (userIdClaim == null)
+            var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(IdClaim, out int Id))
             {
-                throw new UnauthorizedAccessException("Kullanıcı kimliği bulunamadı.");
+                throw new UnauthorizedAccessException("Invalid user ID in token.");
             }
-            return int.Parse(userIdClaim.Value);
+            return Id;
         }
 
         [HttpPost("user-upload-video")]
@@ -63,7 +64,7 @@ namespace FinTrackWebApi.Controller
                 return BadRequest("Dosya boş veya geçersiz.");
             }
 
-            int userId = GetUserIdFromClaims();
+            int userId = GetAuthenticatedId();
 
             var videoId = Guid.NewGuid();
             var orginalFileName = Path.GetFileName(file.FileName);
@@ -95,6 +96,18 @@ namespace FinTrackWebApi.Controller
                 await _context.VideoMetadatas.AddAsync(videoMetadata);
                 await _context.SaveChangesAsync();
 
+                var debtVideoMetadata = new DebtVideoMetadataModel
+                {
+                    DebtId = debtId,
+                    VideoMetadataId = videoMetadata.VideoMetadataId,
+                    CreateAtUtc = DateTime.UtcNow,
+                    UpdatedAtUtc = DateTime.UtcNow,
+                    Status = VideoStatus.PendingApproval
+                };
+
+                await _context.DebtVideoMetadatas.AddAsync(debtVideoMetadata);
+                await _context.SaveChangesAsync();
+
                 _logger.LogInformation("Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata);
                 return Ok(new { Message = "Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata } );
             }
@@ -106,7 +119,7 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPost("video-approve/{videoId}")]
-        [Authorize(Roles = "Admin,VideoApproval")]
+        [Authorize]
         public async Task<IActionResult> ApproveAndEncryptVideo([FromRoute] int videoId)
         {
             var videoMetadata = await _context.DebtVideoMetadatas
@@ -167,7 +180,7 @@ namespace FinTrackWebApi.Controller
                     string emailSubject = "Debt Video Approved and Encrypted";
                     string emailBody = string.Empty;
 
-                    string emailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "CodeVerificationScheme.html");
+                    string emailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "OperatorDebtApprovalScheme.html");
                     if (!System.IO.File.Exists(emailTemplatePath))
                     {
                         _logger.LogError("Email template not found at {Path}", emailTemplatePath);
@@ -182,9 +195,9 @@ namespace FinTrackWebApi.Controller
                     emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.VideoMetadata.OriginalFileName);
                     emailBody = emailBody.Replace("[VIDEO_FILE_SIZE]", videoMetadata.VideoMetadata.FileSize.ToString() ?? "N/A");
                     emailBody = emailBody.Replace("[USER_NAME]", videoMetadata.VideoMetadata.UploadedUser?.UserName);
-                    emailBody = emailBody.Replace("[LENDER_NAME]", videoMetadata.Debt?.Lender.UserName);
-                    emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", videoMetadata.Debt?.Lender.UserName ?? "N/A");
-                    emailBody = emailBody.Replace("[DETAIL_BORROWER_NAME]", videoMetadata.Debt?.Borrower.UserName ?? "N/A");
+                    emailBody = emailBody.Replace("[LENDER_NAME]", videoMetadata.Debt?.Lender?.UserName);
+                    emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", videoMetadata.Debt?.Lender?.UserName ?? "N/A");
+                    emailBody = emailBody.Replace("[DETAIL_BORROWER_NAME]", videoMetadata.Debt?.Borrower?.UserName ?? "N/A");
                     emailBody = emailBody.Replace("[DETAIL_DEBT_AMOUNT]", videoMetadata.Debt?.Amount.ToString());
                     emailBody = emailBody.Replace("[DETAIL_DEBT_CURRENCY]", videoMetadata.Debt?.CurrencyModel?.Code ?? "N/A");
                     emailBody = emailBody.Replace("[DETAIL_DEBT_DUE_DATE]", videoMetadata.Debt?.DueDateUtc.ToString() ?? "N/A");
@@ -197,7 +210,7 @@ namespace FinTrackWebApi.Controller
 
                     emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
 
-                    await _emailSender.SendEmailAsync(videoMetadata.VideoMetadata.UploadedUser?.Email ?? "Null", emailSubject, emailBody);
+                    await _emailSender.SendEmailAsync(videoMetadata.Debt?.Lender?.Email ?? "N/A", emailSubject, emailBody);
 
                     _logger.LogInformation("Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}", videoMetadata.VideoMetadata.UploadedUser?.Email);
                 }
@@ -221,12 +234,12 @@ namespace FinTrackWebApi.Controller
 
         [HttpGet("video-metadata-stream/{videoId}")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> StreamVideo([FromRoute] int id, [FromQuery] string key)
+        public async Task<IActionResult> StreamVideo([FromRoute] int videoId, [FromQuery] string key)
         {
             if (string.IsNullOrEmpty(key))
                 return BadRequest("Şifreleme anahtarı (key) gereklidir.");
 
-            var video = await _context.VideoMetadatas.FindAsync(id);
+            var video = await _context.VideoMetadatas.FindAsync(videoId);
             if (video == null) return NotFound("Video bulunamadı.");
 
             if (video.Status != VideoStatus.Encrypted ||
