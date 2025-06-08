@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateInitialSchemaWithIdentityAndOtp : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -390,6 +390,45 @@ namespace FinTrackWebApi.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Debts",
+                columns: table => new
+                {
+                    DebtId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    LenderId = table.Column<int>(type: "integer", nullable: false),
+                    BorrowerId = table.Column<int>(type: "integer", nullable: false),
+                    CurrencyId = table.Column<int>(type: "integer", nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    CreateAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DueDateUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Debts", x => x.DebtId);
+                    table.ForeignKey(
+                        name: "FK_Debts_Currencies_CurrencyId",
+                        column: x => x.CurrencyId,
+                        principalTable: "Currencies",
+                        principalColumn: "CurrencyId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Debts_Users_BorrowerId",
+                        column: x => x.BorrowerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Debts_Users_LenderId",
+                        column: x => x.LenderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Notifications",
                 columns: table => new
                 {
@@ -498,7 +537,6 @@ namespace FinTrackWebApi.Data.Migrations
                 {
                     VideoMetadataId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    DebtId = table.Column<int>(type: "integer", nullable: false),
                     UploadedByUserId = table.Column<int>(type: "integer", nullable: false),
                     OriginalFileName = table.Column<string>(type: "text", nullable: true),
                     StoredFileName = table.Column<string>(type: "text", nullable: false),
@@ -522,7 +560,7 @@ namespace FinTrackWebApi.Data.Migrations
                         column: x => x.UploadedByUserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -624,49 +662,32 @@ namespace FinTrackWebApi.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Debts",
+                name: "DebtVideoMetadatas",
                 columns: table => new
                 {
-                    DebtId = table.Column<int>(type: "integer", nullable: false)
+                    DebtVideoMetadataId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    LenderId = table.Column<int>(type: "integer", nullable: false),
-                    BorrowerId = table.Column<int>(type: "integer", nullable: false),
+                    DebtId = table.Column<int>(type: "integer", nullable: false),
                     VideoMetadataId = table.Column<int>(type: "integer", nullable: false),
-                    CurrencyId = table.Column<int>(type: "integer", nullable: false),
-                    Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     CreateAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DueDateUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
+                    Status = table.Column<int>(type: "integer", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Debts", x => x.DebtId);
+                    table.PrimaryKey("PK_DebtVideoMetadatas", x => x.DebtVideoMetadataId);
                     table.ForeignKey(
-                        name: "FK_Debts_Currencies_CurrencyId",
-                        column: x => x.CurrencyId,
-                        principalTable: "Currencies",
-                        principalColumn: "CurrencyId",
-                        onDelete: ReferentialAction.Restrict);
+                        name: "FK_DebtVideoMetadatas_Debts_DebtId",
+                        column: x => x.DebtId,
+                        principalTable: "Debts",
+                        principalColumn: "DebtId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Debts_Users_BorrowerId",
-                        column: x => x.BorrowerId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Debts_Users_LenderId",
-                        column: x => x.LenderId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Debts_VideoMetadatas_VideoMetadataId",
+                        name: "FK_DebtVideoMetadatas_VideoMetadatas_VideoMetadataId",
                         column: x => x.VideoMetadataId,
                         principalTable: "VideoMetadatas",
                         principalColumn: "VideoMetadataId",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -750,10 +771,14 @@ namespace FinTrackWebApi.Data.Migrations
                 column: "LenderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Debts_VideoMetadataId",
-                table: "Debts",
-                column: "VideoMetadataId",
-                unique: true);
+                name: "IX_DebtVideoMetadatas_DebtId",
+                table: "DebtVideoMetadatas",
+                column: "DebtId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DebtVideoMetadatas_VideoMetadataId",
+                table: "DebtVideoMetadatas",
+                column: "VideoMetadataId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EmployeeDepartments_DepartmentId",
@@ -895,7 +920,7 @@ namespace FinTrackWebApi.Data.Migrations
                 name: "BudgetCategories");
 
             migrationBuilder.DropTable(
-                name: "Debts");
+                name: "DebtVideoMetadatas");
 
             migrationBuilder.DropTable(
                 name: "EmployeeDepartments");
@@ -925,6 +950,9 @@ namespace FinTrackWebApi.Data.Migrations
                 name: "Budgets");
 
             migrationBuilder.DropTable(
+                name: "Debts");
+
+            migrationBuilder.DropTable(
                 name: "VideoMetadatas");
 
             migrationBuilder.DropTable(
@@ -932,9 +960,6 @@ namespace FinTrackWebApi.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Employees");
-
-            migrationBuilder.DropTable(
-                name: "Currencies");
 
             migrationBuilder.DropTable(
                 name: "CurrencySnapshots");
@@ -947,6 +972,9 @@ namespace FinTrackWebApi.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Currencies");
 
             migrationBuilder.DropTable(
                 name: "MembershipPlans");

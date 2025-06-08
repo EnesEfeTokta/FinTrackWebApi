@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models
 {
+    [Table("Debts")]
     public class DebtModel
     {
         [Key]
@@ -12,16 +13,12 @@ namespace FinTrackWebApi.Models
         [Required]
         [ForeignKey("LenderId")]
         public int LenderId { get; set; }
-        public virtual UserModel Lender { get; set; } = new UserModel();
+        public virtual UserModel? Lender { get; set; }
 
         [Required]
         [ForeignKey("BorrowerId")]
         public int BorrowerId { get; set; }
-        public virtual UserModel Borrower { get; set; } = new UserModel();
-
-        [ForeignKey("VideoMetadataId")]
-        public int? VideoMetadataId { get; set; }
-        public virtual VideoMetadataModel? VideoMetadata { get; set; }
+        public virtual UserModel? Borrower { get; set; }
 
         [Required]
         [ForeignKey("CurrencyId")]
@@ -76,6 +73,8 @@ namespace FinTrackWebApi.Models
         //[Column("PaymentConfirmationDateUtc")]
         //[DataType(DataType.DateTime)]
         //public DateTime? PaymentConfirmationDateUtc { get; set; } = null;
+
+        public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } = new List<DebtVideoMetadataModel>();
     }
 
     public enum DebtStatus

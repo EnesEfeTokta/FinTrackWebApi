@@ -11,11 +11,6 @@ namespace FinTrackWebApi.Models
         public int VideoMetadataId { get; set; }
 
         [Required]
-        [ForeignKey(nameof(Debt))]
-        public int DebtId { get; set; }
-        public virtual DebtModel? Debt { get; set; }
-
-        [Required]
         [ForeignKey(nameof(UploadedUser))]
         public int UploadedByUserId { get; set; }
         public virtual UserModel? UploadedUser { get; set; }
@@ -66,18 +61,9 @@ namespace FinTrackWebApi.Models
 
         [Required]
         [Column("StorageType")]
-        public VideoStorageType StorageType { get; set; } = VideoStorageType.FileSystem; // Varsayılan değer
-    }
+        public VideoStorageType StorageType { get; set; } = VideoStorageType.FileSystem;
 
-    public enum VideoStatus
-    {
-        PendingApproval,                // Onay Bekliyor
-        ApprovedAndQueuedForEncryption, // Operatör Onayladı, Şifreleme Kuyruğunda
-        ProcessingEncryption,           // Şifreleniyor
-        Encrypted,                      // Başarıyla Şifrelendi (ve anahtar gönderildi)
-        Rejected,                       // Reddedildi
-        EncryptionFailed,               // Şifreleme Başarısız Oldu
-        ProcessingError                 // Genel Bir İşlem Hatası
+        public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } = new List<DebtVideoMetadataModel>();
     }
 
     public enum VideoStorageType

@@ -46,7 +46,6 @@ namespace FinTrackWebApi.Controller
                 var debts = await _context.Debts
                     .Include(d => d.Lender)
                     .Include(d => d.Borrower)
-                    .Include(d => d.VideoMetadata)
                     .Include(d => d.CurrencyModel)
                     .Where(d => d.Lender.Id == Id || d.Borrower.Id == Id)
                     .ToListAsync();
@@ -70,6 +69,7 @@ namespace FinTrackWebApi.Controller
             }
 
             int Id = GetAuthenticatedId();
+
             var borrower = await _context.Users.FindAsync(request.BorrowerId);
             if (borrower == null || borrower.Id == Id)
             {
@@ -84,8 +84,8 @@ namespace FinTrackWebApi.Controller
 
             try
             {
-                CurrencyModel currencyModel =  await _context.Currencies.FirstOrDefaultAsync(c => c.Code == request.CurrencyCode) ?? throw new ArgumentException("Invalid currency code.");
-                
+                CurrencyModel currencyModel = await _context.Currencies.FirstOrDefaultAsync(c => c.Code == request.CurrencyCode) ?? throw new ArgumentException("Invalid currency code.");
+
                 await _secureDebtService.CreateDebtOfferAsync(
                     lender.Id.ToString(),
                     borrower.Email ?? throw new ArgumentException("We need the borrower's email address."),
@@ -94,27 +94,135 @@ namespace FinTrackWebApi.Controller
                     request.DueDateUtc,
                     request.Description);
 
-
+                return Ok(new
+                {
+                    Message = "Debt offer created successfully.",
+                    Debt = new
+                    {
+                        LenderId = Id,
+                        BorrowerId = request.BorrowerId,
+                        Amount = request.Amount,
+                        CurrencyCode = request.CurrencyCode,
+                        DueDateUtc = request.DueDateUtc,
+                        Description = request.Description
+                    }
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating debt offer.");
                 return StatusCode(500, "Internal server error while creating debt offer.");
             }
+        }
 
-            return Ok(new
+        // Borç bilgilerini alma metodu.
+        [HttpGet("debt/{debtId}")]
+        public async Task<IActionResult> GetDebtByIdAsync(int debtId)
+        {
+            try
             {
-                Message = "Debt offer created successfully.",
-                Debt = new
+                var debt = await _context.Debts
+                    .Include(d => d.Lender)
+                    .Include(d => d.Borrower)
+                    .Include(d => d.CurrencyModel)
+                    .FirstOrDefaultAsync(d => d.DebtId == debtId);
+                if (debt == null)
                 {
-                    LenderId = Id,
-                    BorrowerId = request.BorrowerId,
-                    Amount = request.Amount,
-                    CurrencyCode = request.CurrencyCode,
-                    DueDateUtc = request.DueDateUtc,
-                    Description = request.Description
+                    return NotFound("Debt not found.");
                 }
-            });
+                return Ok(debt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving debt by ID.");
+                return StatusCode(500, "Internal server error while retrieving debt.");
+            }
+        }
+
+        // Kullanıcıya ait borçları alma metodu.
+        [HttpGet("user-debts/{Id}")]
+        public async Task<IActionResult> GetDebtsByUserIdAsync(int Id)
+        {
+            try
+            {
+                var debts = await _context.Debts
+                    .Include(d => d.Lender)
+                    .Include(d => d.Borrower)
+                    .Include(d => d.CurrencyModel)
+                    .Where(d => d.Lender.Id == Id || d.Borrower.Id == Id)
+                    .ToListAsync();
+                return Ok(debts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving debts by user ID.");
+                return StatusCode(500, "Internal server error while retrieving debts.");
+            }
+        }
+
+        // Borç teklifini kabul etme metodu.
+        [HttpPost("accept-debt-offer/debt-{debtId}/decision-{decision}")]
+        public async Task<IActionResult> AcceptDebtOfferAsync(int debtId, bool decision)
+        {
+            int Id = GetAuthenticatedId();
+            try
+            {
+                var debt = await _context.Debts
+                    .Include(d => d.Lender)
+                    .Include(d => d.Borrower)
+                    .FirstOrDefaultAsync(d => d.DebtId == debtId);
+                if (debt == null)
+                {
+                    return NotFound("Debt offer not found.");
+                }
+                if (debt.Borrower.Id != Id)
+                {
+                    return Forbid("You are not authorized to accept this debt offer.");
+                }
+
+                if (debt.Status != DebtStatus.PendingBorrowerAcceptance)
+                {
+                    return BadRequest("Debt offer is not in a state that can be accepted.");
+                }
+
+                if (decision)
+                {
+                    debt.Status = DebtStatus.PendingOperatorApproval;
+                    debt.UpdatedAtUtc = DateTime.UtcNow;
+
+                    _context.Debts.Update(debt);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    debt.Status = DebtStatus.RejectedByBorrower;
+                    debt.UpdatedAtUtc = DateTime.UtcNow;
+
+                    _context.Debts.Update(debt);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(new
+                {
+                    Message = "Debt offer retrieved successfully.",
+                    Debt = new
+                    {
+                        debt.DebtId,
+                        debt.Lender,
+                        debt.Borrower,
+                        debt.Amount,
+                        debt.CurrencyModel?.Code,
+                        debt.DueDateUtc,
+                        debt.Description,
+                        Status = debt.Status.ToString()
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving debt offer for acceptance.");
+                return StatusCode(500, "Internal server error while retrieving debt offer.");
+            }
         }
     }
 }

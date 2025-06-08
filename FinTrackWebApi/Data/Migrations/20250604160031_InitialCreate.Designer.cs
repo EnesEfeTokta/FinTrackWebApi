@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250603144558_InitialIdentitySchema")]
-    partial class InitialIdentitySchema
+    [Migration("20250604160031_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -307,9 +307,6 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("UpdatedAtUtc");
 
-                    b.Property<int>("VideoMetadataId")
-                        .HasColumnType("integer");
-
                     b.HasKey("DebtId");
 
                     b.HasIndex("BorrowerId");
@@ -318,10 +315,43 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.HasIndex("LenderId");
 
-                    b.HasIndex("VideoMetadataId")
-                        .IsUnique();
-
                     b.ToTable("Debts", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.DebtVideoMetadataModel", b =>
+                {
+                    b.Property<int>("DebtVideoMetadataId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DebtVideoMetadataId"));
+
+                    b.Property<DateTime>("CreateAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreateAtUtc");
+
+                    b.Property<int>("DebtId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasMaxLength(100)
+                        .HasColumnType("integer")
+                        .HasColumnName("Status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("VideoMetadataId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("DebtVideoMetadataId");
+
+                    b.HasIndex("DebtId");
+
+                    b.HasIndex("VideoMetadataId");
+
+                    b.ToTable("DebtVideoMetadatas", (string)null);
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.DepartmentModel", b =>
@@ -983,9 +1013,6 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ContentType");
 
-                    b.Property<int>("DebtId")
-                        .HasColumnType("integer");
-
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval")
                         .HasColumnName("Duration");
@@ -1251,17 +1278,28 @@ namespace FinTrackWebApi.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.VideoMetadataModel", "VideoMetadata")
-                        .WithOne("Debt")
-                        .HasForeignKey("FinTrackWebApi.Models.DebtModel", "VideoMetadataId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
-
                     b.Navigation("Borrower");
 
                     b.Navigation("CurrencyModel");
 
                     b.Navigation("Lender");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.DebtVideoMetadataModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.DebtModel", "Debt")
+                        .WithMany("DebtVideoMetadatas")
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinTrackWebApi.Models.VideoMetadataModel", "VideoMetadata")
+                        .WithMany("DebtVideoMetadatas")
+                        .HasForeignKey("VideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Debt");
 
                     b.Navigation("VideoMetadata");
                 });
@@ -1402,7 +1440,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.UserModel", "UploadedUser")
                         .WithMany("UploadedVideos")
                         .HasForeignKey("UploadedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("UploadedUser");
@@ -1486,6 +1524,11 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("Rates");
                 });
 
+            modelBuilder.Entity("FinTrackWebApi.Models.DebtModel", b =>
+                {
+                    b.Navigation("DebtVideoMetadatas");
+                });
+
             modelBuilder.Entity("FinTrackWebApi.Models.DepartmentModel", b =>
                 {
                     b.Navigation("EmployeeDepartments");
@@ -1535,7 +1578,7 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.VideoMetadataModel", b =>
                 {
-                    b.Navigation("Debt");
+                    b.Navigation("DebtVideoMetadatas");
                 });
 #pragma warning restore 612, 618
         }

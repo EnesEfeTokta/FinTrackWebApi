@@ -53,7 +53,6 @@ namespace FinTrackWebApi.Controller
                 var debts = await _context.Debts
                     .Include(d => d.Lender)
                     .Include(d => d.Borrower)
-                    .Include(d => d.VideoMetadata)
                     .Include(d => d.CurrencyModel)
                     .ToListAsync();
                 return Ok(debts);
@@ -81,7 +80,6 @@ namespace FinTrackWebApi.Controller
                 var pendingDebts = await _context.Debts
                     .Include(d => d.Lender)
                     .Include(d => d.Borrower)
-                    .Include(d => d.VideoMetadata)
                     .Include(d => d.CurrencyModel)
                     .Where(d => d.Status == debtStatus)
                     .ToListAsync();

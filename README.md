@@ -245,6 +245,124 @@ Her mikroservis kendi yapılandırma dosyalarına sahiptir. Temel yapılandırma
 
 **Güvenlik Notu:** Üretim ortamı için hassas yapılandırma bilgilerini asla kaynak kod deposuna göndermeyin. Ortam Değişkenleri, Azure Key Vault, AWS Secrets Manager veya HashiCorp Vault gibi güvenli yapılandırma yönetimi çözümlerini kullanın.
 
+## Kullanıcı Kimlik Doğrulama ve Kayıt Süreçleri
+
+Bu proje, güvenli kullanıcı yönetimi ve kimlik doğrulama için ASP.NET Core Identity altyapısını kullanmaktadır. Kullanıcı kayıt süreci E-posta OTP (One-Time Password) doğrulaması ile desteklenmekte ve kimlik doğrulama JWT (JSON Web Token) tabanlı olarak gerçekleştirilmektedir.
+
+### 1. Kullanıcı Kayıt Süreci (OTP ile)
+
+Yeni bir kullanıcının sisteme kaydolması iki ana adımdan oluşur:
+
+**Adım A: Kayıt Başlatma (Initiate Registration)**
+
+1.  **İstek (Client -> Server):**
+    *   Kullanıcı, kayıt formuna e-posta adresi, kullanıcı adı ve şifresini girer.
+    *   Bu bilgiler aşağıdaki endpoint'e `POST` isteği ile JSON formatında gönderilir:
+        *   **Endpoint:** `POST /api/Auth/user/initiate-registration`
+        *   **Request Body (Örnek):**
+            ```json
+            {
+              "email": "kullanici@example.com",
+              "username": "kullaniciAdi",
+              "password": "GucluBirSifre123!",
+              "profilePicture": "istege_bagli_profil_resmi_url"
+            }
+            ```
+
+2.  **İşlem (Server):**
+    *   Sunucu, gelen e-posta adresinin ve kullanıcı adının sistemde daha önce kayıtlı olup olmadığını kontrol eder (`UserManager` aracılığıyla).
+    *   Eğer e-posta veya kullanıcı adı zaten mevcutsa, uygun bir hata mesajı (`400 Bad Request`) döndürülür.
+    *   Benzersizse, 6 haneli bir OTP (Tek Kullanımlık Şifre) üretilir.
+    *   Bu OTP kodu (BCrypt ile hash'lenerek) ve kullanıcının girdiği diğer bilgiler (e-posta, kullanıcı adı, **düz şifre**, profil resmi URL'si) geçici bir süre için veritabanındaki `OtpVerifications` tablosunda saklanır.
+        *   **Not:** Düz şifrenin geçici olarak saklanması, OTP doğrulandıktan sonra `UserManager` ile kullanıcıyı oluştururken bu şifreyi kullanabilmek içindir. Bu kayıt, OTP doğrulandıktan veya süresi dolduktan sonra hemen silinir.
+    *   Üretilen **düz OTP kodu**, kullanıcının belirttiği e-posta adresine bir doğrulama e-postası ile gönderilir.
+
+3.  **Yanıt (Server -> Client):**
+    *   Başarılı olursa, `200 OK` durum kodu ile birlikte "OTP e-posta adresinize gönderildi. Lütfen hesabınızı doğrulamak için kodu kullanın." gibi bir mesaj döndürülür.
+
+**Adım B: OTP Doğrulama ve Kayıt Tamamlama (Verify OTP & Register)**
+
+1.  **İstek (Client -> Server):**
+    *   Kullanıcı, e-postasına gelen OTP kodunu ve kayıt sırasında kullandığı e-posta adresini girer.
+    *   Bu bilgiler aşağıdaki endpoint'e `POST` isteği ile JSON formatında gönderilir:
+        *   **Endpoint:** `POST /api/Auth/user/verify-otp-and-register`
+        *   **Request Body (Örnek):**
+            ```json
+            {
+              "email": "kullanici@example.com",
+              "otpCode": "123456" // Kullanıcının girdiği OTP
+            }
+            ```
+
+2.  **İşlem (Server):**
+    *   Sunucu, gelen OTP kodunu, `OtpVerifications` tablosunda saklanan hash'lenmiş OTP kodu ve geçerlilik süresi ile karşılaştırır.
+    *   Eğer OTP yanlış veya süresi dolmuşsa, uygun bir hata mesajı (`400 Bad Request`) döndürülür.
+    *   Eğer OTP doğru ve geçerliyse:
+        *   `OtpVerifications` tablosundan kullanıcının geçici olarak saklanan bilgileri (kullanıcı adı, e-posta, düz şifre, profil resmi) alınır.
+        *   Bu bilgilerle yeni bir `UserModel` nesnesi oluşturulur.
+        *   `UserManager.CreateAsync(newUser, temporaryPlainPassword)` metodu çağrılarak kullanıcı ASP.NET Core Identity sistemine kaydedilir. `UserManager` şifreyi kendi standartlarına göre hash'leyip saklar ve `NormalizedUserName`, `NormalizedEmail`, `SecurityStamp` gibi gerekli Identity alanlarını doldurur.
+        *   Kullanıcıya varsayılan olarak "User" rolü atanır (`UserManager.AddToRoleAsync`).
+        *   Başarılı kayıttan sonra, `OtpVerifications` tablosundaki ilgili OTP kaydı güvenlik nedeniyle hemen silinir.
+        *   (İsteğe bağlı) Kullanıcı için varsayılan ayarlar (`UserSettingsModel`) oluşturulur.
+        *   (İsteğe bağlı) Kullanıcıya hoş geldin e-postası gönderilir.
+
+3.  **Yanıt (Server -> Client):**
+    *   Kayıt işlemi başarılı olursa, `200 OK` durum kodu ile birlikte "Kayıt başarılı. Artık giriş yapabilirsiniz." gibi bir mesaj ve yeni oluşturulan kullanıcının ID'si döndürülür.
+    *   `UserManager.CreateAsync` başarısız olursa (örn: şifre politikasına uymuyor), ilgili hata mesajları (`400 Bad Request`) döndürülür.
+
+### 2. Kullanıcı Giriş Süreci
+
+Kimliği doğrulanmış bir kullanıcının sisteme giriş yapması aşağıdaki adımları içerir:
+
+1.  **İstek (Client -> Server):**
+    *   Kullanıcı, login formuna e-posta adresini ve şifresini (düz metin) girer.
+    *   Bu bilgiler aşağıdaki endpoint'e `POST` isteği ile JSON formatında gönderilir:
+        *   **Endpoint:** `POST /api/Auth/user/login`
+        *   **Request Body (Örnek):**
+            ```json
+            {
+              "email": "kullanici@example.com",
+              "password": "GucluBirSifre123!"
+            }
+            ```
+
+2.  **İşlem (Server):**
+    *   Sunucu, öncelikle `UserManager.FindByEmailAsync(email)` ile kullanıcıyı e-posta adresine göre bulur.
+    *   Kullanıcı bulunamazsa, "Geçersiz kimlik bilgileri" hatası (`401 Unauthorized`) döndürülür.
+    *   Kullanıcı bulunursa, `SignInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)` metodu ile girilen şifrenin doğruluğu kontrol edilir. Bu metot aynı zamanda başarısız giriş denemelerini sayarak lockout mekanizmasını da yönetir.
+    *   Şifre yanlışsa veya hesap kilitlenmişse, uygun bir `401 Unauthorized` hatası döndürülür.
+    *   Şifre doğruysa:
+        *   `UserManager.GetRolesAsync(user)` ile kullanıcının rolleri alınır.
+        *   Bir JWT (JSON Web Token) **Access Token** üretilir. Bu token, payload'ında kullanıcının ID'sini (`ClaimTypes.NameIdentifier`), kullanıcı adını (`ClaimTypes.Name`), e-postasını (`ClaimTypes.Email`) ve rollerini (`ClaimTypes.Role`) içerir. Token, `appsettings.json`'da tanımlanan `SecurityKey`, `Issuer` ve `Audience` kullanılarak imzalanır.
+        *   (İsteğe bağlı) Bir **Refresh Token** da üretilip `HttpOnly` cookie olarak client'a gönderilebilir veya Access Token ile birlikte response body'sinde döndürülebilir. (Mevcut `TokenHandler`'ınız Refresh Token üretiyor).
+
+3.  **Yanıt (Server -> Client):**
+    *   Başarılı giriş durumunda, `200 OK` durum kodu ile birlikte aşağıdaki bilgileri içeren bir JSON response'u döndürülür:
+        ```json
+        {
+          "userId": 1,
+          "userName": "kullaniciAdi",
+          "email": "kullanici@example.com",
+          "profilePicture": "profil_resmi_url",
+          "accessToken": "uzun_bir_jwt_access_token_stringi",
+          "refreshToken": "uzun_bir_refresh_token_stringi", // Eğer kullanılıyorsa
+          "roles": ["User"] // Kullanıcının rolleri
+        }
+        ```
+
+### 3. Korumalı Endpoint'lere Erişim
+
+1.  Client, login işleminden aldığı `accessToken`'ı sonraki her korumalı API isteğinde `Authorization` HTTP başlığına ekler:
+    `Authorization: Bearer <accessToken>`
+2.  Sunucu, `AuthenticationMiddleware` (özellikle `JwtBearerHandler`) aracılığıyla bu token'ı doğrular:
+    *   İmzasını kontrol eder (`SecurityKey` kullanarak).
+    *   Süresinin dolup dolmadığını kontrol eder (`exp` claim'i).
+    *   Issuer (`iss`) ve Audience (`aud`) değerlerinin doğru olup olmadığını kontrol eder.
+3.  Eğer token geçerliyse, `HttpContext.User` nesnesi token'daki claim'lerle doldurulur.
+4.  `AuthorizationMiddleware`, endpoint'in `[Authorize]` veya `[Authorize(Roles = "...")]` attribute'larındaki gereksinimleri `HttpContext.User` üzerinden kontrol eder.
+    *   Yetki varsa, istek ilgili controller action'ına yönlendirilir.
+    *   Yetki yoksa, `401 Unauthorized` veya `403 Forbidden` hatası döndürülür.
+
 ---
 
 ## API Kullanımı ve Uç Noktalar (Endpoints)

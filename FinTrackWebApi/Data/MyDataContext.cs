@@ -25,6 +25,7 @@ namespace FinTrackWebApi.Data
         public DbSet<NotificationModel> Notifications { get; set; }
         public DbSet<DebtModel> Debts { get; set; }
         public DbSet<VideoMetadataModel> VideoMetadatas { get; set; }
+        public DbSet<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; }
 
         public DbSet<EmployeesModel> Employees { get; set; }
         public DbSet<DepartmentModel> Departments { get; set; }
@@ -326,20 +327,12 @@ namespace FinTrackWebApi.Data
                 entity.HasOne(d => d.Lender)
                       .WithMany(u => u.DebtsAsLender)
                       .HasForeignKey(d => d.LenderId)
-                      .IsRequired()
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(d => d.Borrower)
-                      .WithMany(u => u.DebtsAsBorrower)
-                      .HasForeignKey(d => d.BorrowerId)
-                      .IsRequired()
-                      .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(d => d.VideoMetadata)
-                      .WithOne(vm => vm.Debt)
-                      .HasForeignKey<DebtModel>(d => d.VideoMetadataId)
-                      .IsRequired()
-                      .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany(u => u.DebtsAsBorrower)
+                        .HasForeignKey(d => d.BorrowerId)
+                        .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<VideoMetadataModel>(entity =>
@@ -349,9 +342,27 @@ namespace FinTrackWebApi.Data
                 entity.Property(v => v.VideoMetadataId).ValueGeneratedOnAdd();
                 entity.Property(e => e.Status).HasConversion<string>();
                 entity.Property(e => e.StorageType).HasConversion<string>();
-                entity.HasOne(entity => entity.UploadedUser)
-                      .WithMany(user => user.UploadedVideos)
-                      .HasForeignKey(entity => entity.UploadedByUserId)
+
+                entity.HasOne(vm => vm.UploadedUser)
+                      .WithMany(u => u.UploadedVideos)
+                      .HasForeignKey(vm => vm.UploadedByUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<DebtVideoMetadataModel>(entity =>
+            {
+                entity.ToTable("DebtVideoMetadatas");
+                entity.HasKey(dvm => dvm.DebtVideoMetadataId);
+                entity.Property(dvm => dvm.DebtVideoMetadataId).ValueGeneratedOnAdd();
+
+                entity.HasOne(dvm => dvm.Debt)
+                      .WithMany(d => d.DebtVideoMetadatas)
+                      .HasForeignKey(dvm => dvm.DebtId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(dvm => dvm.VideoMetadata)
+                      .WithMany(vm => vm.DebtVideoMetadatas)
+                      .HasForeignKey(dvm => dvm.VideoMetadataId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 

@@ -13,6 +13,7 @@ namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin,User,VideoApproval")]
     public class VideosController : ControllerBase
     {
         private readonly MyDataContext _context;
@@ -78,7 +79,6 @@ namespace FinTrackWebApi.Controller
 
                 var videoMetadata = new VideoMetadataModel
                 {
-                    DebtId = debtId,
                     UploadedByUserId = userId,
                     OriginalFileName = orginalFileName,
                     StoredFileName = storedFileName,
@@ -109,9 +109,15 @@ namespace FinTrackWebApi.Controller
         [Authorize(Roles = "Admin,VideoApproval")]
         public async Task<IActionResult> ApproveAndEncryptVideo([FromRoute] int videoId)
         {
-            var videoMetadata = await _context.VideoMetadatas
+            var videoMetadata = await _context.DebtVideoMetadatas
                 .Include(v => v.Debt)
-                .Include(v => v.UploadedUser)
+                    .ThenInclude(vu => vu.Lender)
+                .Include(v => v.Debt)
+                    .ThenInclude(vu => vu.Borrower)
+                .Include(v => v.VideoMetadata)
+                    .ThenInclude(v => v.UploadedUser)
+                .Include(dvm => dvm.Debt)
+                    .ThenInclude(d => d.CurrencyModel)
                 .FirstOrDefaultAsync(v => v.VideoMetadataId == videoId);
 
             if (videoMetadata == null)
@@ -125,7 +131,7 @@ namespace FinTrackWebApi.Controller
 
             try
             {
-                if (string.IsNullOrEmpty(videoMetadata.UnencryptedFilePath) || !System.IO.File.Exists(videoMetadata.UnencryptedFilePath))
+                if (string.IsNullOrEmpty(videoMetadata.VideoMetadata?.UnencryptedFilePath) || !System.IO.File.Exists(videoMetadata.VideoMetadata?.UnencryptedFilePath))
                 {
                     videoMetadata.Status = VideoStatus.ProcessingError;
                     await _context.SaveChangesAsync();
@@ -139,20 +145,20 @@ namespace FinTrackWebApi.Controller
                 string salt = _mediaEncryptionService.GenerateSalt();
                 string iv = _mediaEncryptionService.GenerateIV();
 
-                var encryptedFileName = $"enc_{videoMetadata.StoredFileName}";
+                var encryptedFileName = $"enc_{videoMetadata.VideoMetadata.StoredFileName}";
                 var encryptedFilePath = Path.Combine(_encryptedVideosPath, encryptedFileName);
 
-                await _mediaEncryptionService.EncryptFileAsync(videoMetadata.UnencryptedFilePath, encryptedFilePath, userPasswordKey, salt, iv);
+                await _mediaEncryptionService.EncryptFileAsync(videoMetadata.VideoMetadata.UnencryptedFilePath, encryptedFilePath, userPasswordKey, salt, iv);
 
-                videoMetadata.EncryptedFilePath = encryptedFilePath;
-                videoMetadata.EncryptionKeyHash = _mediaEncryptionService.HashKey(userPasswordKey);
-                videoMetadata.EncryptionSalt = salt;
-                videoMetadata.EncryptionIV = iv;
-                videoMetadata.Status = VideoStatus.Encrypted;
-                videoMetadata.StorageType = VideoStorageType.EncryptedFileSystem;
+                videoMetadata.VideoMetadata.EncryptedFilePath = encryptedFilePath;
+                videoMetadata.VideoMetadata.EncryptionKeyHash = _mediaEncryptionService.HashKey(userPasswordKey);
+                videoMetadata.VideoMetadata.EncryptionSalt = salt;
+                videoMetadata.VideoMetadata.EncryptionIV = iv;
+                videoMetadata.VideoMetadata.Status = VideoStatus.Encrypted;
+                videoMetadata.VideoMetadata.StorageType = VideoStorageType.EncryptedFileSystem;
 
-                System.IO.File.Delete(videoMetadata.UnencryptedFilePath);
-                videoMetadata.UnencryptedFilePath = "This file is now encrypted.";
+                System.IO.File.Delete(videoMetadata.VideoMetadata.UnencryptedFilePath);
+                videoMetadata.VideoMetadata.UnencryptedFilePath = "This file is now encrypted.";
 
                 await _context.SaveChangesAsync();
 
@@ -173,9 +179,9 @@ namespace FinTrackWebApi.Controller
                         emailBody = await reader.ReadToEndAsync();
                     }
 
-                    emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.OriginalFileName);
-                    emailBody = emailBody.Replace("[VIDEO_FILE_SIZE]", videoMetadata.FileSize.ToString() ?? "N/A");
-                    emailBody = emailBody.Replace("[USER_NAME]", videoMetadata.UploadedUser?.UserName);
+                    emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.VideoMetadata.OriginalFileName);
+                    emailBody = emailBody.Replace("[VIDEO_FILE_SIZE]", videoMetadata.VideoMetadata.FileSize.ToString() ?? "N/A");
+                    emailBody = emailBody.Replace("[USER_NAME]", videoMetadata.VideoMetadata.UploadedUser?.UserName);
                     emailBody = emailBody.Replace("[LENDER_NAME]", videoMetadata.Debt?.Lender.UserName);
                     emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", videoMetadata.Debt?.Lender.UserName ?? "N/A");
                     emailBody = emailBody.Replace("[DETAIL_BORROWER_NAME]", videoMetadata.Debt?.Borrower.UserName ?? "N/A");
@@ -186,14 +192,14 @@ namespace FinTrackWebApi.Controller
                     emailBody = emailBody.Replace("[APPROVAL_DATE]", DateTime.UtcNow.ToString());
                     emailBody = emailBody.Replace("[AGREEMENT_ID]", videoMetadata.Debt?.DebtId.ToString());
 
-                    emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.OriginalFileName ?? "N/A");
+                    emailBody = emailBody.Replace("[VIDEO_FILE_NAME]", videoMetadata.VideoMetadata.OriginalFileName ?? "N/A");
                     emailBody = emailBody.Replace("[ENCRYPTION_KEY]", userPasswordKey ?? "N/A");
 
                     emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
 
-                    await _emailSender.SendEmailAsync(videoMetadata.UploadedUser?.Email ?? "Null", emailSubject, emailBody);
+                    await _emailSender.SendEmailAsync(videoMetadata.VideoMetadata.UploadedUser?.Email ?? "Null", emailSubject, emailBody);
 
-                    _logger.LogInformation("Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}", videoMetadata.UploadedUser?.Email);
+                    _logger.LogInformation("Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}", videoMetadata.VideoMetadata.UploadedUser?.Email);
                 }
                 catch (Exception emailEx)
                 {
