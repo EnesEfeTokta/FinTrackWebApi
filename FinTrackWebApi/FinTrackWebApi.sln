@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinTrackWebApi", "FinTrackW
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "FinBotWebApi", "..\FinBotWebApi\FinBotWebApi.pyproj", "{773AAD36-0A3D-4B00-9FEE-A0012F7C7E92}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinTrackManagerPanel", "..\WinTrackManagerPanel\WinTrackManagerPanel.csproj", "{3B1FBAA4-5AD4-4441-9297-2465FA4DDAA1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,10 +19,6 @@ Global
 		{DBC67F9E-3109-4D54-9849-7A9241DD5EFB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{773AAD36-0A3D-4B00-9FEE-A0012F7C7E92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{773AAD36-0A3D-4B00-9FEE-A0012F7C7E92}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B1FBAA4-5AD4-4441-9297-2465FA4DDAA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B1FBAA4-5AD4-4441-9297-2465FA4DDAA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B1FBAA4-5AD4-4441-9297-2465FA4DDAA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B1FBAA4-5AD4-4441-9297-2465FA4DDAA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
