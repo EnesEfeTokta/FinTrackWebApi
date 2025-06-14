@@ -33,7 +33,7 @@ namespace FinTrackWebApi.Controller
             return userId;
         }
 
-        [HttpGet("budgets")]
+        [HttpGet]
         public async Task<IActionResult> GetBudgets()
         {
             try
