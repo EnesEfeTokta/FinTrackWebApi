@@ -396,7 +396,7 @@ pytest
 ## Veri Tabanı
 
 * Kullanılan PostgreSQL Sürümü: 15
-* Veritabanı Şeması (ERD): Detaylı veritabanı şeması, tablolar, alanlar ve ilişkiler için lütfen [Veritabanı Şeması Detayları](./DATABASE.md) dokümanına bakınız.
+* Veritabanı Şeması (ERD): Detaylı veritabanı şeması, tablolar, alanlar ve ilişkiler için lütfen [Veritabanı Şeması Detayları](Documents/DATABASE.md) dokümanına bakınız.
 * Veritabanı Migrasyonları: Entity Framework Core Migrations (`dotnet ef migrations add MigrationName`, `dotnet ef database update`).
 * Veri Yedekleme ve Geri Yükleme Stratejisi:
     * Yedekleme: `pg_dump` aracı ile düzenli (günlük/haftalık) full ve incremental yedeklemeler. Yedeklerin güvenli bir depolama alanına (örn: S3 bucket, Azure Blob Storage) kopyalanması.

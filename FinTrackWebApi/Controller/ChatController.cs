@@ -59,7 +59,7 @@ public class ChatController : ControllerBase
                 clientChatSessionId = request.ClientChatSessionId,
                 message = request.Message,
                 authToken = token
-                // Gerekirse, basitleştirilmiş sohbet geçmişi de eklenebilir
+                // TODO: Gerekirse, basitleştirilmiş sohbet geçmişi de eklenebilir
             };
 
             var jsonPayload = JsonSerializer.Serialize(payload);
