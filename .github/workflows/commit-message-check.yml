@@ -1,0 +1,36 @@
+name: Commit Message Format Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-commit-messages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        run: |
+          echo "⏳ Commit messages are being checked..."
+          INVALID_FOUND=0
+          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=format:"%s")
+          echo "$COMMITS" | while read COMMIT_MSG; do
+            echo "🔍 $COMMIT_MSG"
+            echo "$COMMIT_MSG" | grep -Eq "^(feat|fix|chore|docs|style|refactor|test)(\(.+\))?: .{1,}" || {
+              echo "❌ Incorrect commit message:"
+              echo "$COMMIT_MSG"
+              INVALID_FOUND=1
+            }
+          done
+          if [ $INVALID_FOUND -eq 1 ]; then
+            echo "🚫 Commit message validation failed."
+            exit 1
+          else
+            echo "✅ All commit messages are valid."
+          fi
