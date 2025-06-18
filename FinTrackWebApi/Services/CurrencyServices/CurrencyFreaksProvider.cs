@@ -1,7 +1,7 @@
-﻿using FinTrackWebApi.Services.CurrencyServices.Models;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using FinTrackWebApi.Services.CurrencyServices.Models;
+using Microsoft.Extensions.Options;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {
@@ -14,14 +14,17 @@ namespace FinTrackWebApi.Services.CurrencyServices
         public CurrencyFreaksProvider(
             ILogger<CurrencyFreaksProvider> logger,
             IHttpClientFactory httpClientFactory,
-            IOptions<CurrencyFreaksSettings> settings)
+            IOptions<CurrencyFreaksSettings> settings
+        )
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
             _settings = settings.Value;
         }
 
-        public async Task<CurrencyFreaksResponse?> GetLatestRatesAsync(CancellationToken cancellationToken)
+        public async Task<CurrencyFreaksResponse?> GetLatestRatesAsync(
+            CancellationToken cancellationToken
+        )
         {
             _logger.LogInformation("Fetching latest currency rates from CurrencyFreaks API.");
 
@@ -39,25 +42,40 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     var options = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true,
-                        NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString
+                        NumberHandling =
+                            JsonNumberHandling.AllowReadingFromString
+                            | JsonNumberHandling.WriteAsString,
                     };
 
-                    var ratesResponse = await JsonSerializer.DeserializeAsync<CurrencyFreaksResponse>(responseStream, options, cancellationToken);
+                    var ratesResponse =
+                        await JsonSerializer.DeserializeAsync<CurrencyFreaksResponse>(
+                            responseStream,
+                            options,
+                            cancellationToken
+                        );
 
-                    if (ratesResponse != null && ratesResponse.Rates != null && ratesResponse.Rates.Any())
+                    if (
+                        ratesResponse != null
+                        && ratesResponse.Rates != null
+                        && ratesResponse.Rates.Any()
+                    )
                     {
                         _logger.LogInformation("Successfully fetched latest currency rates.");
                         return ratesResponse;
                     }
                     else
                     {
-                        _logger.LogError("Failed to deserialize the response from CurrencyFreaks API.");
+                        _logger.LogError(
+                            "Failed to deserialize the response from CurrencyFreaks API."
+                        );
                         return null;
                     }
                 }
                 else
                 {
-                    _logger.LogError($"Failed to fetch latest currency rates. Status code: {request.StatusCode}");
+                    _logger.LogError(
+                        $"Failed to fetch latest currency rates. Status code: {request.StatusCode}"
+                    );
                     return null;
                 }
             }

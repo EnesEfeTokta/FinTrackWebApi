@@ -10,6 +10,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
             decimal amount,
             CurrencyModel currency,
             DateTime dueDate,
-            string? description);
+            string? description
+        );
     }
 }

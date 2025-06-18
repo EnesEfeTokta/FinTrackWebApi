@@ -1,7 +1,7 @@
-﻿using FinTrackWebApi.Services.DocumentService.Models;
-using System.Text;
+﻿using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
@@ -11,11 +11,15 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
         public string MimeType => "application/xml";
 
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is TransactionsRaportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for XML generation. Expected TransactionsRaportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for XML generation. Expected TransactionsRaportModel.",
+                    nameof(data)
+                );
             }
 
             var serializer = new XmlSerializer(typeof(TransactionsRaportModel));
@@ -24,7 +28,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 Encoding = Encoding.UTF8,
                 Indent = true,
                 IndentChars = "  ",
-                NewLineOnAttributes = false
+                NewLineOnAttributes = false,
             };
 
             byte[] resultBytes;

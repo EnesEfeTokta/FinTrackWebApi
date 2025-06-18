@@ -1,5 +1,5 @@
-﻿using FinTrackWebApi.Services.DocumentService.Models;
-using System.Text;
+﻿using System.Text;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
@@ -7,11 +7,16 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
     {
         public string FileExtension => ".md";
         public string MimeType => "text/markdown";
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is BudgetReportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for Markdown generation. Expected BudgetReportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for Markdown generation. Expected BudgetReportModel.",
+                    nameof(data)
+                );
             }
 
             StringBuilder sb = new StringBuilder();
@@ -20,8 +25,12 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
             sb.AppendLine($"**Description:** {reportData.Description}");
             sb.AppendLine();
             sb.AppendLine("## Budget Details");
-            sb.AppendLine("| # | Name | Description | Category | Type | Start | End | Created | Updated | Allocated |");
-            sb.AppendLine("|---|------|-------------|----------|------|-------|-----|---------|--------|-----------|");
+            sb.AppendLine(
+                "| # | Name | Description | Category | Type | Start | End | Created | Updated | Allocated |"
+            );
+            sb.AppendLine(
+                "|---|------|-------------|----------|------|-------|-----|---------|--------|-----------|"
+            );
 
             if (reportData.Items != null && reportData.Items.Any())
             {
@@ -29,11 +38,16 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                 foreach (var item in reportData.Items)
                 {
                     string allocatedStr = item.AllocatedAmount.ToString();
-                    string updatedAtStr = item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default ? "-" : item.UpdatedAt.ToString("yyyy-MM-dd");
+                    string updatedAtStr =
+                        item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default
+                            ? "-"
+                            : item.UpdatedAt.ToString("yyyy-MM-dd");
                     string name = Truncate(item.Name, 20);
                     string description = Truncate(item.Description, 25);
                     string category = Truncate(item.Category, 15);
-                    sb.AppendLine($"| {index++} | {name} | {description} | {category} | {item.Type} | {item.StartDate:yyyy-MM-dd} | {item.EndDate:yyyy-MM-dd} | {item.CreatedAt:yyyy-MM-dd} | {updatedAtStr} | {allocatedStr} |");
+                    sb.AppendLine(
+                        $"| {index++} | {name} | {description} | {category} | {item.Type} | {item.StartDate:yyyy-MM-dd} | {item.EndDate:yyyy-MM-dd} | {item.CreatedAt:yyyy-MM-dd} | {updatedAtStr} | {allocatedStr} |"
+                    );
                 }
             }
 

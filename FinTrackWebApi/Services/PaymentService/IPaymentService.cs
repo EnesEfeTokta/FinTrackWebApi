@@ -12,6 +12,7 @@ namespace FinTrackWebApi.Services.PaymentService
             string successUrl,
             string cancelUrl,
             string? clientReferenceId = null,
-            Dictionary<string, string>? metadata = null);
+            Dictionary<string, string>? metadata = null
+        );
     }
 }

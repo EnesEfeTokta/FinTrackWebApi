@@ -8,18 +8,28 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
     public class WordDocumentGenerator_Budget : IDocumentGenerator
     {
         public string FileExtension => ".docx";
-        public string MimeType => "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        public string MimeType =>
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is BudgetReportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for Word generation. Expected BudgetReportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for Word generation. Expected BudgetReportModel.",
+                    nameof(data)
+                );
             }
 
             using (MemoryStream mem = new MemoryStream())
             {
-                using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(mem, WordprocessingDocumentType.Document))
+                using (
+                    WordprocessingDocument wordDocument = WordprocessingDocument.Create(
+                        mem,
+                        WordprocessingDocumentType.Document
+                    )
+                )
                 {
                     MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
                     mainPart.Document = new Document();
@@ -34,13 +44,30 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                         Left = (UInt32Value)1080U,
                         Header = (UInt32Value)720U,
                         Footer = (UInt32Value)720U,
-                        Gutter = (UInt32Value)0U
+                        Gutter = (UInt32Value)0U,
                     };
                     sectionProps.Append(pageMargin);
 
-                    AddParagraph(body, reportData.ReportTitle, justification: JustificationValues.Center, isBold: true, fontSize: "36");
-                    AddParagraph(body, $"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}", justification: JustificationValues.Center, fontSize: "18");
-                    AddParagraph(body, "Description:", isBold: true, fontSize: "20", spaceAfter: "0");
+                    AddParagraph(
+                        body,
+                        reportData.ReportTitle,
+                        justification: JustificationValues.Center,
+                        isBold: true,
+                        fontSize: "36"
+                    );
+                    AddParagraph(
+                        body,
+                        $"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+                        justification: JustificationValues.Center,
+                        fontSize: "18"
+                    );
+                    AddParagraph(
+                        body,
+                        "Description:",
+                        isBold: true,
+                        fontSize: "20",
+                        spaceAfter: "0"
+                    );
                     AddParagraph(body, reportData.Description, fontSize: "20");
                     AddParagraph(body, "");
 
@@ -50,16 +77,45 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                     Table table = new Table();
 
                     TableProperties tblProps = new TableProperties();
-                    TableWidth tableWidth = new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct };
+                    TableWidth tableWidth = new TableWidth()
+                    {
+                        Width = "5000",
+                        Type = TableWidthUnitValues.Pct,
+                    };
                     tblProps.Append(tableWidth);
 
-                    tblProps.Append(new TableBorders(
-                            new TopBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 },
-                            new BottomBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 },
-                            new LeftBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 },
-                            new RightBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 },
-                            new InsideHorizontalBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 },
-                            new InsideVerticalBorder { Val = new EnumValue<BorderValues>(BorderValues.Single), Size = 4 }
+                    tblProps.Append(
+                        new TableBorders(
+                            new TopBorder
+                            {
+                                Val = new EnumValue<BorderValues>(BorderValues.Single),
+                                Size = 4,
+                            },
+                            new BottomBorder
+                            {
+                                Val = new EnumValue<BorderValues>(BorderValues.Single),
+                                Size = 4,
+                            },
+                            new LeftBorder
+                            {
+                                Val = new EnumValue<BorderValues>(BorderValues.Single),
+                                Size = 4,
+                            },
+                            new RightBorder
+                            {
+                                Val = new EnumValue<BorderValues>(BorderValues.Single),
+                                Size = 4,
+                            },
+                            new InsideHorizontalBorder
+                            {
+                                Val = new EnumValue<BorderValues>(BorderValues.Single),
+                                Size = 4,
+                            },
+                            new InsideVerticalBorder
+                            {
+                                Val = new EnumValue<BorderValues>(BorderValues.Single),
+                                Size = 4,
+                            }
                         )
                     );
 
@@ -90,8 +146,17 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                         AddTableCell(dataRow, item.StartDate.ToString("yyyy-MM-dd"));
                         AddTableCell(dataRow, item.EndDate.ToString("yyyy-MM-dd"));
                         AddTableCell(dataRow, item.CreatedAt.ToString("yyyy-MM-dd"));
-                        AddTableCell(dataRow, item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default ? "-" : item.UpdatedAt.ToString("yyyy-MM-dd"));
-                        AddTableCell(dataRow, item.AllocatedAmount.ToString(), JustificationValues.Right);
+                        AddTableCell(
+                            dataRow,
+                            item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default
+                                ? "-"
+                                : item.UpdatedAt.ToString("yyyy-MM-dd")
+                        );
+                        AddTableCell(
+                            dataRow,
+                            item.AllocatedAmount.ToString(),
+                            JustificationValues.Right
+                        );
                         table.Append(dataRow);
                     }
 
@@ -99,15 +164,26 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 
                     AddParagraph(body, "");
 
-                    AddParagraph(body, $"Page 1 of X", justification: JustificationValues.Center, fontSize: "16");
-
+                    AddParagraph(
+                        body,
+                        $"Page 1 of X",
+                        justification: JustificationValues.Center,
+                        fontSize: "16"
+                    );
                 }
 
                 return Task.FromResult(mem.ToArray());
             }
         }
 
-        private static Paragraph AddParagraph(Body body, string text, string? fontSize = "20", bool isBold = false, JustificationValues? justification = null, string? spaceAfter = null)
+        private static Paragraph AddParagraph(
+            Body body,
+            string text,
+            string? fontSize = "20",
+            bool isBold = false,
+            JustificationValues? justification = null,
+            string? spaceAfter = null
+        )
         {
             Paragraph para = new Paragraph();
             Run run = para.AppendChild(new Run());
@@ -132,7 +208,11 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
             return para;
         }
 
-        private static void AddHeaderCell(TableRow row, string text, JustificationValues? justification = null)
+        private static void AddHeaderCell(
+            TableRow row,
+            string text,
+            JustificationValues? justification = null
+        )
         {
             TableCell tc = new TableCell();
 
@@ -149,7 +229,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
             pPr.Append(new SpacingBetweenLines { After = "0" });
             p.Append(pPr);
 
-
             Run run = p.AppendChild(new Run());
             RunProperties runProps = run.AppendChild(new RunProperties());
             runProps.Append(new Bold());
@@ -160,7 +239,11 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
             row.Append(tc);
         }
 
-        private static void AddTableCell(TableRow row, string text, JustificationValues? justification = null)
+        private static void AddTableCell(
+            TableRow row,
+            string text,
+            JustificationValues? justification = null
+        )
         {
             TableCell tc = new TableCell();
 

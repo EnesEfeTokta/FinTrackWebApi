@@ -6,7 +6,8 @@ namespace FinTrackWebApi.Services.DocumentService.Models
     {
         public string ReportTitle { get; set; } = "Default Report";
         public string Description { get; set; } = string.Empty;
-        public List<TransactionRaportTableItem> Items { get; set; } = new List<TransactionRaportTableItem>();
+        public List<TransactionRaportTableItem> Items { get; set; } =
+            new List<TransactionRaportTableItem>();
         public decimal TotalCount { get; set; }
     }
 

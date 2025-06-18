@@ -74,19 +74,20 @@ namespace FinTrackWebApi.Models
         //[DataType(DataType.DateTime)]
         //public DateTime? PaymentConfirmationDateUtc { get; set; } = null;
 
-        public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } = new List<DebtVideoMetadataModel>();
+        public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } =
+            new List<DebtVideoMetadataModel>();
     }
 
     public enum DebtStatus
     {
-        PendingBorrowerAcceptance,  // Borç Alan Onayı Bekliyor
-        PendingOperatorApproval,    // Operatör Onayı Bekliyor (eğer varsa)
-        Active,                     // Aktif Borç
+        PendingBorrowerAcceptance, // Borç Alan Onayı Bekliyor
+        PendingOperatorApproval, // Operatör Onayı Bekliyor (eğer varsa)
+        Active, // Aktif Borç
         PaymentConfirmationPending, // Ödeme Onayı Bekliyor
-        Paid,                       // Ödendi
-        Defaulted,                  // Vadesi Geçmiş/Ödenmemiş
-        RejectedByBorrower,         // Borç Alan Tarafından Reddedildi
-        RejectedByOperator,         // Operatör Tarafından Reddedildi (eğer varsa)
-        CancelledByLender           // Borç Veren Tarafından İptal Edildi
+        Paid, // Ödendi
+        Defaulted, // Vadesi Geçmiş/Ödenmemiş
+        RejectedByBorrower, // Borç Alan Tarafından Reddedildi
+        RejectedByOperator, // Operatör Tarafından Reddedildi (eğer varsa)
+        CancelledByLender, // Borç Veren Tarafından İptal Edildi
     }
 }

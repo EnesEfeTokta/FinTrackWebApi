@@ -63,13 +63,14 @@ namespace FinTrackWebApi.Models
         [Column("StorageType")]
         public VideoStorageType StorageType { get; set; } = VideoStorageType.FileSystem;
 
-        public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } = new List<DebtVideoMetadataModel>();
+        public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } =
+            new List<DebtVideoMetadataModel>();
     }
 
     public enum VideoStorageType
     {
-        FileSystem,          // Dosya sisteminde şifresiz
-        AzureBlob,           // Azure Blob'da şifresiz (kullanıyorsanız)
-        EncryptedFileSystem  // Dosya sisteminde şifreli
+        FileSystem, // Dosya sisteminde şifresiz
+        AzureBlob, // Azure Blob'da şifresiz (kullanıyorsanız)
+        EncryptedFileSystem, // Dosya sisteminde şifreli
     }
 }

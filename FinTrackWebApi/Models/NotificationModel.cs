@@ -45,6 +45,6 @@ namespace FinTrackWebApi.Models
         Info,
         Warning,
         Error,
-        Success
+        Success,
     }
 }

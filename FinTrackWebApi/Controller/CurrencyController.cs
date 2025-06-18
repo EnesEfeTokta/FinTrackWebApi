@@ -15,7 +15,11 @@ namespace FinTrackWebApi.Controller
         private readonly ICurrencyService _currencyService;
         private readonly ILogger<CurrencyController> _logger;
 
-        public CurrencyController(ICurrencyService currencyService, ILogger<CurrencyController> logger, MyDataContext context)
+        public CurrencyController(
+            ICurrencyService currencyService,
+            ILogger<CurrencyController> logger,
+            MyDataContext context
+        )
         {
             _context = context;
             _currencyService = currencyService;
@@ -85,7 +89,9 @@ namespace FinTrackWebApi.Controller
         {
             countryCode = countryCode.ToUpper();
 
-            var currency = await _context.Currencies.FirstOrDefaultAsync(c => c.CountryCode == countryCode);
+            var currency = await _context.Currencies.FirstOrDefaultAsync(c =>
+                c.CountryCode == countryCode
+            );
             if (currency != null)
             {
                 return Ok(currency);
@@ -96,7 +102,9 @@ namespace FinTrackWebApi.Controller
         [HttpGet("currency-by-countryName/{countryName}")]
         public async Task<IActionResult> GetCurrencyByCountryName(string countryName)
         {
-            var currency = await _context.Currencies.FirstOrDefaultAsync(c => c.CountryCode == countryName);
+            var currency = await _context.Currencies.FirstOrDefaultAsync(c =>
+                c.CountryCode == countryName
+            );
             if (currency != null)
             {
                 return Ok(currency);

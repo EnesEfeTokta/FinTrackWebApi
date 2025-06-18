@@ -41,8 +41,18 @@ namespace FinTrackWebApi.Models
         [ForeignKey("UserId")]
         public virtual UserModel User { get; set; } = null!;
 
-        public virtual ICollection<TransactionModel> Transactions { get; set; } = new List<TransactionModel>();
+        public virtual ICollection<TransactionModel> Transactions { get; set; } =
+            new List<TransactionModel>();
     }
 
-    public enum AccountType { Checking, Savings, CreditCard, Cash, Investment, Loan, Other } // Kontrol, Tasarruf, Kredi Kartı, Nakit, Yatırım, Kredi, Diğer
+    public enum AccountType
+    {
+        Checking,
+        Savings,
+        CreditCard,
+        Cash,
+        Investment,
+        Loan,
+        Other,
+    } // Kontrol, Tasarruf, Kredi Kartı, Nakit, Yatırım, Kredi, Diğer
 }

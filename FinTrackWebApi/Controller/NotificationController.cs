@@ -1,11 +1,10 @@
-﻿using FinTrackWebApi.Data;
+﻿using System.Security.Claims;
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-
 
 namespace FinTrackWebApi.Controller
 {
@@ -40,8 +39,8 @@ namespace FinTrackWebApi.Controller
             {
                 int userId = GetAuthenticatedUserId();
 
-                var notificationsFromDb = await _context.Notifications
-                    .Where(n => n.UserId == userId)
+                var notificationsFromDb = await _context
+                    .Notifications.Where(n => n.UserId == userId)
                     .OrderByDescending(n => n.CreatedAtUtc)
                     .Select(n => new NotificationDto
                     {
@@ -50,7 +49,7 @@ namespace FinTrackWebApi.Controller
                         MessageBody = n.MessageBody,
                         NotificationType = n.NotificationType,
                         CreatedAt = n.CreatedAtUtc,
-                        IsRead = n.IsRead
+                        IsRead = n.IsRead,
                     })
                     .AsNoTracking()
                     .ToListAsync();
@@ -59,13 +58,19 @@ namespace FinTrackWebApi.Controller
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching notifications for user {UserId}", GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error fetching notifications for user {UserId}",
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while fetching notifications.");
             }
         }
 
         [HttpPost]
-        public async Task<ActionResult<NotificationDto>> CreateNotification([FromBody] NotificationDto notificationDto)
+        public async Task<ActionResult<NotificationDto>> CreateNotification(
+            [FromBody] NotificationDto notificationDto
+        )
         {
             try
             {
@@ -78,17 +83,25 @@ namespace FinTrackWebApi.Controller
                     MessageBody = notificationDto.MessageBody,
                     NotificationType = notificationDto.NotificationType,
                     CreatedAtUtc = DateTime.UtcNow,
-                    IsRead = false
+                    IsRead = false,
                 };
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
                 notificationDto.Id = notification.NotificationId;
                 notificationDto.CreatedAt = notification.CreatedAtUtc;
-                return CreatedAtAction(nameof(GetNotifications), new { id = notification.NotificationId }, notificationDto);
+                return CreatedAtAction(
+                    nameof(GetNotifications),
+                    new { id = notification.NotificationId },
+                    notificationDto
+                );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating notification for user {UserId}", GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error creating notification for user {UserId}",
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while creating notification.");
             }
         }

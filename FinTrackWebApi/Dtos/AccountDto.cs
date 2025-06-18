@@ -1,5 +1,5 @@
-﻿using FinTrackWebApi.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using FinTrackWebApi.Models;
 
 namespace FinTrackWebApi.Dtos
 {

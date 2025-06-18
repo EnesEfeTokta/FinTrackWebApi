@@ -14,7 +14,10 @@ namespace FinTrackWebApi.Controller
         private readonly MyDataContext _context;
         private readonly ILogger<EmployeeDepartmentController> _logger;
 
-        public EmployeeDepartmentController(MyDataContext context, ILogger<EmployeeDepartmentController> logger)
+        public EmployeeDepartmentController(
+            MyDataContext context,
+            ILogger<EmployeeDepartmentController> logger
+        )
         {
             _context = context;
             _logger = logger;
@@ -25,8 +28,8 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                var employeeDepartments = await _context.EmployeeDepartments
-                    .Include(ed => ed.Employee)
+                var employeeDepartments = await _context
+                    .EmployeeDepartments.Include(ed => ed.Employee)
                     .Include(ed => ed.Department)
                     .ToListAsync();
                 return Ok(employeeDepartments);
@@ -43,8 +46,8 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                var employeeDepartment = await _context.EmployeeDepartments
-                    .Include(ed => ed.Employee)
+                var employeeDepartment = await _context
+                    .EmployeeDepartments.Include(ed => ed.Employee)
                     .Include(ed => ed.Department)
                     .FirstOrDefaultAsync(ed => ed.EmployeeDepartmentId == id);
 
@@ -62,7 +65,9 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPost("employee-department")]
-        public async Task<IActionResult> CreateEmployeeDepartment([FromBody] EmployeeDepartmentModel employeeDepartment)
+        public async Task<IActionResult> CreateEmployeeDepartment(
+            [FromBody] EmployeeDepartmentModel employeeDepartment
+        )
         {
             if (employeeDepartment == null)
             {
@@ -73,7 +78,11 @@ namespace FinTrackWebApi.Controller
                 _context.EmployeeDepartments.Add(employeeDepartment);
 
                 await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetEmployeeDepartmentById), new { id = employeeDepartment.EmployeeDepartmentId }, employeeDepartment);
+                return CreatedAtAction(
+                    nameof(GetEmployeeDepartmentById),
+                    new { id = employeeDepartment.EmployeeDepartmentId },
+                    employeeDepartment
+                );
             }
             catch (Exception ex)
             {
@@ -83,7 +92,10 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPut("employee-department/{id}")]
-        public async Task<IActionResult> UpdateEmployeeDepartment(int id, [FromBody] EmployeeDepartmentModel employeeDepartment)
+        public async Task<IActionResult> UpdateEmployeeDepartment(
+            int id,
+            [FromBody] EmployeeDepartmentModel employeeDepartment
+        )
         {
             if (employeeDepartment == null || employeeDepartment.EmployeeDepartmentId != id)
             {

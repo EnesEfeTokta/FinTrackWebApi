@@ -4,6 +4,7 @@
     {
         string FileExtension { get; }
         string MimeType { get; }
-        Task<byte[]> GenerateAsync<TData>(TData data) where TData : class;
+        Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class;
     }
 }

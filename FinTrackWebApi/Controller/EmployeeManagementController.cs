@@ -13,7 +13,10 @@ namespace FinTrackWebApi.Controller
         private readonly MyDataContext _context;
         private readonly ILogger<EmployeeManagementController> _logger;
 
-        public EmployeeManagementController(MyDataContext context, ILogger<EmployeeManagementController> logger)
+        public EmployeeManagementController(
+            MyDataContext context,
+            ILogger<EmployeeManagementController> logger
+        )
         {
             _context = context;
             _logger = logger;
@@ -26,7 +29,10 @@ namespace FinTrackWebApi.Controller
         {
             if (await _context.Employees.AnyAsync(e => e.Email == employeeDto.Email))
             {
-                _logger.LogWarning("Employee registration initiation failed: Email {Email} already exists.", employeeDto.Email);
+                _logger.LogWarning(
+                    "Employee registration initiation failed: Email {Email} already exists.",
+                    employeeDto.Email
+                );
                 return BadRequest("This email address is already registered.");
             }
 
@@ -38,7 +44,11 @@ namespace FinTrackWebApi.Controller
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initiate employee registration for {Email}.", employeeDto.Email);
+                _logger.LogError(
+                    ex,
+                    "Failed to initiate employee registration for {Email}.",
+                    employeeDto.Email
+                );
                 return StatusCode(500, "An error occurred while initiating employee registration.");
             }
         }
@@ -50,8 +60,8 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                var debts = await _context.Debts
-                    .Include(d => d.Lender)
+                var debts = await _context
+                    .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
                     .ToListAsync();
@@ -77,8 +87,8 @@ namespace FinTrackWebApi.Controller
 
             try
             {
-                var pendingDebts = await _context.Debts
-                    .Include(d => d.Lender)
+                var pendingDebts = await _context
+                    .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
                     .Where(d => d.Status == debtStatus)
@@ -94,7 +104,10 @@ namespace FinTrackWebApi.Controller
 
         [HttpPost("debt-approval/{id}")]
         [Authorize(Roles = "VideoApproval,Admin")]
-        public async Task<IActionResult> UpdateEmployee([FromRoute] int id, [FromQuery] bool isApproval = false)
+        public async Task<IActionResult> UpdateEmployee(
+            [FromRoute] int id,
+            [FromQuery] bool isApproval = false
+        )
         {
             var debt = await _context.Debts.FindAsync(id);
             if (debt == null)
@@ -104,7 +117,10 @@ namespace FinTrackWebApi.Controller
             }
             if (debt.Status != DebtStatus.PendingOperatorApproval)
             {
-                _logger.LogWarning("Debt with ID {Id} is not in a valid state for approval or rejection.", id);
+                _logger.LogWarning(
+                    "Debt with ID {Id} is not in a valid state for approval or rejection.",
+                    id
+                );
                 return BadRequest("Debt is not in a valid state for approval or rejection.");
             }
             try

@@ -18,7 +18,7 @@ namespace FinTrackWebApi.Dtos
         [Required]
         public int PlanId { get; set; }
         public bool AutoRenew { get; set; } = true; // Varsayılan olarak otomatik yenileme açık olabilir
-                                                    // Ödeme yöntemi token'ı gibi ek bilgiler buraya gelebilir
-                                                    // public string? PaymentMethodToken { get; set; }
+        // Ödeme yöntemi token'ı gibi ek bilgiler buraya gelebilir
+        // public string? PaymentMethodToken { get; set; }
     }
 }

@@ -13,7 +13,17 @@ namespace FinTrackWebApi.Services.DocumentService
             _serviceProvider = serviceProvider;
         }
 
-        public async Task<(byte[] Content, string MimeType, string FileName)> GenerateDocumentAsync<TData>(TData data, DocumentFormat format, DocumentType type, string baseFileName) where TData : class
+        public async Task<(
+            byte[] Content,
+            string MimeType,
+            string FileName
+        )> GenerateDocumentAsync<TData>(
+            TData data,
+            DocumentFormat format,
+            DocumentType type,
+            string baseFileName
+        )
+            where TData : class
         {
             IDocumentGenerator generator = GetGenerator(format, type);
 
@@ -40,14 +50,22 @@ namespace FinTrackWebApi.Services.DocumentService
         {
             return format switch
             {
-                DocumentFormat.Pdf => _serviceProvider.GetRequiredService<PdfDocumentGenerator_Budget>(),
-                DocumentFormat.Word => _serviceProvider.GetRequiredService<WordDocumentGenerator_Budget>(),
-                DocumentFormat.Text => _serviceProvider.GetRequiredService<TextDocumentGenerator_Budget>(),
-                DocumentFormat.Markdown => _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Budget>(),
-                DocumentFormat.Xml => _serviceProvider.GetRequiredService<XmlDocumentGenerator_Budget>(),
-                DocumentFormat.Xlsx => _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Budget>(),
+                DocumentFormat.Pdf =>
+                    _serviceProvider.GetRequiredService<PdfDocumentGenerator_Budget>(),
+                DocumentFormat.Word =>
+                    _serviceProvider.GetRequiredService<WordDocumentGenerator_Budget>(),
+                DocumentFormat.Text =>
+                    _serviceProvider.GetRequiredService<TextDocumentGenerator_Budget>(),
+                DocumentFormat.Markdown =>
+                    _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Budget>(),
+                DocumentFormat.Xml =>
+                    _serviceProvider.GetRequiredService<XmlDocumentGenerator_Budget>(),
+                DocumentFormat.Xlsx =>
+                    _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Budget>(),
 
-                _ => throw new NotSupportedException($"Document format '{format}' is not supported.")
+                _ => throw new NotSupportedException(
+                    $"Document format '{format}' is not supported."
+                ),
             };
         }
 
@@ -55,14 +73,22 @@ namespace FinTrackWebApi.Services.DocumentService
         {
             return format switch
             {
-                DocumentFormat.Pdf => _serviceProvider.GetRequiredService<PdfDocumentGenerator_Transaction>(),
-                DocumentFormat.Word => _serviceProvider.GetRequiredService<WordDocumentGenerator_Transaction>(),
-                DocumentFormat.Text => _serviceProvider.GetRequiredService<TextDocumentGenerator_Transaction>(),
-                DocumentFormat.Markdown => _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Transaction>(),
-                DocumentFormat.Xml => _serviceProvider.GetRequiredService<XmlDocumentGenerator_Transaction>(),
-                DocumentFormat.Xlsx => _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Transaction>(),
+                DocumentFormat.Pdf =>
+                    _serviceProvider.GetRequiredService<PdfDocumentGenerator_Transaction>(),
+                DocumentFormat.Word =>
+                    _serviceProvider.GetRequiredService<WordDocumentGenerator_Transaction>(),
+                DocumentFormat.Text =>
+                    _serviceProvider.GetRequiredService<TextDocumentGenerator_Transaction>(),
+                DocumentFormat.Markdown =>
+                    _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Transaction>(),
+                DocumentFormat.Xml =>
+                    _serviceProvider.GetRequiredService<XmlDocumentGenerator_Transaction>(),
+                DocumentFormat.Xlsx =>
+                    _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Transaction>(),
 
-                _ => throw new NotSupportedException($"Document format '{format}' is not supported.")
+                _ => throw new NotSupportedException(
+                    $"Document format '{format}' is not supported."
+                ),
             };
         }
     }

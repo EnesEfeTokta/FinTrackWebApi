@@ -1,10 +1,10 @@
-﻿using FinTrackWebApi.Data;
+﻿using System.Security.Claims;
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
@@ -17,7 +17,10 @@ namespace FinTrackWebApi.Controller
 
         private readonly ILogger<UserSettingsController> _logger;
 
-        public UserSettingsController(MyDataContext context, ILogger<UserSettingsController> logger = null)
+        public UserSettingsController(
+            MyDataContext context,
+            ILogger<UserSettingsController> logger = null
+        )
         {
             _context = context;
             _logger = logger;
@@ -28,8 +31,13 @@ namespace FinTrackWebApi.Controller
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid in token for user {UserName}.", User.Identity?.Name ?? "Unknown");
-                throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
+                _logger.LogError(
+                    "Authenticated user ID claim (NameIdentifier) not found or invalid in token for user {UserName}.",
+                    User.Identity?.Name ?? "Unknown"
+                );
+                throw new UnauthorizedAccessException(
+                    "User ID cannot be determined from the token."
+                );
             }
             return userId;
         }
@@ -39,21 +47,29 @@ namespace FinTrackWebApi.Controller
         {
             int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = await _context.UserSettings
-                 .AsNoTracking()
+            var userSettings = await _context
+                .UserSettings.AsNoTracking()
                 .FirstOrDefaultAsync(s => s.UserId == authenticatedUserId);
             if (userSettings == null)
             {
-                _logger.LogWarning("User settings not found for user ID: {UserId}", authenticatedUserId);
+                _logger.LogWarning(
+                    "User settings not found for user ID: {UserId}",
+                    authenticatedUserId
+                );
                 return NotFound("User settings not found.");
             }
 
-            _logger.LogInformation("Successfully retrieved settings for user ID: {UserId}", authenticatedUserId);
+            _logger.LogInformation(
+                "Successfully retrieved settings for user ID: {UserId}",
+                authenticatedUserId
+            );
             return Ok(userSettings);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUserSettings([FromBody] UserSettingsDto userSettingsDto)
+        public async Task<IActionResult> CreateUserSettings(
+            [FromBody] UserSettingsDto userSettingsDto
+        )
         {
             int authenticatedUserId = GetAuthenticatedUserId();
 
@@ -62,21 +78,31 @@ namespace FinTrackWebApi.Controller
                 UserId = authenticatedUserId,
                 Theme = userSettingsDto.Theme,
                 Language = userSettingsDto.Language,
-                Notification = userSettingsDto.Notification
+                Notification = userSettingsDto.Notification,
             };
             _context.UserSettings.Add(userSettings);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Successfully created settings for user ID: {UserId}", authenticatedUserId);
-            return CreatedAtAction(nameof(GetUserSettings), new { userId = userSettings.UserId }, userSettings);
+            _logger.LogInformation(
+                "Successfully created settings for user ID: {UserId}",
+                authenticatedUserId
+            );
+            return CreatedAtAction(
+                nameof(GetUserSettings),
+                new { userId = userSettings.UserId },
+                userSettings
+            );
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateUserSettings([FromBody] UserSettingsDto userSettingsDto)
+        public async Task<IActionResult> UpdateUserSettings(
+            [FromBody] UserSettingsDto userSettingsDto
+        )
         {
             int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = await _context.UserSettings
-                .FirstOrDefaultAsync(s => s.UserId == authenticatedUserId);
+            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
+                s.UserId == authenticatedUserId
+            );
             if (userSettings == null)
             {
                 return NotFound("User settings not found.");
@@ -86,7 +112,10 @@ namespace FinTrackWebApi.Controller
             userSettings.Notification = userSettingsDto.Notification;
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Successfully updated settings for user ID: {UserId}", authenticatedUserId);
+            _logger.LogInformation(
+                "Successfully updated settings for user ID: {UserId}",
+                authenticatedUserId
+            );
             return NoContent();
         }
 
@@ -95,17 +124,24 @@ namespace FinTrackWebApi.Controller
         {
             int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = await _context.UserSettings
-                .FirstOrDefaultAsync(s => s.UserId == authenticatedUserId);
+            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
+                s.UserId == authenticatedUserId
+            );
             if (userSettings == null)
             {
-                _logger.LogWarning("User settings not found for user ID: {UserId}", authenticatedUserId);
+                _logger.LogWarning(
+                    "User settings not found for user ID: {UserId}",
+                    authenticatedUserId
+                );
                 return NotFound("User settings not found.");
             }
             _context.UserSettings.Remove(userSettings);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Successfully deleted settings for user ID: {UserId}", authenticatedUserId);
+            _logger.LogInformation(
+                "Successfully deleted settings for user ID: {UserId}",
+                authenticatedUserId
+            );
             return NoContent();
         }
     }

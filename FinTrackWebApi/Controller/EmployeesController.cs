@@ -65,7 +65,11 @@ namespace FinTrackWebApi.Controller
             {
                 _context.Employees.Add(employee);
                 await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetEmployeeByIdAsync), new { id = employee.EmployeeId }, employee);
+                return CreatedAtAction(
+                    nameof(GetEmployeeByIdAsync),
+                    new { id = employee.EmployeeId },
+                    employee
+                );
             }
             catch (Exception ex)
             {
@@ -75,7 +79,10 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEmployeeAsync(int id, [FromBody] EmployeesModel employee)
+        public async Task<IActionResult> UpdateEmployeeAsync(
+            int id,
+            [FromBody] EmployeesModel employee
+        )
         {
             if (employee == null || employee.EmployeeId != id)
             {

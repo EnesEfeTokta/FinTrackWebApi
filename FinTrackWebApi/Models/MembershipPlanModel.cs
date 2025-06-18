@@ -39,6 +39,7 @@ namespace FinTrackWebApi.Models
         [Column("IsActive")]
         public bool IsActive { get; set; } = true;
 
-        public virtual ICollection<UserMembershipModel> UserMemberships { get; set; } = new List<UserMembershipModel>();
+        public virtual ICollection<UserMembershipModel> UserMemberships { get; set; } =
+            new List<UserMembershipModel>();
     }
 }

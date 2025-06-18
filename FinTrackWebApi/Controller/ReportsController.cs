@@ -1,10 +1,10 @@
-﻿using FinTrackWebApi.Data;
+﻿using System.Security.Claims;
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Services.DocumentService;
 using FinTrackWebApi.Services.DocumentService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
@@ -17,9 +17,14 @@ namespace FinTrackWebApi.Controller
         private readonly MyDataContext _context;
         private readonly ILogger<ReportsController> _logger;
 
-        public ReportsController(IDocumentGenerationService documentService, MyDataContext context, ILogger<ReportsController> logger)
+        public ReportsController(
+            IDocumentGenerationService documentService,
+            MyDataContext context,
+            ILogger<ReportsController> logger
+        )
         {
-            _documentService = documentService ?? throw new ArgumentNullException(nameof(documentService));
+            _documentService =
+                documentService ?? throw new ArgumentNullException(nameof(documentService));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -32,8 +37,12 @@ namespace FinTrackWebApi.Controller
             var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(IdClaim) || !int.TryParse(IdClaim, out int Id))
             {
-                _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid.");
-                throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
+                _logger.LogError(
+                    "Authenticated user ID claim (NameIdentifier) not found or invalid."
+                );
+                throw new UnauthorizedAccessException(
+                    "User ID cannot be determined from the token."
+                );
             }
             return Id;
         }
@@ -48,7 +57,12 @@ namespace FinTrackWebApi.Controller
         public async Task<IActionResult> GetBudgetReport(string format)
         {
             var reportData = await BuildBudgetReportDataAsync();
-            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_{DateTime.Now:yyyyMMdd}");
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Budget.ToString(),
+                reportData,
+                $"Financial_Budget_Report_{DateTime.Now:yyyyMMdd}"
+            );
         }
 
         /// <summary>
@@ -59,7 +73,11 @@ namespace FinTrackWebApi.Controller
         /// <param name="endDateTime">Bitiş tarihi</param>
         /// <returns></returns>
         [HttpGet("budget-report-by-date/{format}")]
-        public async Task<IActionResult> GetBudgetReportByDate([FromQuery] string format, DateTime startDateTime, DateTime endDateTime)
+        public async Task<IActionResult> GetBudgetReportByDate(
+            [FromQuery] string format,
+            DateTime startDateTime,
+            DateTime endDateTime
+        )
         {
             if (startDateTime >= endDateTime)
             {
@@ -68,7 +86,12 @@ namespace FinTrackWebApi.Controller
 
             var reportData = await BuildBudgetReportDataAsync(startDateTime, endDateTime);
 
-            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}");
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Budget.ToString(),
+                reportData,
+                $"Financial_Budget_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}"
+            );
         }
 
         /// <summary>
@@ -78,7 +101,10 @@ namespace FinTrackWebApi.Controller
         /// <param name="category">İstenilen kategori</param>
         /// <returns></returns>
         [HttpGet("budget-report-by-category/{category}")]
-        public async Task<IActionResult> GetBudgetReportByCategory([FromQuery] string format, string category)
+        public async Task<IActionResult> GetBudgetReportByCategory(
+            [FromQuery] string format,
+            string category
+        )
         {
             if (string.IsNullOrWhiteSpace(category))
             {
@@ -86,9 +112,18 @@ namespace FinTrackWebApi.Controller
             }
 
             var reportData = await BuildBudgetReportDataAsync();
-            reportData.Items = reportData.Items.Where(item => item.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
+            reportData.Items = reportData
+                .Items.Where(item =>
+                    item.Category.Equals(category, StringComparison.OrdinalIgnoreCase)
+                )
+                .ToList();
 
-            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_By_Category_{category}_{DateTime.Now:yyyyMMdd}");
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Budget.ToString(),
+                reportData,
+                $"Financial_Budget_Report_By_Category_{category}_{DateTime.Now:yyyyMMdd}"
+            );
         }
 
         /// <summary>
@@ -98,7 +133,10 @@ namespace FinTrackWebApi.Controller
         /// <param name="type">İstenilen tür</param>
         /// <returns></returns>
         [HttpGet("budget-report-by-type/{type}")]
-        public async Task<IActionResult> GetBudgetReportByType([FromQuery] string format, string type)
+        public async Task<IActionResult> GetBudgetReportByType(
+            [FromQuery] string format,
+            string type
+        )
         {
             if (string.IsNullOrWhiteSpace(type))
             {
@@ -106,9 +144,16 @@ namespace FinTrackWebApi.Controller
             }
 
             var reportData = await BuildBudgetReportDataAsync();
-            reportData.Items = reportData.Items.Where(item => item.Type.Equals(type, StringComparison.OrdinalIgnoreCase)).ToList();
+            reportData.Items = reportData
+                .Items.Where(item => item.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-            return await GenerateAndReturnReport(format, DocumentType.Budget.ToString(), reportData, $"Financial_Budget_Report_By_Type_{type}_{DateTime.Now:yyyyMMdd}");
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Budget.ToString(),
+                reportData,
+                $"Financial_Budget_Report_By_Type_{type}_{DateTime.Now:yyyyMMdd}"
+            );
         }
 
         /// <summary>
@@ -117,7 +162,10 @@ namespace FinTrackWebApi.Controller
         /// <param name="start">Başlangıç tarihi</param>
         /// <param name="end">Biriş tarihi</param>
         /// <returns></returns>
-        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(DateTime? start = null, DateTime? end = null)
+        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(
+            DateTime? start = null,
+            DateTime? end = null
+        )
         {
             int Id = GetAuthenticatedId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == Id);
@@ -130,24 +178,30 @@ namespace FinTrackWebApi.Controller
 
             var report = new BudgetReportModel
             {
-                ReportTitle = start.HasValue && end.HasValue
-                    ? $"Financial Budget Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
-                    : "Financial Budget Report (All Time)",
-                Description = $"Budget details for user {user.UserName}."
+                ReportTitle =
+                    start.HasValue && end.HasValue
+                        ? $"Financial Budget Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
+                        : "Financial Budget Report (All Time)",
+                Description = $"Budget details for user {user.UserName}.",
             };
 
-            DateTime? startUtc = start.HasValue ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc) : null;
-            DateTime? endUtc = end.HasValue ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1) : null;
+            DateTime? startUtc = start.HasValue
+                ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc)
+                : null;
+            DateTime? endUtc = end.HasValue
+                ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1)
+                : null;
 
-            var query = _context.BudgetCategories
-                .Include(bc => bc.Budget)
+            var query = _context
+                .BudgetCategories.Include(bc => bc.Budget)
                 .Include(bc => bc.Category)
                 .Where(bc => bc.Budget.UserId == Id);
 
             if (startUtc.HasValue && endUtc.HasValue)
             {
-                query = query.Where(bc => bc.Budget.EndDate >= startUtc.Value &&
-                                          bc.Budget.StartDate <= endUtc.Value);
+                query = query.Where(bc =>
+                    bc.Budget.EndDate >= startUtc.Value && bc.Budget.StartDate <= endUtc.Value
+                );
             }
 
             var budgetCategoriesData = await query
@@ -159,22 +213,27 @@ namespace FinTrackWebApi.Controller
 
             if (!budgetCategoriesData.Any())
             {
-                _logger.LogInformation("No budget categories found for user {UserName} for the given criteria.", user.UserName);
+                _logger.LogInformation(
+                    "No budget categories found for user {UserName} for the given criteria.",
+                    user.UserName
+                );
                 return report;
             }
 
-            report.Items = budgetCategoriesData.Select(bc => new BudgetReportTableItem
-            {
-                Name = bc.Budget.Name,
-                Description = bc.Budget.Description ?? "-",
-                Category = bc.Category.Name,
-                Type = bc.Category.Type.ToString(),
-                StartDate = bc.Budget.StartDate,
-                EndDate = bc.Budget.EndDate,
-                CreatedAt = bc.Budget.CreatedAtUtc,
-                UpdatedAt = bc.Budget.UpdatedAtUtc ?? DateTime.MinValue,
-                AllocatedAmount = bc.AllocatedAmount
-            }).ToList();
+            report.Items = budgetCategoriesData
+                .Select(bc => new BudgetReportTableItem
+                {
+                    Name = bc.Budget.Name,
+                    Description = bc.Budget.Description ?? "-",
+                    Category = bc.Category.Name,
+                    Type = bc.Category.Type.ToString(),
+                    StartDate = bc.Budget.StartDate,
+                    EndDate = bc.Budget.EndDate,
+                    CreatedAt = bc.Budget.CreatedAtUtc,
+                    UpdatedAt = bc.Budget.UpdatedAtUtc ?? DateTime.MinValue,
+                    AllocatedAmount = bc.AllocatedAmount,
+                })
+                .ToList();
 
             return report;
         }
@@ -186,21 +245,36 @@ namespace FinTrackWebApi.Controller
         /// <param name="reportData">Raporun detayları</param>
         /// <param name="baseFileName">Dosyanın ismi</param>
         /// <returns></returns>
-        private async Task<IActionResult> GenerateAndReturnReport(string format, string type, BudgetReportModel? reportData, string baseFileName)
+        private async Task<IActionResult> GenerateAndReturnReport(
+            string format,
+            string type,
+            BudgetReportModel? reportData,
+            string baseFileName
+        )
         {
             if (reportData == null || !reportData.Items.Any())
             {
                 return NotFound("No report data found for the specified criteria.");
             }
 
-            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
+            if (
+                !Enum.TryParse(
+                    format,
+                    true,
+                    out Services.DocumentService.DocumentFormat requestedFormat
+                )
+            )
             {
-                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown");
+                return BadRequest(
+                    "Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown"
+                );
             }
 
             if (!Enum.TryParse(type, true, out Services.DocumentService.DocumentType requestedType))
             {
-                return BadRequest("Invalid or unsupported type requested. Supported types: Budget, Transaction, Account");
+                return BadRequest(
+                    "Invalid or unsupported type requested. Supported types: Budget, Transaction, Account"
+                );
             }
 
             try
@@ -242,7 +316,12 @@ namespace FinTrackWebApi.Controller
         public async Task<IActionResult> GetTransactionReport(string format)
         {
             var reportData = await BuildTransactionReportDataAsync();
-            return await GenerateAndReturnReport(format, DocumentType.Transaction.ToString(), reportData, $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}");
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Transaction.ToString(),
+                reportData,
+                $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}"
+            );
         }
 
         /// <summary>
@@ -253,7 +332,11 @@ namespace FinTrackWebApi.Controller
         /// <param name="endDateTime">Bitiş tarihi</param>
         /// <returns></returns>
         [HttpGet("transaction-report-by-date/{format}")]
-        public async Task<IActionResult> GetTransactionReportByDate([FromQuery] string format, DateTime startDateTime, DateTime endDateTime)
+        public async Task<IActionResult> GetTransactionReportByDate(
+            [FromQuery] string format,
+            DateTime startDateTime,
+            DateTime endDateTime
+        )
         {
             if (startDateTime >= endDateTime)
             {
@@ -262,7 +345,12 @@ namespace FinTrackWebApi.Controller
 
             var reportData = await BuildTransactionReportDataAsync(startDateTime, endDateTime);
 
-            return await GenerateAndReturnReport(format, DocumentType.Transaction.ToString(), reportData, $"Financial_Transaction_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}");
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Transaction.ToString(),
+                reportData,
+                $"Financial_Transaction_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}"
+            );
         }
 
         /// <summary>
@@ -272,21 +360,36 @@ namespace FinTrackWebApi.Controller
         /// <param name="reportData">Raporun detayları</param>
         /// <param name="baseFileName">Dosyanın ismi</param>
         /// <returns></returns>
-        private async Task<IActionResult> GenerateAndReturnReport(string format, string type, TransactionsRaportModel? reportData, string baseFileName)
+        private async Task<IActionResult> GenerateAndReturnReport(
+            string format,
+            string type,
+            TransactionsRaportModel? reportData,
+            string baseFileName
+        )
         {
             if (reportData == null || !reportData.Items.Any())
             {
                 return NotFound("No report data found for the specified criteria.");
             }
 
-            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
+            if (
+                !Enum.TryParse(
+                    format,
+                    true,
+                    out Services.DocumentService.DocumentFormat requestedFormat
+                )
+            )
             {
-                return BadRequest("Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown");
+                return BadRequest(
+                    "Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown"
+                );
             }
 
             if (!Enum.TryParse(type, true, out Services.DocumentService.DocumentType requestedType))
             {
-                return BadRequest("Invalid or unsupported type requested. Supported types: Budget, Transaction, Account");
+                return BadRequest(
+                    "Invalid or unsupported type requested. Supported types: Budget, Transaction, Account"
+                );
             }
 
             try
@@ -323,7 +426,10 @@ namespace FinTrackWebApi.Controller
         /// <param name="start">Başlangıç tarihi</param>
         /// <param name="end">Biriş tarihi</param>
         /// <returns></returns>
-        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(DateTime? start = null, DateTime? end = null)
+        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(
+            DateTime? start = null,
+            DateTime? end = null
+        )
         {
             int Id = GetAuthenticatedId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == Id);
@@ -336,24 +442,30 @@ namespace FinTrackWebApi.Controller
 
             var report = new TransactionsRaportModel
             {
-                ReportTitle = start.HasValue && end.HasValue
-                    ? $"Financial Transaction Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
-                    : "Financial Transaction Report (All Time)",
-                Description = $"Transaction details for user {user.UserName}."
+                ReportTitle =
+                    start.HasValue && end.HasValue
+                        ? $"Financial Transaction Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
+                        : "Financial Transaction Report (All Time)",
+                Description = $"Transaction details for user {user.UserName}.",
             };
 
-            DateTime? startUtc = start.HasValue ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc) : null;
-            DateTime? endUtc = end.HasValue ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1) : null;
+            DateTime? startUtc = start.HasValue
+                ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc)
+                : null;
+            DateTime? endUtc = end.HasValue
+                ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1)
+                : null;
 
-            var query = _context.Transactions
-                .Include(bc => bc.Account)
+            var query = _context
+                .Transactions.Include(bc => bc.Account)
                 .Include(bc => bc.Category)
                 .Where(bc => bc.User.Id == Id);
 
             if (startUtc.HasValue && endUtc.HasValue)
             {
-                query = query.Where(bc => bc.TransactionDateUtc >= startUtc.Value &&
-                                          bc.TransactionDateUtc <= endUtc.Value);
+                query = query.Where(bc =>
+                    bc.TransactionDateUtc >= startUtc.Value && bc.TransactionDateUtc <= endUtc.Value
+                );
             }
 
             var transactionCategoriesData = await query
@@ -365,18 +477,23 @@ namespace FinTrackWebApi.Controller
 
             if (!transactionCategoriesData.Any())
             {
-                _logger.LogInformation("No transaction categories found for user {UserName} for the given criteria.", user.UserName);
+                _logger.LogInformation(
+                    "No transaction categories found for user {UserName} for the given criteria.",
+                    user.UserName
+                );
                 return report;
             }
 
-            report.Items = transactionCategoriesData.Select(bc => new TransactionRaportTableItem
-            {
-                AccountName = bc.Account.Name,
-                Description = bc.Description ?? "-",
-                CategoryName = bc.Category.Name,
-                Amount = bc.Amount,
-                TransactionDateUtc = bc.TransactionDateUtc
-            }).ToList();
+            report.Items = transactionCategoriesData
+                .Select(bc => new TransactionRaportTableItem
+                {
+                    AccountName = bc.Account.Name,
+                    Description = bc.Description ?? "-",
+                    CategoryName = bc.Category.Name,
+                    Amount = bc.Amount,
+                    TransactionDateUtc = bc.TransactionDateUtc,
+                })
+                .ToList();
 
             return report;
         }

@@ -7,7 +7,8 @@ namespace FinTrackWebApi.Data
 {
     public class MyDataContext : IdentityDbContext<UserModel, IdentityRole<int>, int>
     {
-        public MyDataContext(DbContextOptions<MyDataContext> options) : base(options) { }
+        public MyDataContext(DbContextOptions<MyDataContext> options)
+            : base(options) { }
 
         public DbSet<OtpVerificationModel> OtpVerification { get; set; }
         public DbSet<UserSettingsModel> UserSettings { get; set; }
@@ -39,60 +40,71 @@ namespace FinTrackWebApi.Data
             {
                 entity.ToTable("Users");
 
-                entity.HasOne(u => u.Settings)
-                      .WithOne(s => s.User)
-                      .HasForeignKey<UserSettingsModel>(s => s.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(u => u.Settings)
+                    .WithOne(s => s.User)
+                    .HasForeignKey<UserSettingsModel>(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.Budgets)
-                      .WithOne(b => b.User)
-                      .HasForeignKey(b => b.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.Budgets)
+                    .WithOne(b => b.User)
+                    .HasForeignKey(b => b.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.Categories)
-                      .WithOne(c => c.User)
-                      .HasForeignKey(c => c.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.Categories)
+                    .WithOne(c => c.User)
+                    .HasForeignKey(c => c.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.Transactions)
-                      .WithOne(t => t.User)
-                      .HasForeignKey(t => t.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.Transactions)
+                    .WithOne(t => t.User)
+                    .HasForeignKey(t => t.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.Accounts)
-                      .WithOne(a => a.User)
-                      .HasForeignKey(a => a.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.Accounts)
+                    .WithOne(a => a.User)
+                    .HasForeignKey(a => a.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.UserMemberships)
-                      .WithOne(um => um.User)
-                      .HasForeignKey(um => um.UserId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.UserMemberships)
+                    .WithOne(um => um.User)
+                    .HasForeignKey(um => um.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.Payments)
-                      .WithOne(p => p.User)
-                      .HasForeignKey(p => p.UserId)
-                      .OnDelete(DeleteBehavior.NoAction);
+                entity
+                    .HasMany(u => u.Payments)
+                    .WithOne(p => p.User)
+                    .HasForeignKey(p => p.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-                entity.HasMany(u => u.Notifications)
-                        .WithOne(n => n.User)
-                        .HasForeignKey(n => n.UserId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.Notifications)
+                    .WithOne(n => n.User)
+                    .HasForeignKey(n => n.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.DebtsAsLender)
-                        .WithOne(d => d.Lender)
-                        .HasForeignKey(d => d.LenderId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.DebtsAsLender)
+                    .WithOne(d => d.Lender)
+                    .HasForeignKey(d => d.LenderId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.DebtsAsBorrower)
-                        .WithOne(d => d.Borrower)
-                        .HasForeignKey(d => d.BorrowerId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.DebtsAsBorrower)
+                    .WithOne(d => d.Borrower)
+                    .HasForeignKey(d => d.BorrowerId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasMany(u => u.UploadedVideos)
-                        .WithOne(v => v.UploadedUser)
-                        .HasForeignKey(v => v.UploadedByUserId)
-                        .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(u => u.UploadedVideos)
+                    .WithOne(v => v.UploadedUser)
+                    .HasForeignKey(v => v.UploadedByUserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<OtpVerificationModel>(entity =>
@@ -117,18 +129,31 @@ namespace FinTrackWebApi.Data
                 entity.HasKey(c => c.CategoryId);
                 entity.Property(c => c.CategoryId).ValueGeneratedOnAdd();
                 entity.Property(c => c.Name).HasColumnName("CategoryName").IsRequired();
-                entity.Property(c => c.Type).HasColumnName("CategoryType").HasConversion<string>().IsRequired();
-                entity.HasIndex(c => new { c.UserId, c.Name, c.Type }).IsUnique();
+                entity
+                    .Property(c => c.Type)
+                    .HasColumnName("CategoryType")
+                    .HasConversion<string>()
+                    .IsRequired();
+                entity
+                    .HasIndex(c => new
+                    {
+                        c.UserId,
+                        c.Name,
+                        c.Type,
+                    })
+                    .IsUnique();
 
-                entity.HasMany(c => c.BudgetAllocations)
-                      .WithOne(bc => bc.Category)
-                      .HasForeignKey(bc => bc.CategoryId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasMany(c => c.BudgetAllocations)
+                    .WithOne(bc => bc.Category)
+                    .HasForeignKey(bc => bc.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasMany(c => c.Transactions)
-                      .WithOne(t => t.Category)
-                      .HasForeignKey(t => t.CategoryId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasMany(c => c.Transactions)
+                    .WithOne(t => t.Category)
+                    .HasForeignKey(t => t.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<BudgetModel>(entity =>
@@ -139,10 +164,11 @@ namespace FinTrackWebApi.Data
                 entity.Property(b => b.Name).HasColumnName("BudgetName").IsRequired();
                 entity.Property(b => b.Description).IsRequired(false);
 
-                entity.HasMany(b => b.BudgetCategories)
-                      .WithOne(bc => bc.Budget)
-                      .HasForeignKey(bc => bc.BudgetId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(b => b.BudgetCategories)
+                    .WithOne(bc => bc.Budget)
+                    .HasForeignKey(bc => bc.BudgetId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<BudgetCategoryModel>(entity =>
@@ -150,7 +176,10 @@ namespace FinTrackWebApi.Data
                 entity.ToTable("BudgetCategories");
                 entity.HasKey(bc => bc.BudgetCategoryId);
                 entity.Property(bc => bc.BudgetCategoryId).ValueGeneratedOnAdd();
-                entity.Property(bc => bc.AllocatedAmount).HasColumnType("decimal(18, 2)").IsRequired();
+                entity
+                    .Property(bc => bc.AllocatedAmount)
+                    .HasColumnType("decimal(18, 2)")
+                    .IsRequired();
                 entity.HasIndex(bc => new { bc.BudgetId, bc.CategoryId }).IsUnique();
             });
 
@@ -191,10 +220,11 @@ namespace FinTrackWebApi.Data
                 entity.HasKey(cs => cs.CurrencySnapshotId);
                 entity.Property(cs => cs.CurrencySnapshotId).ValueGeneratedOnAdd();
                 entity.Property(cs => cs.BaseCurrency).IsRequired().HasMaxLength(20);
-                entity.HasMany(cs => cs.Rates)
-                      .WithOne(er => er.CurrencySnapshot)
-                      .HasForeignKey(er => er.CurrencySnapshotId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(cs => cs.Rates)
+                    .WithOne(er => er.CurrencySnapshot)
+                    .HasForeignKey(er => er.CurrencySnapshotId)
+                    .OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(cs => cs.FetchTimestamp);
             });
 
@@ -202,26 +232,15 @@ namespace FinTrackWebApi.Data
             {
                 entity.ToTable("Currencies");
                 entity.HasKey(c => c.CurrencyId);
-                entity.Property(c => c.CurrencyId)
-                      .ValueGeneratedOnAdd();
-                entity.Property(c => c.Code)
-                      .IsRequired()
-                      .HasMaxLength(20);
-                entity.HasIndex(c => c.Code)
-                      .IsUnique();
-                entity.Property(c => c.Name)
-                      .HasMaxLength(100)
-                      .IsRequired();
-                entity.Property(c => c.CountryCode)
-                      .HasMaxLength(20);
-                entity.Property(c => c.CountryName)
-                      .HasMaxLength(100);
-                entity.Property(c => c.Status)
-                      .HasMaxLength(20);
-                entity.Property(c => c.IconUrl)
-                      .HasMaxLength(255);
-                entity.Property(c => c.LastUpdatedUtc)
-                      .IsRequired();
+                entity.Property(c => c.CurrencyId).ValueGeneratedOnAdd();
+                entity.Property(c => c.Code).IsRequired().HasMaxLength(20);
+                entity.HasIndex(c => c.Code).IsUnique();
+                entity.Property(c => c.Name).HasMaxLength(100).IsRequired();
+                entity.Property(c => c.CountryCode).HasMaxLength(20);
+                entity.Property(c => c.CountryName).HasMaxLength(100);
+                entity.Property(c => c.Status).HasMaxLength(20);
+                entity.Property(c => c.IconUrl).HasMaxLength(255);
+                entity.Property(c => c.LastUpdatedUtc).IsRequired();
             });
 
             modelBuilder.Entity<MembershipPlanModel>(entity =>
@@ -233,16 +252,21 @@ namespace FinTrackWebApi.Data
                 entity.HasIndex(e => e.Name).IsUnique();
                 entity.Property(e => e.Description).IsRequired(false);
                 entity.Property(e => e.Price).HasColumnType("decimal(18, 2)").IsRequired();
-                entity.Property(e => e.Currency).IsRequired().HasMaxLength(3).HasDefaultValue("TRY");
+                entity
+                    .Property(e => e.Currency)
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasDefaultValue("TRY");
                 entity.Property(e => e.BillingCycle).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.DurationInDays).IsRequired(false);
                 entity.Property(e => e.Features).IsRequired(false);
                 entity.Property(e => e.IsActive).HasDefaultValue(true).IsRequired();
 
-                entity.HasMany(p => p.UserMemberships)
-                      .WithOne(um => um.Plan)
-                      .HasForeignKey(um => um.MembershipPlanId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasMany(p => p.UserMemberships)
+                    .WithOne(um => um.Plan)
+                    .HasForeignKey(um => um.MembershipPlanId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<UserMembershipModel>(entity =>
@@ -251,10 +275,11 @@ namespace FinTrackWebApi.Data
                 entity.HasKey(e => e.UserMembershipId);
                 entity.Property(e => e.UserMembershipId).ValueGeneratedOnAdd();
 
-                entity.Property(e => e.Status)
-                      .HasConversion<string>()
-                      .HasMaxLength(50)
-                      .IsRequired();
+                entity
+                    .Property(e => e.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .IsRequired();
 
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.MembershipPlanId);
@@ -268,27 +293,34 @@ namespace FinTrackWebApi.Data
                 entity.Property(e => e.PaymentId).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)").IsRequired();
-                entity.Property(e => e.Currency).IsRequired().HasMaxLength(3).HasDefaultValue("TRY");
+                entity
+                    .Property(e => e.Currency)
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasDefaultValue("TRY");
                 entity.Property(e => e.PaymentDate).IsRequired();
                 entity.Property(e => e.PaymentMethod).HasMaxLength(100).IsRequired(false);
                 entity.Property(e => e.TransactionId).HasMaxLength(255).IsRequired(false);
-                entity.HasIndex(e => e.TransactionId)
-                      .IsUnique()
-                      .HasFilter("\"TransactionId\" IS NOT NULL");
+                entity
+                    .HasIndex(e => e.TransactionId)
+                    .IsUnique()
+                    .HasFilter("\"TransactionId\" IS NOT NULL");
 
-                entity.Property(e => e.Status)
-                      .HasConversion<string>()
-                      .HasMaxLength(50)
-                      .IsRequired();
+                entity
+                    .Property(e => e.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .IsRequired();
 
                 entity.HasIndex(e => e.UserId);
                 entity.HasIndex(e => e.UserMembershipId);
 
-                entity.HasOne(p => p.UserMembership)
-                      .WithMany(um => um.Payments)
-                      .HasForeignKey(p => p.UserMembershipId)
-                      .IsRequired(false)
-                      .OnDelete(DeleteBehavior.SetNull);
+                entity
+                    .HasOne(p => p.UserMembership)
+                    .WithMany(um => um.Payments)
+                    .HasForeignKey(p => p.UserMembershipId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             modelBuilder.Entity<NotificationModel>(entity =>
@@ -298,7 +330,10 @@ namespace FinTrackWebApi.Data
                 entity.Property(n => n.NotificationId).ValueGeneratedOnAdd();
                 entity.Property(n => n.MessageHead).IsRequired().HasMaxLength(200);
                 entity.Property(n => n.MessageBody).IsRequired().HasMaxLength(1000);
-                entity.Property(n => n.CreatedAtUtc).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity
+                    .Property(n => n.CreatedAtUtc)
+                    .IsRequired()
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.Property(n => n.IsRead).IsRequired().HasDefaultValue(false);
                 entity.HasIndex(n => n.UserId);
             });
@@ -311,29 +346,33 @@ namespace FinTrackWebApi.Data
 
                 entity.Property(d => d.Amount).HasColumnType("decimal(18, 2)").IsRequired();
 
-                entity.HasOne(d => d.CurrencyModel)
-                      .WithMany()
-                      .HasForeignKey(d => d.CurrencyId)
-                      .IsRequired()
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasOne(d => d.CurrencyModel)
+                    .WithMany()
+                    .HasForeignKey(d => d.CurrencyId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(d => d.Description).HasMaxLength(500).IsRequired();
                 entity.Property(d => d.CreateAtUtc).IsRequired();
                 entity.Property(d => d.DueDateUtc).IsRequired();
-                entity.Property(d => d.Status)
-                      .HasConversion<string>()
-                      .HasMaxLength(50)
-                      .IsRequired();
+                entity
+                    .Property(d => d.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .IsRequired();
 
-                entity.HasOne(d => d.Lender)
-                      .WithMany(u => u.DebtsAsLender)
-                      .HasForeignKey(d => d.LenderId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasOne(d => d.Lender)
+                    .WithMany(u => u.DebtsAsLender)
+                    .HasForeignKey(d => d.LenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasOne(d => d.Borrower)
-                        .WithMany(u => u.DebtsAsBorrower)
-                        .HasForeignKey(d => d.BorrowerId)
-                        .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasOne(d => d.Borrower)
+                    .WithMany(u => u.DebtsAsBorrower)
+                    .HasForeignKey(d => d.BorrowerId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<VideoMetadataModel>(entity =>
@@ -344,10 +383,11 @@ namespace FinTrackWebApi.Data
                 entity.Property(e => e.Status).HasConversion<string>();
                 entity.Property(e => e.StorageType).HasConversion<string>();
 
-                entity.HasOne(vm => vm.UploadedUser)
-                      .WithMany(u => u.UploadedVideos)
-                      .HasForeignKey(vm => vm.UploadedByUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                entity
+                    .HasOne(vm => vm.UploadedUser)
+                    .WithMany(u => u.UploadedVideos)
+                    .HasForeignKey(vm => vm.UploadedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<DebtVideoMetadataModel>(entity =>
@@ -358,15 +398,17 @@ namespace FinTrackWebApi.Data
 
                 entity.Property(dvm => dvm.Status).HasConversion<string>();
 
-                entity.HasOne(dvm => dvm.Debt)
-                      .WithMany(d => d.DebtVideoMetadatas)
-                      .HasForeignKey(dvm => dvm.DebtId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(dvm => dvm.Debt)
+                    .WithMany(d => d.DebtVideoMetadatas)
+                    .HasForeignKey(dvm => dvm.DebtId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(dvm => dvm.VideoMetadata)
-                      .WithMany(vm => vm.DebtVideoMetadatas)
-                      .HasForeignKey(dvm => dvm.VideoMetadataId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(dvm => dvm.VideoMetadata)
+                    .WithMany(vm => vm.DebtVideoMetadatas)
+                    .HasForeignKey(dvm => dvm.VideoMetadataId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<EmployeesModel>(entity =>
@@ -396,14 +438,16 @@ namespace FinTrackWebApi.Data
             {
                 entity.ToTable("EmployeeDepartments");
                 entity.HasKey(ed => new { ed.EmployeeId, ed.DepartmentId });
-                entity.HasOne(ed => ed.Employee)
-                      .WithMany(e => e.EmployeeDepartments)
-                      .HasForeignKey(ed => ed.EmployeeId)
-                      .OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(ed => ed.Department)
-                      .WithMany(d => d.EmployeeDepartments)
-                      .HasForeignKey(ed => ed.DepartmentId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(ed => ed.Employee)
+                    .WithMany(e => e.EmployeeDepartments)
+                    .HasForeignKey(ed => ed.EmployeeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(ed => ed.Department)
+                    .WithMany(d => d.EmployeeDepartments)
+                    .HasForeignKey(ed => ed.DepartmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }
