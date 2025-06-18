@@ -1,5 +1,5 @@
-﻿using FinTrackWebApi.Services.DocumentService.Models;
-using System.Text;
+﻿using System.Text;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
@@ -8,11 +8,15 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
         public string FileExtension => ".txt";
         public string MimeType => "text/plain";
 
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is TransactionsRaportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for Text generation. Expected TransactionsRaportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for Text generation. Expected TransactionsRaportModel.",
+                    nameof(data)
+                );
             }
 
             StringBuilder sb = new StringBuilder();
@@ -27,10 +31,21 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
             sb.AppendLine("Transaction Details:");
 
-            sb.AppendLine("--------------------------------------------------------------------------------------------------------------------------------------------------------------");
-            sb.AppendFormat("| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10} |\n",
-                          "#", "Account Name", "Category", "Amount", "Description", "Transaction");
-            sb.AppendLine("--------------------------------------------------------------------------------------------------------------------------------------------------------------");
+            sb.AppendLine(
+                "--------------------------------------------------------------------------------------------------------------------------------------------------------------"
+            );
+            sb.AppendFormat(
+                "| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10} |\n",
+                "#",
+                "Account Name",
+                "Category",
+                "Amount",
+                "Description",
+                "Transaction"
+            );
+            sb.AppendLine(
+                "--------------------------------------------------------------------------------------------------------------------------------------------------------------"
+            );
 
             if (reportData.Items != null && reportData.Items.Any())
             {
@@ -41,22 +56,24 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     string description = Truncate(item.Description, 25);
                     string category = Truncate(item.CategoryName, 15);
 
-                    sb.AppendFormat("| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10:yyyy-MM-dd} |\n",
-                                  index++,
-                                  name,
-                                  category,
-                                  item.Amount,
-                                  description,
-                                  item.TransactionDateUtc);
+                    sb.AppendFormat(
+                        "| {0,-3} | {1,-20} | {2,-18} | {3,-12} | {4,-25} | {5,-10:yyyy-MM-dd} |\n",
+                        index++,
+                        name,
+                        category,
+                        item.Amount,
+                        description,
+                        item.TransactionDateUtc
+                    );
                 }
-                sb.AppendLine("--------------------------------------------------------------------------------------------------------------------------------------------------------------");
-
+                sb.AppendLine(
+                    "--------------------------------------------------------------------------------------------------------------------------------------------------------------"
+                );
             }
             else
             {
                 sb.AppendLine("No transaction details found.");
             }
-
 
             sb.AppendLine("\n--- End of Report ---");
 
@@ -65,7 +82,8 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
         private static string Truncate(string? value, int maxLength)
         {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
             return value.Length <= maxLength ? value : value.Substring(0, maxLength - 3) + "...";
         }
     }

@@ -1,20 +1,25 @@
-﻿using FinTrackWebApi.Services.DocumentService.Models;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
     public class XlsxDocumentGenerator_Transaction : IDocumentGenerator
     {
         public string FileExtension => ".xlsx";
-        public string MimeType => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        public string MimeType =>
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
         private const int NumberOfColumns = 6;
 
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is TransactionsRaportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for XLSX generation. Expected TransactionsRaportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for XLSX generation. Expected TransactionsRaportModel.",
+                    nameof(data)
+                );
             }
 
             using (var workbook = new XLWorkbook())
@@ -24,8 +29,10 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 int currentRow = 1;
 
                 worksheet.Cell(currentRow, 1).Value = reportData.ReportTitle;
-                worksheet.Range(currentRow, 1, currentRow, NumberOfColumns).Merge().Style
-                    .Font.SetBold(true)
+                worksheet
+                    .Range(currentRow, 1, currentRow, NumberOfColumns)
+                    .Merge()
+                    .Style.Font.SetBold(true)
                     .Font.SetFontSize(16)
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                 currentRow++;
@@ -36,15 +43,20 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     worksheet.Cell(currentRow, 1).Style.Font.SetBold(true);
                     currentRow++;
                     worksheet.Cell(currentRow, 1).Value = reportData.Description;
-                    worksheet.Range(currentRow, 1, currentRow, NumberOfColumns).Merge().Style
-                        .Alignment.SetWrapText(true)
+                    worksheet
+                        .Range(currentRow, 1, currentRow, NumberOfColumns)
+                        .Merge()
+                        .Style.Alignment.SetWrapText(true)
                         .Alignment.SetVertical(XLAlignmentVerticalValues.Top);
                     currentRow++;
                 }
 
-                worksheet.Cell(currentRow, 1).Value = $"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
-                worksheet.Range(currentRow, 1, currentRow, NumberOfColumns).Merge().Style
-                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left)
+                worksheet.Cell(currentRow, 1).Value =
+                    $"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                worksheet
+                    .Range(currentRow, 1, currentRow, NumberOfColumns)
+                    .Merge()
+                    .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left)
                     .Font.SetItalic(true);
                 currentRow++;
                 currentRow++;
@@ -68,7 +80,9 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 headerRange.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
                 headerRange.Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
 
-                worksheet.Cell(headerRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+                worksheet
+                    .Cell(headerRow, 4)
+                    .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
                 currentRow++;
 
@@ -78,58 +92,78 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     foreach (var item in reportData.Items)
                     {
                         worksheet.Cell(currentRow, 1).Value = index++;
-                        worksheet.Cell(currentRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        worksheet
+                            .Cell(currentRow, 1)
+                            .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                         worksheet.Cell(currentRow, 2).Value = item.AccountName;
                         worksheet.Cell(currentRow, 3).Value = item.CategoryName;
 
                         worksheet.Cell(currentRow, 4).Value = item.Amount;
                         worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "#,##0.00";
-                        worksheet.Cell(currentRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+                        worksheet
+                            .Cell(currentRow, 4)
+                            .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
                         worksheet.Cell(currentRow, 5).Value = item.Description;
 
                         worksheet.Cell(currentRow, 6).Value = item.TransactionDateUtc;
                         worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "yyyy-MM-dd";
-                        worksheet.Cell(currentRow, 6).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        worksheet
+                            .Cell(currentRow, 6)
+                            .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                         currentRow++;
                     }
 
-                    var dataRange = worksheet.Range(headerRow + 1, 1, currentRow - 1, NumberOfColumns);
+                    var dataRange = worksheet.Range(
+                        headerRow + 1,
+                        1,
+                        currentRow - 1,
+                        NumberOfColumns
+                    );
                     dataRange.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
                     dataRange.Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
 
                     for (int i = headerRow + 1; i < currentRow; i++)
                     {
                         worksheet.Row(i).AdjustToContents();
-                        worksheet.Row(i).Cells(1, NumberOfColumns).Style.Alignment.SetVertical(XLAlignmentVerticalValues.Top);
+                        worksheet
+                            .Row(i)
+                            .Cells(1, NumberOfColumns)
+                            .Style.Alignment.SetVertical(XLAlignmentVerticalValues.Top);
                     }
                 }
                 else
                 {
                     worksheet.Cell(currentRow, 1).Value = "No transaction details found.";
-                    worksheet.Range(currentRow, 1, currentRow, NumberOfColumns).Merge().Style
-                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    worksheet
+                        .Range(currentRow, 1, currentRow, NumberOfColumns)
+                        .Merge()
+                        .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                     currentRow++;
                 }
 
                 currentRow++;
                 worksheet.Cell(currentRow, NumberOfColumns - 1).Value = "Total Transactions Count:";
-                worksheet.Cell(currentRow, NumberOfColumns - 1).Style.Font.SetBold(true)
+                worksheet
+                    .Cell(currentRow, NumberOfColumns - 1)
+                    .Style.Font.SetBold(true)
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
                 worksheet.Cell(currentRow, NumberOfColumns).Value = reportData.TotalCount;
-                worksheet.Cell(currentRow, NumberOfColumns).Style.Font.SetBold(true)
+                worksheet
+                    .Cell(currentRow, NumberOfColumns)
+                    .Style.Font.SetBold(true)
                     .NumberFormat.Format = "#,##0";
-                worksheet.Cell(currentRow, NumberOfColumns).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
-
+                worksheet
+                    .Cell(currentRow, NumberOfColumns)
+                    .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
 
                 worksheet.Columns(1, NumberOfColumns).AdjustToContents();
                 worksheet.Column(2).Width = Math.Max(worksheet.Column(2).Width, 20); // Account Name min genişlik
                 worksheet.Column(5).Width = Math.Max(worksheet.Column(5).Width, 30); // Description min genişlik
                 worksheet.Column(5).Style.Alignment.SetWrapText(true);
-
 
                 using (var stream = new MemoryStream())
                 {

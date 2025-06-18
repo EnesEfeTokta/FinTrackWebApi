@@ -45,6 +45,7 @@ namespace FinTrackWebApi.Models
         [DataType(DataType.DateTime)]
         public DateTime LastUpdatedUtc { get; set; }
 
-        public virtual ICollection<ExchangeRateModel> ExchangeRates { get; set; } = new List<ExchangeRateModel>();
+        public virtual ICollection<ExchangeRateModel> ExchangeRates { get; set; } =
+            new List<ExchangeRateModel>();
     }
 }

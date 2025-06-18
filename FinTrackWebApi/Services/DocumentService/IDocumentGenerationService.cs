@@ -2,7 +2,13 @@
 {
     public interface IDocumentGenerationService
     {
-        Task<(byte[] Content, string MimeType, string FileName)> GenerateDocumentAsync<TData>(TData data, DocumentFormat format, DocumentType type, string baseFileName) where TData : class;
+        Task<(byte[] Content, string MimeType, string FileName)> GenerateDocumentAsync<TData>(
+            TData data,
+            DocumentFormat format,
+            DocumentType type,
+            string baseFileName
+        )
+            where TData : class;
     }
 
     public enum DocumentFormat
@@ -12,13 +18,13 @@
         Text,
         Markdown,
         Xml,
-        Xlsx
+        Xlsx,
     }
 
     public enum DocumentType
     {
         Budget,
         Transaction,
-        Account
+        Account,
     }
 }

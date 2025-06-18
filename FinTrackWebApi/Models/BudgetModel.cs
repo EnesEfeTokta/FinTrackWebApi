@@ -44,6 +44,7 @@ namespace FinTrackWebApi.Models
         public DateTime? UpdatedAtUtc { get; set; }
 
         public virtual UserModel User { get; set; } = null!;
-        public virtual ICollection<BudgetCategoryModel> BudgetCategories { get; set; } = new List<BudgetCategoryModel>();
+        public virtual ICollection<BudgetCategoryModel> BudgetCategories { get; set; } =
+            new List<BudgetCategoryModel>();
     }
 }

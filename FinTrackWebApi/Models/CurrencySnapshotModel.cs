@@ -18,6 +18,7 @@ namespace FinTrackWebApi.Models
         [Column("BaseCurrency")]
         public string BaseCurrency { get; set; } = string.Empty;
 
-        public virtual ICollection<ExchangeRateModel> Rates { get; set; } = new List<ExchangeRateModel>();
+        public virtual ICollection<ExchangeRateModel> Rates { get; set; } =
+            new List<ExchangeRateModel>();
     }
 }

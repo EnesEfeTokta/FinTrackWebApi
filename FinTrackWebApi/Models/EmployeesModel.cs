@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models
 {
@@ -77,7 +77,8 @@ namespace FinTrackWebApi.Models
         [MaxLength(1000)]
         public string? Notes { get; set; } = null;
 
-        public ICollection<EmployeeDepartmentModel> EmployeeDepartments { get; set; } = new List<EmployeeDepartmentModel>();
+        public ICollection<EmployeeDepartmentModel> EmployeeDepartments { get; set; } =
+            new List<EmployeeDepartmentModel>();
     }
 
     public enum EmployeeStatus
@@ -88,6 +89,6 @@ namespace FinTrackWebApi.Models
         Support,
         DataAnalyst,
         Admin,
-        None
+        None,
     }
 }

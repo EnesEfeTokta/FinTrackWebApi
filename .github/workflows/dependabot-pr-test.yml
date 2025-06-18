@@ -1,0 +1,22 @@
+name: Dependabot PR Test
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [ main ]
+
+jobs:
+  test-dependabot:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - run: dotnet restore
+      - run: dotnet build --no-restore --configuration Release
+      - run: dotnet test --no-build --configuration Release

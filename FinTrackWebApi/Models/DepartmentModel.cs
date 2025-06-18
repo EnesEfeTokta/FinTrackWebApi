@@ -38,6 +38,7 @@ namespace FinTrackWebApi.Models
         [MaxLength(100)]
         public string UpdatedBy { get; set; } = string.Empty;
 
-        public ICollection<EmployeeDepartmentModel> EmployeeDepartments { get; set; } = new List<EmployeeDepartmentModel>();
+        public ICollection<EmployeeDepartmentModel> EmployeeDepartments { get; set; } =
+            new List<EmployeeDepartmentModel>();
     }
 }

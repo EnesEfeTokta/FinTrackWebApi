@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FinTrackWebApi.Models;
 
 namespace FinTrackWebApi.Models
 {
@@ -38,12 +37,12 @@ namespace FinTrackWebApi.Models
 
     public enum VideoStatus
     {
-        PendingApproval,                // Onay Bekliyor
+        PendingApproval, // Onay Bekliyor
         ApprovedAndQueuedForEncryption, // Operatör Onayladı, Şifreleme Kuyruğunda
-        ProcessingEncryption,           // Şifreleniyor
-        Encrypted,                      // Başarıyla Şifrelendi (ve anahtar gönderildi)
-        Rejected,                       // Reddedildi
-        EncryptionFailed,               // Şifreleme Başarısız Oldu
-        ProcessingError                 // Genel Bir İşlem Hatası
+        ProcessingEncryption, // Şifreleniyor
+        Encrypted, // Başarıyla Şifrelendi (ve anahtar gönderildi)
+        Rejected, // Reddedildi
+        EncryptionFailed, // Şifreleme Başarısız Oldu
+        ProcessingError, // Genel Bir İşlem Hatası
     }
 }

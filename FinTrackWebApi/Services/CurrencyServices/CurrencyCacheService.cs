@@ -28,9 +28,17 @@ namespace FinTrackWebApi.Services.CurrencyServices
             var rates = GetLatestRatesFromCache();
             targetCurrency = targetCurrency.ToUpperInvariant();
 
-            if (rates != null && rates.Rates != null && rates.Rates.TryGetValue(targetCurrency, out decimal rate))
+            if (
+                rates != null
+                && rates.Rates != null
+                && rates.Rates.TryGetValue(targetCurrency, out decimal rate)
+            )
             {
-                _logger.LogInformation("Rate for {TargetCurrency} found in cache: {Rate}", targetCurrency, rate);
+                _logger.LogInformation(
+                    "Rate for {TargetCurrency} found in cache: {Rate}",
+                    targetCurrency,
+                    rate
+                );
                 return rate;
             }
 

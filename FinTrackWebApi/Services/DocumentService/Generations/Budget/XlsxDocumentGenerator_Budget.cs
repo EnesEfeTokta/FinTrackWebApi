@@ -1,18 +1,23 @@
-﻿using FinTrackWebApi.Services.DocumentService.Models;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
     public class XlsxDocumentGenerator_Budget : IDocumentGenerator
     {
         public string FileExtension => ".xlsx";
-        public string MimeType => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        public string MimeType =>
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is BudgetReportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for XLSX generation. Expected BudgetReportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for XLSX generation. Expected BudgetReportModel.",
+                    nameof(data)
+                );
             }
 
             using (var workbook = new XLWorkbook())
@@ -21,8 +26,10 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 
                 int currentRow = 1;
                 worksheet.Cell(currentRow, 1).Value = reportData.ReportTitle;
-                worksheet.Range(currentRow, 1, currentRow, 10).Merge().Style
-                    .Font.SetBold(true)
+                worksheet
+                    .Range(currentRow, 1, currentRow, 10)
+                    .Merge()
+                    .Style.Font.SetBold(true)
                     .Font.SetFontSize(16)
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                 currentRow++;
@@ -31,7 +38,10 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                 worksheet.Cell(currentRow, 1).Style.Font.SetBold(true);
                 currentRow++;
                 worksheet.Cell(currentRow, 1).Value = reportData.Description;
-                worksheet.Range(currentRow, 1, currentRow, 10).Merge().Style.Alignment.SetWrapText(true);
+                worksheet
+                    .Range(currentRow, 1, currentRow, 10)
+                    .Merge()
+                    .Style.Alignment.SetWrapText(true);
                 currentRow++;
                 currentRow++;
 
@@ -57,7 +67,9 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                 headerRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                 headerRange.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
                 headerRange.Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
-                worksheet.Cell(headerRow, 10).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
+                worksheet
+                    .Cell(headerRow, 10)
+                    .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
                 currentRow++;
 
@@ -90,7 +102,9 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                         }
 
                         worksheet.Cell(currentRow, 10).Value = item.AllocatedAmount;
-                        worksheet.Cell(currentRow, 10).Style.NumberFormat.Format = string.Format("#,##0.00 \"{0}\"");
+                        worksheet.Cell(currentRow, 10).Style.NumberFormat.Format = string.Format(
+                            "#,##0.00 \"{0}\""
+                        );
 
                         currentRow++;
                     }

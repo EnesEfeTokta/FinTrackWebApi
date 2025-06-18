@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Models;
+using FinTrackWebApi.Services.PaymentService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
-using FinTrackWebApi.Dtos;
-using FinTrackWebApi.Services.PaymentService;
 
 namespace FinTrackWebApi.Controller
 {
@@ -18,7 +18,11 @@ namespace FinTrackWebApi.Controller
         private readonly ILogger<MembershipController> _logger;
         private readonly IPaymentService _paymentService;
 
-        public MembershipController(MyDataContext context, ILogger<MembershipController> logger, IPaymentService paymentService)
+        public MembershipController(
+            MyDataContext context,
+            ILogger<MembershipController> logger,
+            IPaymentService paymentService
+        )
         {
             _context = context;
             _logger = logger;
@@ -30,8 +34,13 @@ namespace FinTrackWebApi.Controller
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid for user {UserName}.", User.Identity?.Name ?? "Unknown");
-                throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
+                _logger.LogError(
+                    "Authenticated user ID claim (NameIdentifier) not found or invalid for user {UserName}.",
+                    User.Identity?.Name ?? "Unknown"
+                );
+                throw new UnauthorizedAccessException(
+                    "User ID cannot be determined from the token."
+                );
             }
             return userId;
         }
@@ -40,9 +49,13 @@ namespace FinTrackWebApi.Controller
         public async Task<ActionResult<UserMembershipDto>> GetCurrentUserActiveMembership()
         {
             var userId = GetAuthenticatedUserId();
-            var activeMembership = await _context.UserMemberships
-                .Include(um => um.Plan)
-                .Where(um => um.UserId == userId && um.Status == MembershipStatus.Active && um.EndDate > DateTime.UtcNow)
+            var activeMembership = await _context
+                .UserMemberships.Include(um => um.Plan)
+                .Where(um =>
+                    um.UserId == userId
+                    && um.Status == MembershipStatus.Active
+                    && um.EndDate > DateTime.UtcNow
+                )
                 .OrderByDescending(um => um.EndDate)
                 .Select(um => new UserMembershipDto
                 {
@@ -52,18 +65,20 @@ namespace FinTrackWebApi.Controller
                     StartDate = um.StartDate,
                     EndDate = um.EndDate,
                     Status = um.Status.ToString(),
-                    AutoRenew = um.AutoRenew
+                    AutoRenew = um.AutoRenew,
                 })
                 .FirstOrDefaultAsync();
-            return activeMembership == null ? NotFound("No active membership found.") : Ok(activeMembership);
+            return activeMembership == null
+                ? NotFound("No active membership found.")
+                : Ok(activeMembership);
         }
 
         [HttpGet("history")]
         public async Task<ActionResult<IEnumerable<UserMembershipDto>>> GetUserMembershipHistory()
         {
             var userId = GetAuthenticatedUserId();
-            var memberships = await _context.UserMemberships
-                .Include(um => um.Plan)
+            var memberships = await _context
+                .UserMemberships.Include(um => um.Plan)
                 .Where(um => um.UserId == userId)
                 .OrderByDescending(um => um.StartDate)
                 .Select(um => new UserMembershipDto
@@ -74,14 +89,16 @@ namespace FinTrackWebApi.Controller
                     StartDate = um.StartDate,
                     EndDate = um.EndDate,
                     Status = um.Status.ToString(),
-                    AutoRenew = um.AutoRenew
+                    AutoRenew = um.AutoRenew,
                 })
                 .ToListAsync();
             return Ok(memberships);
         }
 
         [HttpPost("create-checkout-session")]
-        public async Task<IActionResult> CreateCheckoutSession([FromBody] SubscriptionRequestDto request)
+        public async Task<IActionResult> CreateCheckoutSession(
+            [FromBody] SubscriptionRequestDto request
+        )
         {
             if (!ModelState.IsValid)
             {
@@ -93,17 +110,31 @@ namespace FinTrackWebApi.Controller
 
             if (planToSubscribe == null || !planToSubscribe.IsActive)
             {
-                _logger.LogWarning("PlanId {RequestedPlanId} not found or not active for UserId {UserId}.", request.PlanId, userId);
+                _logger.LogWarning(
+                    "PlanId {RequestedPlanId} not found or not active for UserId {UserId}.",
+                    request.PlanId,
+                    userId
+                );
                 return NotFound(new { message = "Selected plan is not valid or active." });
             }
 
-            var existingActiveMembership = await _context.UserMemberships
-                .FirstOrDefaultAsync(um => um.UserId == userId && um.MembershipPlanId == request.PlanId && um.Status == MembershipStatus.Active && um.EndDate > DateTime.UtcNow);
+            var existingActiveMembership = await _context.UserMemberships.FirstOrDefaultAsync(um =>
+                um.UserId == userId
+                && um.MembershipPlanId == request.PlanId
+                && um.Status == MembershipStatus.Active
+                && um.EndDate > DateTime.UtcNow
+            );
 
             if (existingActiveMembership != null)
             {
-                _logger.LogInformation("User {UserId} already has an active subscription to PlanId {PlanId}.", userId, request.PlanId);
-                return BadRequest(new { message = "You already have an active subscription to this plan." });
+                _logger.LogInformation(
+                    "User {UserId} already has an active subscription to PlanId {PlanId}.",
+                    userId,
+                    request.PlanId
+                );
+                return BadRequest(
+                    new { message = "You already have an active subscription to this plan." }
+                );
             }
 
             if (planToSubscribe.Price == 0)
@@ -113,14 +144,29 @@ namespace FinTrackWebApi.Controller
                     UserId = userId,
                     MembershipPlanId = planToSubscribe.MembershipPlanId,
                     StartDate = DateTime.UtcNow,
-                    EndDate = planToSubscribe.DurationInDays.HasValue ? DateTime.UtcNow.AddDays(planToSubscribe.DurationInDays.Value) : DateTime.UtcNow.AddYears(100),
+                    EndDate = planToSubscribe.DurationInDays.HasValue
+                        ? DateTime.UtcNow.AddDays(planToSubscribe.DurationInDays.Value)
+                        : DateTime.UtcNow.AddYears(100),
                     Status = MembershipStatus.Active,
-                    AutoRenew = false
+                    AutoRenew = false,
                 };
                 _context.UserMemberships.Add(freeMembership);
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Successfully subscribed User {UserId} to free PlanId {PlanId}. Membership ID: {MembershipId}", userId, freeMembership.MembershipPlanId, freeMembership.UserMembershipId);
-                return Ok(new { message = "Successfully subscribed to the free plan.", userMembershipId = freeMembership.UserMembershipId, sessionId = (string?)null, checkoutUrl = (string?)null });
+                _logger.LogInformation(
+                    "Successfully subscribed User {UserId} to free PlanId {PlanId}. Membership ID: {MembershipId}",
+                    userId,
+                    freeMembership.MembershipPlanId,
+                    freeMembership.UserMembershipId
+                );
+                return Ok(
+                    new
+                    {
+                        message = "Successfully subscribed to the free plan.",
+                        userMembershipId = freeMembership.UserMembershipId,
+                        sessionId = (string?)null,
+                        checkoutUrl = (string?)null,
+                    }
+                );
             }
 
             var newMembership = new UserMembershipModel
@@ -130,7 +176,7 @@ namespace FinTrackWebApi.Controller
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(planToSubscribe.DurationInDays ?? 30),
                 Status = MembershipStatus.PendingPayment,
-                AutoRenew = request.AutoRenew
+                AutoRenew = request.AutoRenew,
             };
             _context.UserMemberships.Add(newMembership);
             await _context.SaveChangesAsync();
@@ -142,13 +188,14 @@ namespace FinTrackWebApi.Controller
                 Amount = planToSubscribe.Price,
                 Currency = planToSubscribe.Currency.ToUpper(),
                 PaymentDate = DateTime.UtcNow,
-                Status = PaymentStatus.Pending
+                Status = PaymentStatus.Pending,
             };
             _context.Payments.Add(newPayment);
             await _context.SaveChangesAsync();
 
             var domain = $"{Request.Scheme}://{Request.Host}";
-            var successUrl = $"{domain}/payment-success?session_id={{CHECKOUT_SESSION_ID}}&membership_id={newMembership.UserMembershipId}";
+            var successUrl =
+                $"{domain}/payment-success?session_id={{CHECKOUT_SESSION_ID}}&membership_id={newMembership.UserMembershipId}";
             var cancelUrl = $"{domain}/payment-cancelled";
 
             var metadata = new Dictionary<string, string>
@@ -156,7 +203,7 @@ namespace FinTrackWebApi.Controller
                 { "UserMembershipId", newMembership.UserMembershipId.ToString() },
                 { "PaymentId", newPayment.PaymentId.ToString() },
                 { "PlanId", planToSubscribe.MembershipPlanId.ToString() },
-                { "UserId", userId.ToString() }
+                { "UserId", userId.ToString() },
             };
 
             try
@@ -174,23 +221,53 @@ namespace FinTrackWebApi.Controller
 
                 if (session == null)
                 {
-                    _logger.LogError("PaymentService returned null for Checkout Session. UserId: {UserId}, PlanId: {PlanId}.", userId, planToSubscribe.MembershipPlanId);
-                    await MarkSubscriptionAsFailed(newMembership.UserMembershipId, newPayment.PaymentId, "Failed to initiate Stripe session via PaymentService.");
+                    _logger.LogError(
+                        "PaymentService returned null for Checkout Session. UserId: {UserId}, PlanId: {PlanId}.",
+                        userId,
+                        planToSubscribe.MembershipPlanId
+                    );
+                    await MarkSubscriptionAsFailed(
+                        newMembership.UserMembershipId,
+                        newPayment.PaymentId,
+                        "Failed to initiate Stripe session via PaymentService."
+                    );
                     return StatusCode(500, new { message = "Could not initiate payment session." });
                 }
 
-                _logger.LogInformation("Stripe Checkout Session {SessionId} created for UserMembershipId {UserMembershipId}. User will be redirected.", session.Id, newMembership.UserMembershipId);
+                _logger.LogInformation(
+                    "Stripe Checkout Session {SessionId} created for UserMembershipId {UserMembershipId}. User will be redirected.",
+                    session.Id,
+                    newMembership.UserMembershipId
+                );
                 return Ok(new { sessionId = session.Id, checkoutUrl = session.Url });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception creating Stripe Checkout Session. UserId: {UserId}, PlanId: {PlanId}.", userId, planToSubscribe.MembershipPlanId);
-                await MarkSubscriptionAsFailed(newMembership.UserMembershipId, newPayment.PaymentId, $"Error during Stripe session creation: {ex.Message}");
-                return BadRequest(new { message = "An error occurred while initiating the payment: " + ex.Message });
+                _logger.LogError(
+                    ex,
+                    "Exception creating Stripe Checkout Session. UserId: {UserId}, PlanId: {PlanId}.",
+                    userId,
+                    planToSubscribe.MembershipPlanId
+                );
+                await MarkSubscriptionAsFailed(
+                    newMembership.UserMembershipId,
+                    newPayment.PaymentId,
+                    $"Error during Stripe session creation: {ex.Message}"
+                );
+                return BadRequest(
+                    new
+                    {
+                        message = "An error occurred while initiating the payment: " + ex.Message,
+                    }
+                );
             }
         }
 
-        private async Task MarkSubscriptionAsFailed(int membershipId, int paymentId, string gatewayResponseMessage)
+        private async Task MarkSubscriptionAsFailed(
+            int membershipId,
+            int paymentId,
+            string gatewayResponseMessage
+        )
         {
             var membership = await _context.UserMemberships.FindAsync(membershipId);
             var payment = await _context.Payments.FindAsync(paymentId);
@@ -204,8 +281,10 @@ namespace FinTrackWebApi.Controller
                 payment.Status = PaymentStatus.Failed;
                 payment.GatewayResponse = gatewayResponseMessage;
             }
-            if ((membership != null && _context.Entry(membership).State == EntityState.Modified) ||
-                (payment != null && _context.Entry(payment).State == EntityState.Modified))
+            if (
+                (membership != null && _context.Entry(membership).State == EntityState.Modified)
+                || (payment != null && _context.Entry(payment).State == EntityState.Modified)
+            )
             {
                 await _context.SaveChangesAsync();
             }
@@ -215,8 +294,9 @@ namespace FinTrackWebApi.Controller
         public async Task<IActionResult> CancelSubscription(int userMembershipId)
         {
             var userId = GetAuthenticatedUserId();
-            var membershipToCancel = await _context.UserMemberships
-                .FirstOrDefaultAsync(um => um.UserMembershipId == userMembershipId && um.UserId == userId);
+            var membershipToCancel = await _context.UserMemberships.FirstOrDefaultAsync(um =>
+                um.UserMembershipId == userMembershipId && um.UserId == userId
+            );
 
             if (membershipToCancel == null)
             {
@@ -235,7 +315,13 @@ namespace FinTrackWebApi.Controller
             _context.Entry(membershipToCancel).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Subscription cancellation requested. It will expire on " + membershipToCancel.EndDate.ToShortDateString() });
+            return Ok(
+                new
+                {
+                    message = "Subscription cancellation requested. It will expire on "
+                        + membershipToCancel.EndDate.ToShortDateString(),
+                }
+            );
         }
     }
 }

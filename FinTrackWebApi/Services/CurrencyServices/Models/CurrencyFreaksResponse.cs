@@ -1,5 +1,5 @@
-﻿using FinTrackWebApi.Utils;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
+using FinTrackWebApi.Utils;
 
 namespace FinTrackWebApi.Services.CurrencyServices.Models
 {

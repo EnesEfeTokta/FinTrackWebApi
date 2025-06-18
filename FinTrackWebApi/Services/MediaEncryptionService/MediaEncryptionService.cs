@@ -10,7 +10,8 @@ namespace FinTrackWebApi.Services.MediaEncryptionService
 
         public string GenerateRandomKey(int length = 20)
         {
-            const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+";
+            const string validChars =
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+";
             StringBuilder res = new StringBuilder();
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
@@ -56,13 +57,26 @@ namespace FinTrackWebApi.Services.MediaEncryptionService
 
         private byte[] DeriveKey(string password, byte[] salt)
         {
-            using (var rfc2898 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256))
+            using (
+                var rfc2898 = new Rfc2898DeriveBytes(
+                    password,
+                    salt,
+                    Iterations,
+                    HashAlgorithmName.SHA256
+                )
+            )
             {
                 return rfc2898.GetBytes(KeySize / 8); // 256 bit / 8 = 32 bytes
             }
         }
 
-        public async Task EncryptFileAsync(string inputFile, string outputFile, string password, string saltString, string ivString)
+        public async Task EncryptFileAsync(
+            string inputFile,
+            string outputFile,
+            string password,
+            string saltString,
+            string ivString
+        )
         {
             byte[] salt = Convert.FromBase64String(saltString);
             byte[] iv = Convert.FromBase64String(ivString);
@@ -77,9 +91,29 @@ namespace FinTrackWebApi.Services.MediaEncryptionService
                 aes.Key = key;
                 aes.IV = iv;
 
-                using (var fsInput = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var fsOutput = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                using (var cryptoStream = new CryptoStream(fsOutput, aes.CreateEncryptor(), CryptoStreamMode.Write))
+                using (
+                    var fsInput = new FileStream(
+                        inputFile,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.Read
+                    )
+                )
+                using (
+                    var fsOutput = new FileStream(
+                        outputFile,
+                        FileMode.Create,
+                        FileAccess.Write,
+                        FileShare.None
+                    )
+                )
+                using (
+                    var cryptoStream = new CryptoStream(
+                        fsOutput,
+                        aes.CreateEncryptor(),
+                        CryptoStreamMode.Write
+                    )
+                )
                 {
                     // IV'yi dosyanın başına yazmak yerine DB'de sakladık, bu da bir yöntem.
                     // Alternatif olarak IV'yi şifreli dosyanın başına yazabilirsiniz.
@@ -89,7 +123,12 @@ namespace FinTrackWebApi.Services.MediaEncryptionService
             }
         }
 
-        public Stream GetDecryptedVideoStream(string inputFile, string password, string saltString, string ivString)
+        public Stream GetDecryptedVideoStream(
+            string inputFile,
+            string password,
+            string saltString,
+            string ivString
+        )
         {
             byte[] salt = Convert.FromBase64String(saltString);
             byte[] iv = Convert.FromBase64String(ivString);
@@ -114,7 +153,11 @@ namespace FinTrackWebApi.Services.MediaEncryptionService
             // Stream'i olduğu gibi dönmek yerine, response'a yazarken anlık decrypt etmek daha iyi olabilir.
             // Ya da CryptoStream kapatıldığında alttaki stream'i kapatmaması için bir wrapper yazılabilir.
             // Şimdilik FileStreamResult'ın bunu yönettiğini varsayalım.
-            var cryptoStream = new CryptoStream(fsInput, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            var cryptoStream = new CryptoStream(
+                fsInput,
+                aes.CreateDecryptor(),
+                CryptoStreamMode.Read
+            );
             return cryptoStream;
         }
     }

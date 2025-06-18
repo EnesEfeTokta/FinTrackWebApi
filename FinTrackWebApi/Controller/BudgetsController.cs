@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Models;
-using FinTrackWebApi.Data;
-using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Controller
 {
@@ -27,8 +27,13 @@ namespace FinTrackWebApi.Controller
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid in token for user {UserName}.", User.Identity?.Name ?? "Unknown");
-                throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
+                _logger.LogError(
+                    "Authenticated user ID claim (NameIdentifier) not found or invalid in token for user {UserName}.",
+                    User.Identity?.Name ?? "Unknown"
+                );
+                throw new UnauthorizedAccessException(
+                    "User ID cannot be determined from the token."
+                );
             }
             return userId;
         }
@@ -40,23 +45,33 @@ namespace FinTrackWebApi.Controller
             {
                 int authenticatedUserId = GetAuthenticatedUserId();
 
-                var budgets = await _context.Budgets
-                    .AsNoTracking()
+                var budgets = await _context
+                    .Budgets.AsNoTracking()
                     .Where(b => b.UserId == authenticatedUserId)
                     .ToListAsync();
 
                 if (budgets == null || !budgets.Any())
                 {
-                    _logger.LogWarning("No budgets found for user ID: {UserId}", authenticatedUserId);
+                    _logger.LogWarning(
+                        "No budgets found for user ID: {UserId}",
+                        authenticatedUserId
+                    );
                     return NotFound("No budgets found.");
                 }
 
-                _logger.LogInformation("Successfully retrieved budgets for user ID: {UserId}", authenticatedUserId);
+                _logger.LogInformation(
+                    "Successfully retrieved budgets for user ID: {UserId}",
+                    authenticatedUserId
+                );
                 return Ok(budgets);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving budgets for user ID: {UserId}", GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving budgets for user ID: {UserId}",
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while retrieving budgets.");
             }
         }
@@ -68,22 +83,35 @@ namespace FinTrackWebApi.Controller
             {
                 int authenticatedUserId = GetAuthenticatedUserId();
 
-                var budget = await _context.Budgets
-                    .AsNoTracking()
+                var budget = await _context
+                    .Budgets.AsNoTracking()
                     .FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == authenticatedUserId);
 
                 if (budget == null)
                 {
-                    _logger.LogWarning("Budget with ID {BudgetId} not found for user ID: {UserId}", id, authenticatedUserId);
+                    _logger.LogWarning(
+                        "Budget with ID {BudgetId} not found for user ID: {UserId}",
+                        id,
+                        authenticatedUserId
+                    );
                     return NotFound("Budget not found.");
                 }
 
-                _logger.LogInformation("Successfully retrieved budget with ID {BudgetId} for user ID: {UserId}", id, authenticatedUserId);
+                _logger.LogInformation(
+                    "Successfully retrieved budget with ID {BudgetId} for user ID: {UserId}",
+                    id,
+                    authenticatedUserId
+                );
                 return Ok(budget);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving budget with ID {BudgetId} for user ID: {UserId}", id, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving budget with ID {BudgetId} for user ID: {UserId}",
+                    id,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while retrieving budget.");
             }
         }
@@ -103,18 +131,25 @@ namespace FinTrackWebApi.Controller
                     EndDate = DateTime.SpecifyKind(budgetDto.EndDate, DateTimeKind.Utc),
                     IsActive = budgetDto.IsActive,
                     CreatedAtUtc = DateTime.UtcNow,
-                    UpdatedAtUtc = null
+                    UpdatedAtUtc = null,
                 };
 
                 _context.Budgets.Add(budget);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Successfully created budget for user ID: {UserId}", authenticatedUserId);
+                _logger.LogInformation(
+                    "Successfully created budget for user ID: {UserId}",
+                    authenticatedUserId
+                );
                 return CreatedAtAction(nameof(GetBudgets), new { id = budget.BudgetId }, budget);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating budget for user ID: {UserId}", GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error creating budget for user ID: {UserId}",
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while creating budget.");
             }
         }
@@ -129,7 +164,11 @@ namespace FinTrackWebApi.Controller
                 var budget = await _context.Budgets.FindAsync(id);
                 if (budget == null || budget.UserId != authenticatedUserId)
                 {
-                    _logger.LogWarning("Budget with ID {BudgetId} not found for user ID: {UserId}", id, authenticatedUserId);
+                    _logger.LogWarning(
+                        "Budget with ID {BudgetId} not found for user ID: {UserId}",
+                        id,
+                        authenticatedUserId
+                    );
                     return NotFound("Budget not found.");
                 }
 
@@ -143,16 +182,24 @@ namespace FinTrackWebApi.Controller
                 _context.Budgets.Update(budget);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Successfully updated budget with ID {BudgetId} for user ID: {UserId}", id, authenticatedUserId);
+                _logger.LogInformation(
+                    "Successfully updated budget with ID {BudgetId} for user ID: {UserId}",
+                    id,
+                    authenticatedUserId
+                );
                 return Ok(budget);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating budget with ID {BudgetId} for user ID: {UserId}", id, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error updating budget with ID {BudgetId} for user ID: {UserId}",
+                    id,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while updating budget.");
             }
         }
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBudget(int id)
@@ -164,19 +211,32 @@ namespace FinTrackWebApi.Controller
                 var budget = await _context.Budgets.FindAsync(id);
                 if (budget == null || budget.UserId != authenticatedUserId)
                 {
-                    _logger.LogWarning("Budget with ID {BudgetId} not found for user ID: {UserId}", id, authenticatedUserId);
+                    _logger.LogWarning(
+                        "Budget with ID {BudgetId} not found for user ID: {UserId}",
+                        id,
+                        authenticatedUserId
+                    );
                     return NotFound("Budget not found.");
                 }
 
                 _context.Budgets.Remove(budget);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Successfully deleted budget with ID {BudgetId} for user ID: {UserId}", id, authenticatedUserId);
+                _logger.LogInformation(
+                    "Successfully deleted budget with ID {BudgetId} for user ID: {UserId}",
+                    id,
+                    authenticatedUserId
+                );
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting budget with ID {BudgetId} for user ID: {UserId}", id, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error deleting budget with ID {BudgetId} for user ID: {UserId}",
+                    id,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while deleting budget.");
             }
         }
@@ -188,23 +248,36 @@ namespace FinTrackWebApi.Controller
             {
                 int authenticatedUserId = GetAuthenticatedUserId();
 
-                var budget = await _context.Budgets
-                    .Include(b => b.BudgetCategories)
+                var budget = await _context
+                    .Budgets.Include(b => b.BudgetCategories)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == authenticatedUserId);
 
                 if (budget == null)
                 {
-                    _logger.LogWarning("Budget with ID {BudgetId} not found for user ID: {UserId}", id, authenticatedUserId);
+                    _logger.LogWarning(
+                        "Budget with ID {BudgetId} not found for user ID: {UserId}",
+                        id,
+                        authenticatedUserId
+                    );
                     return NotFound("Budget not found.");
                 }
 
-                _logger.LogInformation("Successfully retrieved budget categories for budget ID {BudgetId} and user ID: {UserId}", id, authenticatedUserId);
+                _logger.LogInformation(
+                    "Successfully retrieved budget categories for budget ID {BudgetId} and user ID: {UserId}",
+                    id,
+                    authenticatedUserId
+                );
                 return Ok(budget.BudgetCategories);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving budget categories for budget ID {BudgetId} and user ID: {UserId}", id, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving budget categories for budget ID {BudgetId} and user ID: {UserId}",
+                    id,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "Internal server error while retrieving budget categories.");
             }
         }

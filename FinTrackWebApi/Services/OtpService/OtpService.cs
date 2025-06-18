@@ -1,9 +1,8 @@
 ﻿// FinTrackWebApi.Services.OtpService.OtpService.cs
 using System.Security.Cryptography;
-using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
-using Microsoft.Extensions.Logging; // ILogger için
+using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Services.OtpService
 {
@@ -30,13 +29,20 @@ namespace FinTrackWebApi.Services.OtpService
             }
         }
 
-        public async Task<bool> StoreOtpAsync(string email, string otpCodeHash, string username, string temporaryPlainPassword, string? profilePicture, DateTime expireAt)
+        public async Task<bool> StoreOtpAsync(
+            string email,
+            string otpCodeHash,
+            string username,
+            string temporaryPlainPassword,
+            string? profilePicture,
+            DateTime expireAt
+        )
         {
             try
             {
                 // Önceki OTP'leri temizle
-                var existingOtps = await _context.OtpVerification
-                    .Where(x => x.Email == email)
+                var existingOtps = await _context
+                    .OtpVerification.Where(x => x.Email == email)
                     .ToListAsync();
 
                 if (existingOtps.Any())
@@ -52,7 +58,9 @@ namespace FinTrackWebApi.Services.OtpService
                     ExpireAt = expireAt,
                     Username = username,
                     TemporaryPlainPassword = temporaryPlainPassword, // Düz şifre
-                    ProfilePicture = profilePicture ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"
+                    ProfilePicture =
+                        profilePicture
+                        ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740",
                 };
 
                 await _context.OtpVerification.AddAsync(otpVerification);
@@ -72,8 +80,8 @@ namespace FinTrackWebApi.Services.OtpService
         {
             try
             {
-                var otpRecord = await _context.OtpVerification
-                    .Where(x => x.Email == email)
+                var otpRecord = await _context
+                    .OtpVerification.Where(x => x.Email == email)
                     .OrderByDescending(x => x.CreateAt)
                     .FirstOrDefaultAsync();
 
@@ -85,7 +93,12 @@ namespace FinTrackWebApi.Services.OtpService
 
                 if (otpRecord.ExpireAt < DateTime.UtcNow)
                 {
-                    _logger.LogWarning("OTP expired for email: {Email}. ExpireAt: {ExpireAt}, UtcNow: {UtcNow}", email, otpRecord.ExpireAt, DateTime.UtcNow);
+                    _logger.LogWarning(
+                        "OTP expired for email: {Email}. ExpireAt: {ExpireAt}, UtcNow: {UtcNow}",
+                        email,
+                        otpRecord.ExpireAt,
+                        DateTime.UtcNow
+                    );
                     // Süresi dolmuş OTP'yi sil
                     _context.OtpVerification.Remove(otpRecord);
                     await _context.SaveChangesAsync();
@@ -95,7 +108,12 @@ namespace FinTrackWebApi.Services.OtpService
                 // Gelen düz OTP'yi OtpVerificationModel'deki hash'lenmiş OTP ile karşılaştır
                 if (!BCrypt.Net.BCrypt.Verify(plainOtpCode, otpRecord.OtpCode))
                 {
-                    _logger.LogWarning("Invalid OTP for email: {Email}. Provided OTP: {PlainOtpCode}, Stored Hash: {StoredHash}", email, plainOtpCode, otpRecord.OtpCode);
+                    _logger.LogWarning(
+                        "Invalid OTP for email: {Email}. Provided OTP: {PlainOtpCode}, Stored Hash: {StoredHash}",
+                        email,
+                        plainOtpCode,
+                        otpRecord.OtpCode
+                    );
                     return null;
                 }
 
@@ -116,10 +134,11 @@ namespace FinTrackWebApi.Services.OtpService
             // ... (RemoveOtpAsync metodunuz aynı kalabilir) ...
             try
             {
-                var existingOtps = await _context.OtpVerification
-                                    .Where(x => x.Email == email)
-                                    .ToListAsync();
-                if (!existingOtps.Any()) return true; // Silinecek bir şey yoksa başarılı say
+                var existingOtps = await _context
+                    .OtpVerification.Where(x => x.Email == email)
+                    .ToListAsync();
+                if (!existingOtps.Any())
+                    return true; // Silinecek bir şey yoksa başarılı say
 
                 _context.OtpVerification.RemoveRange(existingOtps);
                 await _context.SaveChangesAsync();

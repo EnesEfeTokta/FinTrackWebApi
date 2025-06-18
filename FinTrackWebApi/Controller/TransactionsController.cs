@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
 using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
 using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Controller
@@ -38,8 +38,8 @@ namespace FinTrackWebApi.Controller
             try
             {
                 int userId = GetAuthenticatedUserId();
-                var transactions = await _context.Transactions
-                    .AsNoTracking()
+                var transactions = await _context
+                    .Transactions.AsNoTracking()
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId)
@@ -54,7 +54,7 @@ namespace FinTrackWebApi.Controller
                         AccountName = t.Account.Name,
                         Amount = t.Amount,
                         TransactionDateUtc = t.TransactionDateUtc,
-                        Description = t.Description
+                        Description = t.Description,
                     })
                     .ToListAsync();
 
@@ -62,7 +62,11 @@ namespace FinTrackWebApi.Controller
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving transactions for user {UserId}", GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving transactions for user {UserId}",
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "An error occurred while retrieving the transactions.");
             }
         }
@@ -74,8 +78,8 @@ namespace FinTrackWebApi.Controller
             {
                 int userId = GetAuthenticatedUserId();
 
-                var transaction = await _context.Transactions
-                    .AsNoTracking()
+                var transaction = await _context
+                    .Transactions.AsNoTracking()
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId && t.TransactionId == transactionId)
@@ -90,20 +94,27 @@ namespace FinTrackWebApi.Controller
                         AccountName = t.Account.Name,
                         Amount = t.Amount,
                         TransactionDateUtc = t.TransactionDateUtc,
-                        Description = t.Description
+                        Description = t.Description,
                     })
                     .FirstOrDefaultAsync();
 
                 if (transaction == null)
                 {
-                    return NotFound($"Transaction with ID {transactionId} not found for user {userId}.");
+                    return NotFound(
+                        $"Transaction with ID {transactionId} not found for user {userId}."
+                    );
                 }
 
                 return Ok(transaction);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving transaction with ID {TransactionId} for user {UserId}", transactionId, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving transaction with ID {TransactionId} for user {UserId}",
+                    transactionId,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "An error occurred while retrieving the transaction.");
             }
         }
@@ -115,8 +126,8 @@ namespace FinTrackWebApi.Controller
             {
                 int userId = GetAuthenticatedUserId();
 
-                var transactions = await _context.Transactions
-                    .AsNoTracking()
+                var transactions = await _context
+                    .Transactions.AsNoTracking()
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId && t.Category.Type.ToString() == type)
@@ -124,14 +135,21 @@ namespace FinTrackWebApi.Controller
 
                 if (transactions == null || transactions.Count == 0)
                 {
-                    return NotFound($"No transactions found for category type '{type}' for user {userId}.");
+                    return NotFound(
+                        $"No transactions found for category type '{type}' for user {userId}."
+                    );
                 }
 
                 return Ok(transactions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving transactions for category type '{CategoryType}' for user {UserId}", type, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving transactions for category type '{CategoryType}' for user {UserId}",
+                    type,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "An error occurred while retrieving the transactions.");
             }
         }
@@ -143,8 +161,8 @@ namespace FinTrackWebApi.Controller
             {
                 int userId = GetAuthenticatedUserId();
 
-                var transactions = await _context.Transactions
-                    .AsNoTracking()
+                var transactions = await _context
+                    .Transactions.AsNoTracking()
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId && t.Category.Name == category)
@@ -152,20 +170,29 @@ namespace FinTrackWebApi.Controller
 
                 if (transactions == null || transactions.Count == 0)
                 {
-                    return NotFound($"No transactions found for category name '{category}' for user {userId}.");
+                    return NotFound(
+                        $"No transactions found for category name '{category}' for user {userId}."
+                    );
                 }
 
                 return Ok(transactions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving transactions for category name '{CategoryName}' for user {UserId}", category, GetAuthenticatedUserId());
+                _logger.LogError(
+                    ex,
+                    "Error retrieving transactions for category name '{CategoryName}' for user {UserId}",
+                    category,
+                    GetAuthenticatedUserId()
+                );
                 return StatusCode(500, "An error occurred while retrieving the transactions.");
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransaction([FromBody] TransactionCreateDto transactionDto)
+        public async Task<IActionResult> CreateTransaction(
+            [FromBody] TransactionCreateDto transactionDto
+        )
         {
             if (!ModelState.IsValid)
             {
@@ -174,11 +201,14 @@ namespace FinTrackWebApi.Controller
 
             int userId = GetAuthenticatedUserId();
 
-            var category = await _context.Categories
-                                     .FirstOrDefaultAsync(c => c.CategoryId == transactionDto.CategoryId && c.UserId == userId);
+            var category = await _context.Categories.FirstOrDefaultAsync(c =>
+                c.CategoryId == transactionDto.CategoryId && c.UserId == userId
+            );
             if (category == null)
             {
-                return BadRequest($"Category with ID {transactionDto.CategoryId} not found for this user.");
+                return BadRequest(
+                    $"Category with ID {transactionDto.CategoryId} not found for this user."
+                );
             }
 
             var transaction = new TransactionModel
@@ -187,9 +217,12 @@ namespace FinTrackWebApi.Controller
                 CategoryId = transactionDto.CategoryId,
                 AccountId = transactionDto.AccountId,
                 Amount = transactionDto.Amount,
-                TransactionDateUtc = DateTime.SpecifyKind(transactionDto.TransactionDateUtc, DateTimeKind.Utc),
+                TransactionDateUtc = DateTime.SpecifyKind(
+                    transactionDto.TransactionDateUtc,
+                    DateTimeKind.Utc
+                ),
                 Description = transactionDto.Description,
-                CreatedAtUtc = DateTime.UtcNow
+                CreatedAtUtc = DateTime.UtcNow,
             };
 
             _context.Transactions.Add(transaction);
@@ -197,9 +230,19 @@ namespace FinTrackWebApi.Controller
             try
             {
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Transaction created with ID {TransactionId} for user {UserId}", transaction.TransactionId, userId);
+                _logger.LogInformation(
+                    "Transaction created with ID {TransactionId} for user {UserId}",
+                    transaction.TransactionId,
+                    userId
+                );
 
-                return Ok(new { TransactionId = transaction.TransactionId, Message = "Transaction created successfully." });
+                return Ok(
+                    new
+                    {
+                        TransactionId = transaction.TransactionId,
+                        Message = "Transaction created successfully.",
+                    }
+                );
             }
             catch (DbUpdateException ex)
             {
@@ -209,7 +252,10 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPut("{transactionId}")]
-        public async Task<IActionResult> UpdateTransaction(int transactionId, [FromBody] TransactionUpdateDto transactionDto)
+        public async Task<IActionResult> UpdateTransaction(
+            int transactionId,
+            [FromBody] TransactionUpdateDto transactionDto
+        )
         {
             if (!ModelState.IsValid)
             {
@@ -218,30 +264,45 @@ namespace FinTrackWebApi.Controller
 
             int userId = GetAuthenticatedUserId();
 
-            var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);
+            var transaction = await _context.Transactions.FirstOrDefaultAsync(t =>
+                t.TransactionId == transactionId && t.UserId == userId
+            );
 
             if (transaction == null)
             {
-                return NotFound($"Transaction with ID {transactionId} not found for user {userId}.");
+                return NotFound(
+                    $"Transaction with ID {transactionId} not found for user {userId}."
+                );
             }
 
             transaction.CategoryId = transactionDto.CategoryId;
             transaction.AccountId = transactionDto.AccountId;
             transaction.Amount = transactionDto.Amount;
-            transaction.TransactionDateUtc = DateTime.SpecifyKind(transactionDto.TransactionDateUtc, DateTimeKind.Utc);
+            transaction.TransactionDateUtc = DateTime.SpecifyKind(
+                transactionDto.TransactionDateUtc,
+                DateTimeKind.Utc
+            );
             transaction.Description = transactionDto.Description;
             transaction.UpdatedAtUtc = DateTime.UtcNow;
 
             try
             {
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Transaction with ID {TransactionId} updated for user {UserId}", transaction.TransactionId, userId);
+                _logger.LogInformation(
+                    "Transaction with ID {TransactionId} updated for user {UserId}",
+                    transaction.TransactionId,
+                    userId
+                );
                 return Ok(new { Message = "Transaction updated successfully." });
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "Error updating transaction with ID {TransactionId} for user {UserId}", transaction.TransactionId, userId);
+                _logger.LogError(
+                    ex,
+                    "Error updating transaction with ID {TransactionId} for user {UserId}",
+                    transaction.TransactionId,
+                    userId
+                );
                 return StatusCode(500, "An error occurred while updating the transaction.");
             }
         }
@@ -250,22 +311,34 @@ namespace FinTrackWebApi.Controller
         public async Task<IActionResult> DeleteTransaction(int transactionId)
         {
             int userId = GetAuthenticatedUserId();
-            var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);
+            var transaction = await _context.Transactions.FirstOrDefaultAsync(t =>
+                t.TransactionId == transactionId && t.UserId == userId
+            );
             if (transaction == null)
             {
-                return NotFound($"Transaction with ID {transactionId} not found for user {userId}.");
+                return NotFound(
+                    $"Transaction with ID {transactionId} not found for user {userId}."
+                );
             }
             _context.Transactions.Remove(transaction);
             try
             {
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Transaction with ID {TransactionId} deleted for user {UserId}", transaction.TransactionId, userId);
+                _logger.LogInformation(
+                    "Transaction with ID {TransactionId} deleted for user {UserId}",
+                    transaction.TransactionId,
+                    userId
+                );
                 return Ok(new { Message = "Transaction deleted successfully." });
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "Error deleting transaction with ID {TransactionId} for user {UserId}", transaction.TransactionId, userId);
+                _logger.LogError(
+                    ex,
+                    "Error deleting transaction with ID {TransactionId} for user {UserId}",
+                    transaction.TransactionId,
+                    userId
+                );
                 return StatusCode(500, "An error occurred while deleting the transaction.");
             }
         }

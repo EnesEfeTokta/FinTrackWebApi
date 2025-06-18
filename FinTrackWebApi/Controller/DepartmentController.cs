@@ -1,8 +1,8 @@
 ﻿using FinTrackWebApi.Data;
-using Microsoft.AspNetCore.Mvc;
 using FinTrackWebApi.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Controller
 {
@@ -65,7 +65,11 @@ namespace FinTrackWebApi.Controller
             {
                 _context.Departments.Add(department);
                 await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetDepartmentById), new { id = department.DepartmentId }, department);
+                return CreatedAtAction(
+                    nameof(GetDepartmentById),
+                    new { id = department.DepartmentId },
+                    department
+                );
             }
             catch (Exception ex)
             {
@@ -75,7 +79,10 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpPut("department/{id}")]
-        public async Task<IActionResult> UpdateDepartment(int id, [FromBody] DepartmentModel department)
+        public async Task<IActionResult> UpdateDepartment(
+            int id,
+            [FromBody] DepartmentModel department
+        )
         {
             if (department == null || department.DepartmentId != id)
             {

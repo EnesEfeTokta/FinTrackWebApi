@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
@@ -27,15 +25,12 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
   </ItemGroup>
-
   <ItemGroup>
-	  <Content Include="Services\EmailService\EmailHtmlSchemes\**\*.html">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+    <Content Include="Services\EmailService\EmailHtmlSchemes\**\*.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
   </ItemGroup>
-
 </Project>

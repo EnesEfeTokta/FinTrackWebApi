@@ -1,12 +1,11 @@
-﻿using FinTrackWebApi.Data;
+﻿using System.Security.Claims;
+using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Models;
-using FinTrackWebApi.Services.EmailService;
+using FinTrackWebApi.Services.SecureDebtService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using FinTrackWebApi.Dtos;
-using FinTrackWebApi.Services.SecureDebtService;
 
 namespace FinTrackWebApi.Controller
 {
@@ -19,7 +18,11 @@ namespace FinTrackWebApi.Controller
         private readonly ILogger<DebtController> _logger;
         private readonly ISecureDebtService _secureDebtService;
 
-        public DebtController(MyDataContext context, ILogger<DebtController> logger, ISecureDebtService secureDebtService)
+        public DebtController(
+            MyDataContext context,
+            ILogger<DebtController> logger,
+            ISecureDebtService secureDebtService
+        )
         {
             _context = context;
             _logger = logger;
@@ -43,8 +46,8 @@ namespace FinTrackWebApi.Controller
             int Id = GetAuthenticatedId();
             try
             {
-                var debts = await _context.Debts
-                    .Include(d => d.Lender)
+                var debts = await _context
+                    .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
                     .Where(d => d.Lender.Id == Id || d.Borrower.Id == Id)
@@ -61,9 +64,16 @@ namespace FinTrackWebApi.Controller
 
         // Borç teklifi oluşturma metodu.
         [HttpPost("create-debt-offer")]
-        public async Task<IActionResult> CreateDebtOfferAsync([FromBody] CreateDebtOfferRequestDto request)
+        public async Task<IActionResult> CreateDebtOfferAsync(
+            [FromBody] CreateDebtOfferRequestDto request
+        )
         {
-            if (request == null || request.Amount <= 0 || string.IsNullOrWhiteSpace(request.Description) || request.DueDateUtc == default)
+            if (
+                request == null
+                || request.Amount <= 0
+                || string.IsNullOrWhiteSpace(request.Description)
+                || request.DueDateUtc == default
+            )
             {
                 return BadRequest("Invalid debt offer request.");
             }
@@ -84,29 +94,36 @@ namespace FinTrackWebApi.Controller
 
             try
             {
-                CurrencyModel currencyModel = await _context.Currencies.FirstOrDefaultAsync(c => c.Code == request.CurrencyCode) ?? throw new ArgumentException("Invalid currency code.");
+                CurrencyModel currencyModel =
+                    await _context.Currencies.FirstOrDefaultAsync(c =>
+                        c.Code == request.CurrencyCode
+                    ) ?? throw new ArgumentException("Invalid currency code.");
 
                 await _secureDebtService.CreateDebtOfferAsync(
                     lender.Id.ToString(),
-                    borrower.Email ?? throw new ArgumentException("We need the borrower's email address."),
+                    borrower.Email
+                        ?? throw new ArgumentException("We need the borrower's email address."),
                     request.Amount,
                     currencyModel,
                     request.DueDateUtc,
-                    request.Description);
+                    request.Description
+                );
 
-                return Ok(new
-                {
-                    Message = "Debt offer created successfully.",
-                    Debt = new
+                return Ok(
+                    new
                     {
-                        LenderId = Id,
-                        BorrowerId = request.BorrowerId,
-                        Amount = request.Amount,
-                        CurrencyCode = request.CurrencyCode,
-                        DueDateUtc = request.DueDateUtc,
-                        Description = request.Description
+                        Message = "Debt offer created successfully.",
+                        Debt = new
+                        {
+                            LenderId = Id,
+                            BorrowerId = request.BorrowerId,
+                            Amount = request.Amount,
+                            CurrencyCode = request.CurrencyCode,
+                            DueDateUtc = request.DueDateUtc,
+                            Description = request.Description,
+                        },
                     }
-                });
+                );
             }
             catch (Exception ex)
             {
@@ -121,8 +138,8 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                var debt = await _context.Debts
-                    .Include(d => d.Lender)
+                var debt = await _context
+                    .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
                     .FirstOrDefaultAsync(d => d.DebtId == debtId);
@@ -145,8 +162,8 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                var debts = await _context.Debts
-                    .Include(d => d.Lender)
+                var debts = await _context
+                    .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
                     .Where(d => d.Lender.Id == Id || d.Borrower.Id == Id)
@@ -167,8 +184,8 @@ namespace FinTrackWebApi.Controller
             int Id = GetAuthenticatedId();
             try
             {
-                var debt = await _context.Debts
-                    .Include(d => d.Lender)
+                var debt = await _context
+                    .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .FirstOrDefaultAsync(d => d.DebtId == debtId);
                 if (debt == null)
@@ -202,21 +219,23 @@ namespace FinTrackWebApi.Controller
                     await _context.SaveChangesAsync();
                 }
 
-                return Ok(new
-                {
-                    Message = "Debt offer retrieved successfully.",
-                    Debt = new
+                return Ok(
+                    new
                     {
-                        debt.DebtId,
-                        debt.Lender,
-                        debt.Borrower,
-                        debt.Amount,
-                        debt.CurrencyModel?.Code,
-                        debt.DueDateUtc,
-                        debt.Description,
-                        Status = debt.Status.ToString()
+                        Message = "Debt offer retrieved successfully.",
+                        Debt = new
+                        {
+                            debt.DebtId,
+                            debt.Lender,
+                            debt.Borrower,
+                            debt.Amount,
+                            debt.CurrencyModel?.Code,
+                            debt.DueDateUtc,
+                            debt.Description,
+                            Status = debt.Status.ToString(),
+                        },
                     }
-                });
+                );
             }
             catch (Exception ex)
             {

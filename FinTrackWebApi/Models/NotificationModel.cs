@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models
 {
@@ -45,6 +45,6 @@ namespace FinTrackWebApi.Models
         Info,
         Warning,
         Error,
-        Success
+        Success,
     }
 }

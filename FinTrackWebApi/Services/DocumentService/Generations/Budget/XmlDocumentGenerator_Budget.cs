@@ -1,6 +1,6 @@
 ﻿using System.Text;
-using System.Xml.Serialization;
 using System.Xml;
+using System.Xml.Serialization;
 using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
@@ -10,11 +10,15 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
         public string FileExtension => ".xml";
         public string MimeType => "application/xml";
 
-        public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
+        public Task<byte[]> GenerateAsync<TData>(TData data)
+            where TData : class
         {
             if (!(data is BudgetReportModel reportData))
             {
-                throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for XML generation. Expected BudgetReportModel.", nameof(data));
+                throw new ArgumentException(
+                    $"Unsupported data type '{typeof(TData).FullName}' for XML generation. Expected BudgetReportModel.",
+                    nameof(data)
+                );
             }
 
             var serializer = new XmlSerializer(typeof(BudgetReportModel));
@@ -23,7 +27,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                 Encoding = Encoding.UTF8,
                 Indent = true,
                 IndentChars = "  ",
-                NewLineOnAttributes = false
+                NewLineOnAttributes = false,
             };
 
             byte[] resultBytes;

@@ -1,14 +1,11 @@
-﻿using FinTrackWebApi.Data;
+﻿using System.Globalization;
+using System.Text.Json;
+using FinTrackWebApi.Data;
+using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.CurrencyServices.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
-using FinTrackWebApi.Models;
-using DocumentFormat.OpenXml.VariantTypes;
-using System.Text.Json;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {
@@ -24,7 +21,8 @@ namespace FinTrackWebApi.Services.CurrencyServices
             IServiceProvider serviceProvider,
             ILogger<CurrencyUpdateService> logger,
             IMemoryCache cache,
-            IOptions<CurrencyFreaksSettings> settings)
+            IOptions<CurrencyFreaksSettings> settings
+        )
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
@@ -33,7 +31,10 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
             _updateInterval = TimeSpan.FromMinutes(_settings.UpdateIntervalMinutes);
 
-            _logger.LogInformation("CurrencyUpdateService has been started. Update interval: {Interval}", _updateInterval);
+            _logger.LogInformation(
+                "CurrencyUpdateService has been started. Update interval: {Interval}",
+                _updateInterval
+            );
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,8 +46,8 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     await DoWorkWithScopeAsync(stoppingToken);
                 }
             }
-            catch (Exception ex) 
-            { 
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "An error occurred during the initial currency update.");
             }
 
@@ -54,7 +55,10 @@ namespace FinTrackWebApi.Services.CurrencyServices
             {
                 try
                 {
-                    _logger.LogDebug("Waiting until {Interval} for the next rate update.", _updateInterval);
+                    _logger.LogDebug(
+                        "Waiting until {Interval} for the next rate update.",
+                        _updateInterval
+                    );
                     await Task.Delay(_updateInterval, stoppingToken);
                     await DoWorkWithScopeAsync(stoppingToken);
                 }
@@ -74,12 +78,16 @@ namespace FinTrackWebApi.Services.CurrencyServices
                 {
                     var scopedDataProvider = scope.ServiceProvider;
 
-                    _logger.LogInformation("The scope of the currency update work has been completed.");
+                    _logger.LogInformation(
+                        "The scope of the currency update work has been completed."
+                    );
 
-                    var dataProvider = scopedDataProvider.GetRequiredService<ICurrencyDataProvider>();
+                    var dataProvider =
+                        scopedDataProvider.GetRequiredService<ICurrencyDataProvider>();
                     var dbContext = scopedDataProvider.GetRequiredService<MyDataContext>();
 
-                    var httpClientFactory = scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
+                    var httpClientFactory =
+                        scope.ServiceProvider.GetRequiredService<IHttpClientFactory>();
 
                     CurrencyFreaksResponse? ratesResponse = null;
 
@@ -87,24 +95,39 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     {
                         ratesResponse = await dataProvider.GetLatestRatesAsync(stoppingToken);
 
-                        await UpdateSupportedCurrenciesAsync(dbContext, httpClientFactory, stoppingToken);
+                        await UpdateSupportedCurrenciesAsync(
+                            dbContext,
+                            httpClientFactory,
+                            stoppingToken
+                        );
 
-                        if (ratesResponse != null && ratesResponse.Rates != null && ratesResponse.Rates.Any())
+                        if (
+                            ratesResponse != null
+                            && ratesResponse.Rates != null
+                            && ratesResponse.Rates.Any()
+                        )
                         {
                             try
                             {
-                                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                                    .SetAbsoluteExpiration(_updateInterval.Add(TimeSpan.FromMinutes(5)));
+                                var cacheEntryOptions =
+                                    new MemoryCacheEntryOptions().SetAbsoluteExpiration(
+                                        _updateInterval.Add(TimeSpan.FromMinutes(5))
+                                    );
                                 _cache.Set(CacheKeys.LatestRates, ratesResponse, cacheEntryOptions);
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogError(ex, "An error occurred while caching the latest rates.");
+                                _logger.LogError(
+                                    ex,
+                                    "An error occurred while caching the latest rates."
+                                );
                             }
                         }
                         else
                         {
-                            _logger.LogWarning("Failed to retrieve valid exchange rate data from CurrencyFreaks API. The cache was not updated.");
+                            _logger.LogWarning(
+                                "Failed to retrieve valid exchange rate data from CurrencyFreaks API. The cache was not updated."
+                            );
                         }
                     }
                     catch (Exception ex)
@@ -130,26 +153,35 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
         private const int DefaultRatePrecision = 6;
 
-        private async Task SaveRatesToDatabaseAsync(MyDataContext dbContext, CurrencyFreaksResponse? newRatesResponse, CancellationToken cancellationToken)
+        private async Task SaveRatesToDatabaseAsync(
+            MyDataContext dbContext,
+            CurrencyFreaksResponse? newRatesResponse,
+            CancellationToken cancellationToken
+        )
         {
             // newRatesResponse null ise işlemi erken sonlandır
             if (newRatesResponse == null)
             {
-                _logger.LogWarning("SaveRatesToDatabaseAsync: newRatesResponse is null. No rates will be saved.");
+                _logger.LogWarning(
+                    "SaveRatesToDatabaseAsync: newRatesResponse is null. No rates will be saved."
+                );
                 return; // Veya uygun bir hata yönetimi
             }
             // Ayrıca, Rates koleksiyonunun da null veya boş olup olmadığını kontrol etmek iyi bir pratiktir.
             if (newRatesResponse.Rates == null || !newRatesResponse.Rates.Any())
             {
-                _logger.LogWarning("SaveRatesToDatabaseAsync: newRatesResponse.Rates is null or empty. No rates will be saved. Base Currency: {Base}", newRatesResponse.Base);
+                _logger.LogWarning(
+                    "SaveRatesToDatabaseAsync: newRatesResponse.Rates is null or empty. No rates will be saved. Base Currency: {Base}",
+                    newRatesResponse.Base
+                );
                 return;
             }
 
             try
             {
-                var dbCurrenciesMap = await dbContext.Currencies
-                                                     .AsNoTracking()
-                                                     .ToDictionaryAsync(c => c.Code, c => c.CurrencyId, cancellationToken);
+                var dbCurrenciesMap = await dbContext
+                    .Currencies.AsNoTracking()
+                    .ToDictionaryAsync(c => c.Code, c => c.CurrencyId, cancellationToken);
 
                 var newCurrencyCodesToAdd = new List<string>();
                 // newRatesResponse.Rates null olmayacağı için (yukarıdaki kontrol sayesinde) doğrudan erişebiliriz.
@@ -163,29 +195,34 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
                 if (newCurrencyCodesToAdd.Any())
                 {
-                    _logger.LogInformation("{Count} of new currencies detected: {Codes}. They are being added to the database.",
-                        newCurrencyCodesToAdd.Count, string.Join(", ", newCurrencyCodesToAdd));
+                    _logger.LogInformation(
+                        "{Count} of new currencies detected: {Codes}. They are being added to the database.",
+                        newCurrencyCodesToAdd.Count,
+                        string.Join(", ", newCurrencyCodesToAdd)
+                    );
 
                     foreach (var code in newCurrencyCodesToAdd)
                     {
                         // Varsayılan olarak Name ve diğer zorunlu alanlar için mantıklı değerler atayın
-                        dbContext.Currencies.Add(new CurrencyModel
-                        {
-                            Code = code,
-                            Name = $"Currency {code ?? "N/A"}", // Veya API'den gelen bir isim varsa o
-                            CountryCode = "N/A",      // Varsayılan veya API'den gelen
-                            CountryName = "N/A",    // Varsayılan veya API'den gelen
-                            Status = "Active",        // Varsayılan
-                            LastUpdatedUtc = DateTime.UtcNow
-                        });
+                        dbContext.Currencies.Add(
+                            new CurrencyModel
+                            {
+                                Code = code,
+                                Name = $"Currency {code ?? "N/A"}", // Veya API'den gelen bir isim varsa o
+                                CountryCode = "N/A", // Varsayılan veya API'den gelen
+                                CountryName = "N/A", // Varsayılan veya API'den gelen
+                                Status = "Active", // Varsayılan
+                                LastUpdatedUtc = DateTime.UtcNow,
+                            }
+                        );
                     }
 
                     await dbContext.SaveChangesAsync(cancellationToken);
                     _logger.LogInformation("New currencies were registered in the database.");
 
-                    var newlyAddedCurrencies = await dbContext.Currencies
-                                                              .Where(c => newCurrencyCodesToAdd.Contains(c.Code))
-                                                              .ToDictionaryAsync(c => c.Code, c => c.CurrencyId, cancellationToken);
+                    var newlyAddedCurrencies = await dbContext
+                        .Currencies.Where(c => newCurrencyCodesToAdd.Contains(c.Code))
+                        .ToDictionaryAsync(c => c.Code, c => c.CurrencyId, cancellationToken);
                     foreach (var addedCurrency in newlyAddedCurrencies)
                     {
                         dbCurrenciesMap[addedCurrency.Key] = addedCurrency.Value;
@@ -194,23 +231,31 @@ namespace FinTrackWebApi.Services.CurrencyServices
                 }
 
                 // newRatesResponse.Base null olmayacağı için (yukarıdaki ilk null kontrolü sayesinde) doğrudan erişebiliriz.
-                var lastSnapshotRates = await dbContext.ExchangeRates
-                    .Where(er => er.CurrencySnapshot.BaseCurrency == newRatesResponse.Base)
+                var lastSnapshotRates = await dbContext
+                    .ExchangeRates.Where(er =>
+                        er.CurrencySnapshot.BaseCurrency == newRatesResponse.Base
+                    )
                     .Include(er => er.Currency)
                     .OrderByDescending(er => er.CurrencySnapshot.FetchTimestamp)
                     .GroupBy(er => er.Currency.Code) // Currency null olabilir mi? Eğer olabiliyorsa, .Where(er => er.Currency != null) ekleyin.
                     .Select(g => g.First())
                     .ToDictionaryAsync(er => er.Currency.Code, er => er.Rate, cancellationToken);
 
-                _logger.LogDebug("{Count} last exchange rate information for {Base} base was retrieved from the database.", lastSnapshotRates.Count, newRatesResponse.Base);
+                _logger.LogDebug(
+                    "{Count} last exchange rate information for {Base} base was retrieved from the database.",
+                    lastSnapshotRates.Count,
+                    newRatesResponse.Base
+                );
 
-
-                DateTime fetchTimestampUtc = DateTime.SpecifyKind(newRatesResponse.Date, DateTimeKind.Utc);
+                DateTime fetchTimestampUtc = DateTime.SpecifyKind(
+                    newRatesResponse.Date,
+                    DateTimeKind.Utc
+                );
                 var newDbSnapshot = new CurrencySnapshotModel
                 {
                     FetchTimestamp = fetchTimestampUtc,
                     BaseCurrency = newRatesResponse.Base,
-                    Rates = new List<ExchangeRateModel>()
+                    Rates = new List<ExchangeRateModel>(),
                 };
 
                 bool hasChangesForThisSnapshot = false;
@@ -221,14 +266,27 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     string currencyCodeFromApi = apiRatePair.Key;
                     decimal rateFromApi = apiRatePair.Value;
                     // ...
-                    decimal processedApiRate = Math.Round(rateFromApi, DefaultRatePrecision, MidpointRounding.AwayFromZero);
+                    decimal processedApiRate = Math.Round(
+                        rateFromApi,
+                        DefaultRatePrecision,
+                        MidpointRounding.AwayFromZero
+                    );
 
                     if (dbCurrenciesMap.TryGetValue(currencyCodeFromApi, out int currencyIdInDb))
                     {
                         bool rateIsNewOrChanged = true;
-                        if (lastSnapshotRates.TryGetValue(currencyCodeFromApi, out decimal lastRateInDb))
+                        if (
+                            lastSnapshotRates.TryGetValue(
+                                currencyCodeFromApi,
+                                out decimal lastRateInDb
+                            )
+                        )
                         {
-                            decimal processedDbRate = Math.Round(lastRateInDb, DefaultRatePrecision, MidpointRounding.AwayFromZero);
+                            decimal processedDbRate = Math.Round(
+                                lastRateInDb,
+                                DefaultRatePrecision,
+                                MidpointRounding.AwayFromZero
+                            );
                             if (processedDbRate == processedApiRate)
                             {
                                 rateIsNewOrChanged = false;
@@ -244,37 +302,63 @@ namespace FinTrackWebApi.Services.CurrencyServices
                             };
                             newDbSnapshot.Rates.Add(newDbExchangeRate);
                             hasChangesForThisSnapshot = true;
-                            _logger.LogTrace("Change/new setup to be added to Snapshot: {Code} - API Rate: {ApiRate}, Processed Rate: {ProcessedRate}",
-                                             currencyCodeFromApi, rateFromApi, processedApiRate);
+                            _logger.LogTrace(
+                                "Change/new setup to be added to Snapshot: {Code} - API Rate: {ApiRate}, Processed Rate: {ProcessedRate}",
+                                currencyCodeFromApi,
+                                rateFromApi,
+                                processedApiRate
+                            );
                         }
                     }
                     else
                     {
-                        _logger.LogWarning("No ID found in DB for currency code '{Code}'. This rate is being skipped.", currencyCodeFromApi);
+                        _logger.LogWarning(
+                            "No ID found in DB for currency code '{Code}'. This rate is being skipped.",
+                            currencyCodeFromApi
+                        );
                     }
                 }
 
-                bool isFirstSnapshotForBase = !await dbContext.CurrencySnapshots.AnyAsync(s => s.BaseCurrency == newRatesResponse.Base, cancellationToken);
+                bool isFirstSnapshotForBase = !await dbContext.CurrencySnapshots.AnyAsync(
+                    s => s.BaseCurrency == newRatesResponse.Base,
+                    cancellationToken
+                );
 
-                if (newDbSnapshot.Rates.Any() && (hasChangesForThisSnapshot || isFirstSnapshotForBase))
+                if (
+                    newDbSnapshot.Rates.Any()
+                    && (hasChangesForThisSnapshot || isFirstSnapshotForBase)
+                )
                 {
                     dbContext.CurrencySnapshots.Add(newDbSnapshot);
                     int affectedRows = await dbContext.SaveChangesAsync(cancellationToken);
-                    _logger.LogInformation("A new snapshot with {RateCount} rate has been added to the database. Total affected rows (including relationships): {AffectedRows}",
-                        newDbSnapshot.Rates.Count, affectedRows);
+                    _logger.LogInformation(
+                        "A new snapshot with {RateCount} rate has been added to the database. Total affected rows (including relationships): {AffectedRows}",
+                        newDbSnapshot.Rates.Count,
+                        affectedRows
+                    );
                 }
                 else
                 {
-                    _logger.LogInformation("No significant change in exchange rates has been detected or the snapshot is already up to date. No new snapshots have been added to the database.");
+                    _logger.LogInformation(
+                        "No significant change in exchange rates has been detected or the snapshot is already up to date. No new snapshots have been added to the database."
+                    );
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unexpected error occurred while saving a rate to the database. Base Currency (if available): {Base}", newRatesResponse?.Base);
+                _logger.LogError(
+                    ex,
+                    "An unexpected error occurred while saving a rate to the database. Base Currency (if available): {Base}",
+                    newRatesResponse?.Base
+                );
             }
         }
 
-        private async Task UpdateSupportedCurrenciesAsync(MyDataContext dbContext, IHttpClientFactory httpClientFactory, CancellationToken stoppingToken)
+        private async Task UpdateSupportedCurrenciesAsync(
+            MyDataContext dbContext,
+            IHttpClientFactory httpClientFactory,
+            CancellationToken stoppingToken
+        )
         {
             try
             {
@@ -293,54 +377,114 @@ namespace FinTrackWebApi.Services.CurrencyServices
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonString = await response.Content.ReadAsStringAsync(stoppingToken);
-                    var apiResponse = JsonSerializer.Deserialize<SupportedCurrenciesApiResponse>(jsonString, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    var apiResponse = JsonSerializer.Deserialize<SupportedCurrenciesApiResponse>(
+                        jsonString,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
 
-                    if (apiResponse?.SupportedCurrenciesMap != null && apiResponse.SupportedCurrenciesMap.Any())
+                    if (
+                        apiResponse?.SupportedCurrenciesMap != null
+                        && apiResponse.SupportedCurrenciesMap.Any()
+                    )
                     {
                         int newCurrenciesCount = 0;
                         int updatedCurrenciesCount = 0;
 
-                        var existingDbCurrencies = await dbContext.Currencies.ToDictionaryAsync(c => c.Code, c => c, stoppingToken);
+                        var existingDbCurrencies = await dbContext.Currencies.ToDictionaryAsync(
+                            c => c.Code,
+                            c => c,
+                            stoppingToken
+                        );
 
                         foreach (var apiKeyValuePair in apiResponse.SupportedCurrenciesMap)
                         {
                             string apiCurrencyCode = apiKeyValuePair.Key;
                             SupportedCurrencyDetail apiDetail = apiKeyValuePair.Value;
 
-                            if (string.IsNullOrWhiteSpace(apiCurrencyCode) || string.IsNullOrWhiteSpace(apiDetail.CurrencyName))
+                            if (
+                                string.IsNullOrWhiteSpace(apiCurrencyCode)
+                                || string.IsNullOrWhiteSpace(apiDetail.CurrencyName)
+                            )
                             {
-                                _logger.LogWarning("Skipping currency with missing code or name: {CurrencyCode}", apiCurrencyCode);
+                                _logger.LogWarning(
+                                    "Skipping currency with missing code or name: {CurrencyCode}",
+                                    apiCurrencyCode
+                                );
                                 continue;
                             }
 
                             DateTime? availableFrom = null;
-                            if (!string.IsNullOrWhiteSpace(apiDetail.AvailableFromString) &&
-                                DateTime.TryParse(apiDetail.AvailableFromString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fromDate))
+                            if (
+                                !string.IsNullOrWhiteSpace(apiDetail.AvailableFromString)
+                                && DateTime.TryParse(
+                                    apiDetail.AvailableFromString,
+                                    CultureInfo.InvariantCulture,
+                                    DateTimeStyles.None,
+                                    out DateTime fromDate
+                                )
+                            )
                             {
                                 availableFrom = DateTime.SpecifyKind(fromDate, DateTimeKind.Utc);
                             }
 
                             DateTime? availableUntil = null;
-                            if (!string.IsNullOrWhiteSpace(apiDetail.AvailableUntilString) &&
-                                DateTime.TryParse(apiDetail.AvailableUntilString, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime untilDate))
+                            if (
+                                !string.IsNullOrWhiteSpace(apiDetail.AvailableUntilString)
+                                && DateTime.TryParse(
+                                    apiDetail.AvailableUntilString,
+                                    CultureInfo.InvariantCulture,
+                                    DateTimeStyles.None,
+                                    out DateTime untilDate
+                                )
+                            )
                             {
                                 availableUntil = DateTime.SpecifyKind(untilDate, DateTimeKind.Utc);
                             }
 
-                            if (existingDbCurrencies.TryGetValue(apiCurrencyCode, out CurrencyModel? dbCurrency))
+                            if (
+                                existingDbCurrencies.TryGetValue(
+                                    apiCurrencyCode,
+                                    out CurrencyModel? dbCurrency
+                                )
+                            )
                             {
                                 // Var olanı güncelle
                                 bool changed = false;
-                                if (dbCurrency.Name != apiDetail.CurrencyName) { dbCurrency.Name = apiDetail.CurrencyName; changed = true; }
-                                if (dbCurrency.CountryCode != apiDetail.CountryCode) { dbCurrency.CountryCode = apiDetail.CountryCode; changed = true; }
-                                if (dbCurrency.CountryName != apiDetail.CountryName) { dbCurrency.CountryName = apiDetail.CountryName; changed = true; }
-                                if (dbCurrency.Status != apiDetail.Status) { dbCurrency.Status = apiDetail.Status; changed = true; }
-                                if (dbCurrency.AvailableFrom != availableFrom) { dbCurrency.AvailableFrom = availableFrom; changed = true; }
-                                if (dbCurrency.AvailableUntil != availableUntil) { dbCurrency.AvailableUntil = availableUntil; changed = true; }
-                                if (dbCurrency.IconUrl != apiDetail.Icon) { dbCurrency.IconUrl = apiDetail.Icon; changed = true; }
+                                if (dbCurrency.Name != apiDetail.CurrencyName)
+                                {
+                                    dbCurrency.Name = apiDetail.CurrencyName;
+                                    changed = true;
+                                }
+                                if (dbCurrency.CountryCode != apiDetail.CountryCode)
+                                {
+                                    dbCurrency.CountryCode = apiDetail.CountryCode;
+                                    changed = true;
+                                }
+                                if (dbCurrency.CountryName != apiDetail.CountryName)
+                                {
+                                    dbCurrency.CountryName = apiDetail.CountryName;
+                                    changed = true;
+                                }
+                                if (dbCurrency.Status != apiDetail.Status)
+                                {
+                                    dbCurrency.Status = apiDetail.Status;
+                                    changed = true;
+                                }
+                                if (dbCurrency.AvailableFrom != availableFrom)
+                                {
+                                    dbCurrency.AvailableFrom = availableFrom;
+                                    changed = true;
+                                }
+                                if (dbCurrency.AvailableUntil != availableUntil)
+                                {
+                                    dbCurrency.AvailableUntil = availableUntil;
+                                    changed = true;
+                                }
+                                if (dbCurrency.IconUrl != apiDetail.Icon)
+                                {
+                                    dbCurrency.IconUrl = apiDetail.Icon;
+                                    changed = true;
+                                }
 
                                 if (changed)
                                 {
@@ -363,7 +507,7 @@ namespace FinTrackWebApi.Services.CurrencyServices
                                     AvailableFrom = availableFrom,
                                     AvailableUntil = availableUntil,
                                     IconUrl = apiDetail.Icon,
-                                    LastUpdatedUtc = DateTime.UtcNow
+                                    LastUpdatedUtc = DateTime.UtcNow,
                                 };
                                 await dbContext.Currencies.AddAsync(newCurrency, stoppingToken);
                                 newCurrenciesCount++;
@@ -377,23 +521,34 @@ namespace FinTrackWebApi.Services.CurrencyServices
                         }
                         else
                         {
-                            _logger.LogInformation("No changes were made to the database of supported currencies.");
+                            _logger.LogInformation(
+                                "No changes were made to the database of supported currencies."
+                            );
                         }
                     }
                     else
                     {
-                        _logger.LogWarning("Failed to retrieve supported currency data from the API or came back empty.");
+                        _logger.LogWarning(
+                            "Failed to retrieve supported currency data from the API or came back empty."
+                        );
                     }
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync(stoppingToken);
-                    _logger.LogError("API error when withdrawing supported currencies. Status: {StatusCode}, Response: {ErrorContent}", response.StatusCode, errorContent);
+                    _logger.LogError(
+                        "API error when withdrawing supported currencies. Status: {StatusCode}, Response: {ErrorContent}",
+                        response.StatusCode,
+                        errorContent
+                    );
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unexpected error occurred while updating supported currencies.");
+                _logger.LogError(
+                    ex,
+                    "An unexpected error occurred while updating supported currencies."
+                );
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 
@@ -10,7 +9,10 @@ namespace FinTrackWebApi.Services.PaymentService
         private readonly StripeSettings _stripeSettings; // IOptions<StripeSettings> yerine doğrudan StripeSettings
         private readonly ILogger<StripePaymentService> _logger;
 
-        public StripePaymentService(IOptions<StripeSettings> stripeSettingsOptions, ILogger<StripePaymentService> logger)
+        public StripePaymentService(
+            IOptions<StripeSettings> stripeSettingsOptions,
+            ILogger<StripePaymentService> logger
+        )
         {
             _stripeSettings = stripeSettingsOptions.Value; // Value ile erişilir
             _logger = logger;
@@ -25,7 +27,8 @@ namespace FinTrackWebApi.Services.PaymentService
             string successUrl,
             string cancelUrl,
             string? clientReferenceId = null,
-            Dictionary<string, string>? metadata = null)
+            Dictionary<string, string>? metadata = null
+        )
         {
             try
             {
@@ -54,29 +57,44 @@ namespace FinTrackWebApi.Services.PaymentService
                     },
                     Mode = "payment", // Tek seferlik ödeme için
                     SuccessUrl = successUrl, // Örn: "https://yourdomain.com/payment-success?session_id={CHECKOUT_SESSION_ID}"
-                    CancelUrl = cancelUrl,   // Örn: "https://yourdomain.com/payment-cancelled"
+                    CancelUrl = cancelUrl, // Örn: "https://yourdomain.com/payment-cancelled"
                     ClientReferenceId = clientReferenceId, // Örn: UserId veya OrderId
-                    Metadata = metadata ?? new Dictionary<string, string>() // Metadata boşsa yeni dictionary ata
+                    Metadata = metadata ?? new Dictionary<string, string>(), // Metadata boşsa yeni dictionary ata
                 };
 
                 var service = new SessionService();
                 Session session = await service.CreateAsync(options);
 
-                _logger.LogInformation("Created Stripe Checkout Session {SessionId} for client {ClientRefId} with amount {Amount} {Currency}",
-                    session.Id, clientReferenceId ?? "N/A", amount, currency);
+                _logger.LogInformation(
+                    "Created Stripe Checkout Session {SessionId} for client {ClientRefId} with amount {Amount} {Currency}",
+                    session.Id,
+                    clientReferenceId ?? "N/A",
+                    amount,
+                    currency
+                );
 
                 return session;
             }
             catch (StripeException ex)
             {
-                _logger.LogError(ex, "Stripe error while creating Checkout Session for client {ClientRefId}: {Message}", clientReferenceId ?? "N/A", ex.StripeError?.Message ?? ex.Message);
+                _logger.LogError(
+                    ex,
+                    "Stripe error while creating Checkout Session for client {ClientRefId}: {Message}",
+                    clientReferenceId ?? "N/A",
+                    ex.StripeError?.Message ?? ex.Message
+                );
                 // Burada Exception fırlatmak yerine null dönmek veya özel bir sonuç objesi dönmek daha iyi olabilir.
                 // Controller'ın hatayı uygun şekilde işlemesi için.
                 throw; // Veya throw new ApplicationException($"Payment processing error: {ex.StripeError?.Message ?? ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Generic error while creating Checkout Session for client {ClientRefId}: {Message}", clientReferenceId ?? "N/A", ex.Message);
+                _logger.LogError(
+                    ex,
+                    "Generic error while creating Checkout Session for client {ClientRefId}: {Message}",
+                    clientReferenceId ?? "N/A",
+                    ex.Message
+                );
                 throw; // Veya throw new ApplicationException("An unexpected error occurred during payment processing.", ex);
             }
         }

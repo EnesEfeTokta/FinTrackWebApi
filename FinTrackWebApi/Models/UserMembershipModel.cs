@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace FinTrackWebApi.Models
@@ -52,6 +52,6 @@ namespace FinTrackWebApi.Models
         Active = 1,
         Expired = 2,
         Cancelled = 3,
-        FailedPayment = 4
+        FailedPayment = 4,
     }
 }

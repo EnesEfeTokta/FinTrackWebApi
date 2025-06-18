@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Services.CurrencyServices;
-using FinTrackWebApi.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Controller
@@ -15,7 +15,11 @@ namespace FinTrackWebApi.Controller
         private readonly ICurrencyService _currencyService;
         private readonly ILogger<CurrencyController> _logger;
 
-        public CurrencyController(ICurrencyService currencyService, ILogger<CurrencyController> logger, MyDataContext context)
+        public CurrencyController(
+            ICurrencyService currencyService,
+            ILogger<CurrencyController> logger,
+            MyDataContext context
+        )
         {
             _context = context;
             _currencyService = currencyService;
@@ -46,7 +50,7 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpGet("currencies")]
-        public async Task <IActionResult> GetAllCurrencies()
+        public async Task<IActionResult> GetAllCurrencies()
         {
             var currencies = await _context.Currencies.ToListAsync();
             if (currencies != null && currencies.Count > 0)
@@ -85,7 +89,9 @@ namespace FinTrackWebApi.Controller
         {
             countryCode = countryCode.ToUpper();
 
-            var currency = await _context.Currencies.FirstOrDefaultAsync(c => c.CountryCode == countryCode);
+            var currency = await _context.Currencies.FirstOrDefaultAsync(c =>
+                c.CountryCode == countryCode
+            );
             if (currency != null)
             {
                 return Ok(currency);
@@ -96,7 +102,9 @@ namespace FinTrackWebApi.Controller
         [HttpGet("currency-by-countryName/{countryName}")]
         public async Task<IActionResult> GetCurrencyByCountryName(string countryName)
         {
-            var currency = await _context.Currencies.FirstOrDefaultAsync(c => c.CountryCode == countryName);
+            var currency = await _context.Currencies.FirstOrDefaultAsync(c =>
+                c.CountryCode == countryName
+            );
             if (currency != null)
             {
                 return Ok(currency);

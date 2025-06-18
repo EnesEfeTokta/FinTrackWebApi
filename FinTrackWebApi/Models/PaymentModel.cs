@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models
 {
@@ -41,7 +41,6 @@ namespace FinTrackWebApi.Models
         [MaxLength(255)]
         public string? TransactionId { get; set; }
 
-
         [Required]
         [Column("Status")]
         public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
@@ -59,6 +58,6 @@ namespace FinTrackWebApi.Models
         Succeeded = 1,
         Failed = 2,
         Refunded = 3,
-        PartiallyRefunded = 4
+        PartiallyRefunded = 4,
     }
 }
