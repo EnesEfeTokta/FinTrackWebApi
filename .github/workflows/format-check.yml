@@ -21,4 +21,6 @@ jobs:
         run: dotnet tool install -g dotnet-format
 
       - name: Check formatting
-        run: dotnet format --verify-no-changes
+        # <-- DEĞİŞİKLİK BURADA
+        # Projenizin .sln dosyasının adını --workspace parametresi ile belirtiyoruz.
+        run: dotnet format --workspace FinTrackWebApi.sln --verify-no-changes
