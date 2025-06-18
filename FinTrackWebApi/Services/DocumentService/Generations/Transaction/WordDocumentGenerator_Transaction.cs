@@ -39,7 +39,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     sectionProps.Append(pageMargin);
 
                     AddParagraph(body, reportData.ReportTitle, justification: JustificationValues.Center, isBold: true, fontSize: "36");
-                    AddParagraph(body, $"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}", justification: JustificationValues.Center, fontSize: "18"); 
+                    AddParagraph(body, $"Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}", justification: JustificationValues.Center, fontSize: "18");
                     if (!string.IsNullOrWhiteSpace(reportData.Description))
                     {
                         AddParagraph(body, "Description:", isBold: true, fontSize: "22", spaceAfter: "0");
@@ -85,7 +85,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                             AddTableCell(dataRow, index++.ToString(), fontSize: "18");
                             AddTableCell(dataRow, item.AccountName, fontSize: "18");
                             AddTableCell(dataRow, item.CategoryName, fontSize: "18");
-                            AddTableCell(dataRow, item.Amount.ToString("N2"), JustificationValues.Right, fontSize: "18"); 
+                            AddTableCell(dataRow, item.Amount.ToString("N2"), JustificationValues.Right, fontSize: "18");
                             AddTableCell(dataRow, item.Description, fontSize: "18");
                             AddTableCell(dataRow, item.TransactionDateUtc.ToString("yyyy-MM-dd"), JustificationValues.Center, fontSize: "18");
                             table.Append(dataRow);

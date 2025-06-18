@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
 using System.ComponentModel.DataAnnotations;
-using DocumentFormat.OpenXml.Spreadsheet;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models
 {

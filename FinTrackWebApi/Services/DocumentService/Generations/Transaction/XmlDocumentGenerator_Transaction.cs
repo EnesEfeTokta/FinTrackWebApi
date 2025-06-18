@@ -1,7 +1,7 @@
-﻿using System.Text;
-using System.Xml.Serialization;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using System.Text;
 using System.Xml;
-using FinTrackWebApi.Services.DocumentService.Models;
+using System.Xml.Serialization;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
@@ -13,7 +13,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
         public Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
         {
-            if(!(data is TransactionsRaportModel reportData))
+            if (!(data is TransactionsRaportModel reportData))
             {
                 throw new ArgumentException($"Unsupported data type '{typeof(TData).FullName}' for XML generation. Expected TransactionsRaportModel.", nameof(data));
             }

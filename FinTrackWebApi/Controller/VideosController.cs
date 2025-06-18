@@ -1,11 +1,8 @@
-﻿using DocumentFormat.OpenXml.Presentation;
-using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.MediaEncryptionService;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -39,7 +36,7 @@ namespace FinTrackWebApi.Controller
             _unapprovedVideosPath = _configuration["FilePaths:UnapprovedVideos"] ?? "Null";
             _encryptedVideosPath = _configuration["FilePaths:EncryptedVideos"] ?? "Null";
 
-            if(!Directory.Exists(_unapprovedVideosPath))
+            if (!Directory.Exists(_unapprovedVideosPath))
                 Directory.CreateDirectory(_unapprovedVideosPath);
             if (!Directory.Exists(_encryptedVideosPath))
                 Directory.CreateDirectory(_encryptedVideosPath);
@@ -109,7 +106,7 @@ namespace FinTrackWebApi.Controller
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata);
-                return Ok(new { Message = "Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata } );
+                return Ok(new { Message = "Video metadata başarıyla kaydedildi: {VideoMetadata}", videoMetadata });
             }
             catch (Exception ex)
             {

@@ -1,5 +1,5 @@
-﻿using System.Text;
-using FinTrackWebApi.Services.DocumentService.Models;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using System.Text;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
@@ -22,7 +22,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
             sb.AppendLine("## Budget Details");
             sb.AppendLine("| # | Name | Description | Category | Type | Start | End | Created | Updated | Allocated |");
             sb.AppendLine("|---|------|-------------|----------|------|-------|-----|---------|--------|-----------|");
-            
+
             if (reportData.Items != null && reportData.Items.Any())
             {
                 int index = 1;

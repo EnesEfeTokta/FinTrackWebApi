@@ -185,7 +185,8 @@ namespace FinTrackWebApi.Data
                 entity.HasIndex(e => new { e.CurrencySnapshotId, e.CurrencyId }).IsUnique();
             });
 
-            modelBuilder.Entity<CurrencySnapshotModel>(entity => {
+            modelBuilder.Entity<CurrencySnapshotModel>(entity =>
+            {
                 entity.ToTable("CurrencySnapshots");
                 entity.HasKey(cs => cs.CurrencySnapshotId);
                 entity.Property(cs => cs.CurrencySnapshotId).ValueGeneratedOnAdd();

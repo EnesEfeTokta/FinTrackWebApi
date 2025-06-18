@@ -24,7 +24,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
             sb.AppendLine("## Transaction Details");
             sb.AppendLine("| # | Account Name | Category | Amount | Description | Transaction |");
             sb.AppendLine("|:---|:---|:---|:---|:---|:---|");
-            
+
             if (reportData.Items != null && reportData.Items.Any())
             {
                 int index = 1;

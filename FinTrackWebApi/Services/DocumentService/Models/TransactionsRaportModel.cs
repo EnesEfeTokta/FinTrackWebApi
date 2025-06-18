@@ -1,5 +1,4 @@
-﻿using FinTrackWebApi.Models;
-using FinTrackWebApi.Services.DocumentService.Generations;
+﻿using FinTrackWebApi.Services.DocumentService.Generations;
 
 namespace FinTrackWebApi.Services.DocumentService.Models
 {

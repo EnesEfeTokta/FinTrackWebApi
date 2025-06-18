@@ -1,7 +1,7 @@
-﻿using QuestPDF.Fluent;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {
@@ -114,7 +114,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                             });
 
                             int index = 1;
-                            foreach (var item in _data.Items) 
+                            foreach (var item in _data.Items)
                             {
                                 table.Cell().Element(DataCellStyle).Text(index++.ToString());
                                 table.Cell().Element(DataCellStyle).Text(item.Name);
@@ -135,7 +135,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                                              .DefaultTextStyle(x => x.FontSize(6));
                             }
                         });
-                    }); 
+                    });
             });
         }
     }

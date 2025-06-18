@@ -1,10 +1,10 @@
 ﻿using FinTrackWebApi.Dtos;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Text.Json;
 using System.Text;
-using Microsoft.AspNetCore.Authentication;
+using System.Text.Json;
 
 [Authorize(Roles = "User,Admin")]
 [ApiController]

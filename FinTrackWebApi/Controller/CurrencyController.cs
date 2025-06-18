@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Services.CurrencyServices;
-using FinTrackWebApi.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Controller
@@ -46,7 +46,7 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpGet("currencies")]
-        public async Task <IActionResult> GetAllCurrencies()
+        public async Task<IActionResult> GetAllCurrencies()
         {
             var currencies = await _context.Currencies.ToListAsync();
             if (currencies != null && currencies.Count > 0)

@@ -1,10 +1,10 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using FinTrackWebApi.Dtos;
-using FinTrackWebApi.Models;
 
 namespace FinTrackWebApi.Controller
 {
@@ -71,7 +71,7 @@ namespace FinTrackWebApi.Controller
                 var category = await _context.Categories
                     .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.UserId == authenticatedUserId && c.CategoryId == categoryId);
-                
+
                 if (category == null)
                 {
                     _logger.LogWarning("Category with ID {CategoryId} not found for user ID: {UserId}", categoryId, authenticatedUserId);
@@ -156,7 +156,7 @@ namespace FinTrackWebApi.Controller
 
                 var existingCategory = await _context.Categories
                     .FirstOrDefaultAsync(c => c.UserId == authenticatedUserId && c.CategoryId == categoryId);
-                
+
                 if (existingCategory == null)
                 {
                     _logger.LogWarning("Category with ID {CategoryId} not found for user ID: {UserId}", categoryId, authenticatedUserId);

@@ -1,9 +1,8 @@
 ﻿// FinTrackWebApi.Services.OtpService.OtpService.cs
-using System.Security.Cryptography;
-using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
-using Microsoft.Extensions.Logging; // ILogger için
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace FinTrackWebApi.Services.OtpService
 {

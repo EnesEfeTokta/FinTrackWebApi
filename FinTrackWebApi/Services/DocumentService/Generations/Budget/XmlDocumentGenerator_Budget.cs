@@ -1,7 +1,7 @@
-﻿using System.Text;
-using System.Xml.Serialization;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using System.Text;
 using System.Xml;
-using FinTrackWebApi.Services.DocumentService.Models;
+using System.Xml.Serialization;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {

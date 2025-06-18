@@ -1,12 +1,11 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Models;
-using FinTrackWebApi.Services.EmailService;
+using FinTrackWebApi.Services.SecureDebtService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using FinTrackWebApi.Dtos;
-using FinTrackWebApi.Services.SecureDebtService;
 
 namespace FinTrackWebApi.Controller
 {

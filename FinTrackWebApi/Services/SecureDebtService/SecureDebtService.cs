@@ -162,7 +162,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 // E-Posta bildirimini gönderme.
                 string subject = "Request New Secured Debt";
                 string emailBody = string.Empty;
-                
+
                 string emailTemplatePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Services", "EmailService", "EmailHtmlSchemes", "BorrowerInformationScheme.html");
                 if (!File.Exists(emailTemplatePath))
                 {

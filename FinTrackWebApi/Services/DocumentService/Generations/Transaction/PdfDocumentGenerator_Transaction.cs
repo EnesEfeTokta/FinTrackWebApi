@@ -1,7 +1,7 @@
-﻿using QuestPDF.Fluent;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
@@ -12,7 +12,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
         public async Task<byte[]> GenerateAsync<TData>(TData data) where TData : class
         {
-            if (data is TransactionsRaportModel reportData) 
+            if (data is TransactionsRaportModel reportData)
             {
                 var pdfDocument = new TransactionReportPdfDocument(reportData);
 

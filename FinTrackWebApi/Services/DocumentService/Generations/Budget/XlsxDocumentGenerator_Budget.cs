@@ -1,5 +1,5 @@
-﻿using FinTrackWebApi.Services.DocumentService.Models;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
+using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
 {

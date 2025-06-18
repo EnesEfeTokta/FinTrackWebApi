@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Services.DocumentService;
-using FinTrackWebApi.Data;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using FinTrackWebApi.Services.DocumentService.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
@@ -373,7 +373,7 @@ namespace FinTrackWebApi.Controller
             {
                 AccountName = bc.Account.Name,
                 Description = bc.Description ?? "-",
-                CategoryName =  bc.Category.Name,
+                CategoryName = bc.Category.Name,
                 Amount = bc.Amount,
                 TransactionDateUtc = bc.TransactionDateUtc
             }).ToList();

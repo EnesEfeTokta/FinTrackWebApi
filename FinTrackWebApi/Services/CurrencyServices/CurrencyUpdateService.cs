@@ -1,14 +1,11 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.CurrencyServices.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
-using FinTrackWebApi.Models;
-using DocumentFormat.OpenXml.VariantTypes;
-using System.Text.Json;
-using System.Threading;
-using Microsoft.Extensions.Logging;
 using System.Globalization;
+using System.Text.Json;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {
@@ -45,8 +42,8 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     await DoWorkWithScopeAsync(stoppingToken);
                 }
             }
-            catch (Exception ex) 
-            { 
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "An error occurred during the initial currency update.");
             }
 

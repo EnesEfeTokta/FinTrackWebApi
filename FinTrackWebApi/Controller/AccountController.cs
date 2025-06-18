@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize (Roles = "User,Admin")]
+    [Authorize(Roles = "User,Admin")]
     public class AccountController : ControllerBase
     {
         private readonly MyDataContext _context;

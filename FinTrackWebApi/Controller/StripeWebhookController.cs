@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Models;
+using FinTrackWebApi.Services.EmailService;
+using FinTrackWebApi.Services.PaymentService;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
-using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
-using FinTrackWebApi.Services.PaymentService;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
-using FinTrackWebApi.Services.EmailService;
 using System.Globalization;
 
 namespace FinTrackWebApi.Controller
