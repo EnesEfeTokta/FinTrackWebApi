@@ -1,5 +1,4 @@
-﻿// FinTrackWebApi.Services.OtpService.OtpService.cs
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +18,6 @@ namespace FinTrackWebApi.Services.OtpService
 
         public string GenerateOtp()
         {
-            // ... (GenerateOtp metodunuz aynı kalabilir) ...
             using (var rng = RandomNumberGenerator.Create())
             {
                 byte[] bytes = new byte[4];
@@ -40,7 +38,6 @@ namespace FinTrackWebApi.Services.OtpService
         {
             try
             {
-                // Önceki OTP'leri temizle
                 var existingOtps = await _context
                     .OtpVerification.Where(x => x.Email == email)
                     .ToListAsync();
@@ -53,11 +50,11 @@ namespace FinTrackWebApi.Services.OtpService
                 OtpVerificationModel otpVerification = new OtpVerificationModel
                 {
                     Email = email,
-                    OtpCode = otpCodeHash, // Hash'lenmiş OTP
+                    OtpCode = otpCodeHash,
                     CreateAt = DateTime.UtcNow,
                     ExpireAt = expireAt,
                     Username = username,
-                    TemporaryPlainPassword = temporaryPlainPassword, // Düz şifre
+                    TemporaryPlainPassword = temporaryPlainPassword,
                     ProfilePicture =
                         profilePicture
                         ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740",
@@ -99,13 +96,12 @@ namespace FinTrackWebApi.Services.OtpService
                         otpRecord.ExpireAt,
                         DateTime.UtcNow
                     );
-                    // Süresi dolmuş OTP'yi sil
+
                     _context.OtpVerification.Remove(otpRecord);
                     await _context.SaveChangesAsync();
                     return null;
                 }
 
-                // Gelen düz OTP'yi OtpVerificationModel'deki hash'lenmiş OTP ile karşılaştır
                 if (!BCrypt.Net.BCrypt.Verify(plainOtpCode, otpRecord.OtpCode))
                 {
                     _logger.LogWarning(
@@ -118,8 +114,6 @@ namespace FinTrackWebApi.Services.OtpService
                 }
 
                 _logger.LogInformation("OTP verified for email: {Email}", email);
-                // OTP doğrulandıktan sonra kaydı silmeyin, AuthController silecek.
-                // Modeli döndürerek AuthController'ın içindeki verilere (TemporaryPlainPassword dahil) erişmesini sağlayın.
                 return otpRecord;
             }
             catch (Exception ex)
@@ -131,14 +125,13 @@ namespace FinTrackWebApi.Services.OtpService
 
         public async Task<bool> RemoveOtpAsync(string email)
         {
-            // ... (RemoveOtpAsync metodunuz aynı kalabilir) ...
             try
             {
                 var existingOtps = await _context
                     .OtpVerification.Where(x => x.Email == email)
                     .ToListAsync();
                 if (!existingOtps.Any())
-                    return true; // Silinecek bir şey yoksa başarılı say
+                    return true;
 
                 _context.OtpVerification.RemoveRange(existingOtps);
                 await _context.SaveChangesAsync();
