@@ -10,5 +10,7 @@
         public bool WeeklySpendingSummary { get; set; } = true;
         public bool NewFeaturesAndAnnouncements { get; set; } = true;
         public bool EnableDesktopNotifications { get; set; } = true;
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAtUtc { get; set; }
     }
 }

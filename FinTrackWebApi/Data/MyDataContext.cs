@@ -138,6 +138,15 @@ namespace FinTrackWebApi.Data
                       .HasConversion<string>()
                       .HasDefaultValue("TRY")
                       .IsRequired(true);
+                entity.Property(s => s.CreatedAtUtc)
+                        .HasColumnName("CreatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(s => s.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
 
                 // -- İlişkiler --
                 entity.HasOne(s => s.User)
@@ -175,6 +184,15 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("EnableDesktopNotifications")
                       .HasDefaultValue(true)
                       .IsRequired(true);
+                entiy.Property(s => s.CreatedAtUtc)
+                      .HasColumnName("CreatedAtUtc")
+                      .HasColumnType("timestamp")
+                      .HasDefaultValueSql("NOW()")
+                      .IsRequired(true);
+                entiy.Property(s => s.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
 
                 // -- İlişkiler --
                 entiy.HasOne(s => s.User)
@@ -200,6 +218,15 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("CategoryType")
                       .HasConversion<string>()
                       .IsRequired(true);
+                entity.Property(c => c.CreatedAtUtc)
+                      .HasColumnName("CreatedAtUtc")
+                      .HasColumnType("timestamp")
+                      .HasDefaultValueSql("NOW()")
+                      .IsRequired(true);
+                entity.Property(c => c.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
 
                 // -- İlişkiler --
                 entity.HasMany(c => c.BudgetAllocations)
@@ -244,10 +271,12 @@ namespace FinTrackWebApi.Data
                         .IsRequired(true);
                 entity.Property(b => b.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
+                        .HasColumnType("timestamp")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(b => b.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -276,6 +305,15 @@ namespace FinTrackWebApi.Data
                       .HasConversion<string>()
                       .HasDefaultValue("TRY")
                       .IsRequired(true);
+                entity.Property(bc => bc.CreatedAtUtc)
+                        .HasColumnName("CreatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(bc => bc.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
 
                 // -- İlişkiler --
                 entity.HasOne(bc => bc.Budget)
@@ -294,10 +332,47 @@ namespace FinTrackWebApi.Data
 
             modelBuilder.Entity<TransactionModel>(entity =>
             {
+                // -- Tablo --
                 entity.ToTable("Transactions");
-                entity.HasKey(t => t.TransactionId);
-                entity.Property(t => t.TransactionId).ValueGeneratedOnAdd();
-                entity.Property(t => t.Amount).HasColumnType("decimal(18, 2)").IsRequired();
+                entity.HasKey(t => t.Id);
+                entity.Property(t => t.Id).ValueGeneratedOnAdd();
+                entity.Property(t => t.Amount)
+                      .HasColumnName("Amount")
+                      .HasColumnType("decimal(18, 2)")
+                      .IsRequired(true);
+                entity.Property(t => t.TransactionDateUtc)
+                      .HasColumnName("TransactionDateUtc")
+                      .HasColumnType("timestamp")
+                      .IsRequired(true);
+                entity.Property(t => t.Description)
+                        .HasColumnName("Description")
+                        .HasMaxLength(500)
+                        .IsRequired(false);
+                entity.Property(t => t.CreatedAtUtc)
+                        .HasColumnName("CreatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(t => t.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
+
+                // -- İlişkiler --
+                entity.HasOne(t => t.User)
+                      .WithMany(u => u.Transactions)
+                      .HasForeignKey(t => t.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(t => t.Category)
+                      .WithMany(c => c.Transactions)
+                      .HasForeignKey(t => t.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(t => t.Account)
+                      .WithMany(u => u.Transactions)
+                      .HasForeignKey(t => t.AccountId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // --Index --
                 entity.HasIndex(t => t.UserId);
                 entity.HasIndex(t => t.CategoryId);
                 entity.HasIndex(t => t.TransactionDateUtc);

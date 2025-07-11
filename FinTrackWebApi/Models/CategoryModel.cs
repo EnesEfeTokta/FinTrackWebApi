@@ -9,6 +9,8 @@ namespace FinTrackWebApi.Models
         public virtual UserModel User { get; set; } = null!;
         public string Name { get; set; } = null!;
         public TransactionCategoryType Type { get; set; }
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAtUtc { get; set; }
 
         public virtual ICollection<BudgetCategoryModel> BudgetAllocations { get; set; } =
             new List<BudgetCategoryModel>();
