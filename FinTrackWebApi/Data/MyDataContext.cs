@@ -11,7 +11,8 @@ namespace FinTrackWebApi.Data
             : base(options) { }
 
         public DbSet<OtpVerificationModel> OtpVerification { get; set; }
-        public DbSet<UserSettingsModel> UserSettings { get; set; }
+        public DbSet<UserAppSettingsModel> UserAppSettings { get; set; }
+        public DbSet<UserNotificationSettingsModel> UserSecuritySettings { get; set; }
         public DbSet<CategoryModel> Categories { get; set; }
         public DbSet<BudgetCategoryModel> BudgetCategories { get; set; }
         public DbSet<BudgetModel> Budgets { get; set; }
@@ -41,9 +42,15 @@ namespace FinTrackWebApi.Data
                 entity.ToTable("Users");
 
                 entity
-                    .HasOne(u => u.Settings)
+                    .HasOne(u => u.AppSettings)
                     .WithOne(s => s.User)
-                    .HasForeignKey<UserSettingsModel>(s => s.UserId)
+                    .HasForeignKey<UserAppSettingsModel>(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity
+                    .HasOne(u => u.NotificationSettings)
+                    .WithOne(s => s.User)
+                    .HasForeignKey<UserNotificationSettingsModel>(s => s.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity
@@ -115,12 +122,68 @@ namespace FinTrackWebApi.Data
                 entity.HasIndex(o => o.Email);
             });
 
-            modelBuilder.Entity<UserSettingsModel>(entity =>
+            modelBuilder.Entity<UserAppSettingsModel>(entity =>
             {
-                entity.ToTable("UserSettings");
-                entity.HasKey(s => s.SettingsId);
-                entity.Property(s => s.SettingsId).ValueGeneratedOnAdd();
+                // -- Tablo --
+                entity.ToTable("UserAppSettings");
+                entity.HasKey(s => s.Id);
+                entity.Property(s => s.Id).ValueGeneratedOnAdd();
+                entity.Property(s => s.Appearance)
+                      .HasColumnName("Appearance")
+                      .HasConversion<string>()
+                      .HasDefaultValue("Dark")
+                      .IsRequired(true);
+                entity.Property(s => s.BaseCurrency)
+                      .HasColumnName("BaseCurrency")
+                      .HasConversion<string>()
+                      .HasDefaultValue("TRY")
+                      .IsRequired(true);
+
+                // -- İlişkiler --
+                entity.HasOne(s => s.User)
+                      .WithOne(u => u.AppSettings)
+                      .HasForeignKey<UserAppSettingsModel>(s => s.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // -- Index --
                 entity.HasIndex(s => s.UserId).IsUnique();
+            });
+
+            modelBuilder.Entity<UserNotificationSettingsModel>(entiy =>
+            {
+                // -- Tablo --
+                entiy.ToTable("UserNotificationSettings");
+                entiy.HasKey(s => s.Id);
+                entiy.Property(s => s.Id).ValueGeneratedOnAdd();
+                entiy.Property(s => s.SpendingLimitWarning)
+                      .HasColumnName("SpendingLimitWarning")
+                      .HasDefaultValue(true)
+                      .IsRequired(true);
+                entiy.Property(s => s.ExpectedBillReminder)
+                      .HasColumnName("ExpectedBillReminder")
+                      .HasDefaultValue(true)
+                      .IsRequired(true);
+                entiy.Property(s => s.WeeklySpendingSummary)
+                      .HasColumnName("WeeklySpendingSummary")
+                      .HasDefaultValue(true)
+                      .IsRequired(true);
+                entiy.Property(s => s.NewFeaturesAndAnnouncements)
+                      .HasColumnName("NewFeaturesAndAnnouncements")
+                      .HasDefaultValue(true)
+                      .IsRequired(true);
+                entiy.Property(s => s.EnableDesktopNotifications)
+                      .HasColumnName("EnableDesktopNotifications")
+                      .HasDefaultValue(true)
+                      .IsRequired(true);
+
+                // -- İlişkiler --
+                entiy.HasOne(s => s.User)
+                      .WithOne(u => u.NotificationSettings)
+                      .HasForeignKey<UserNotificationSettingsModel>(s => s.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                // -- Index --
+                entiy.HasIndex(s => s.UserId).IsUnique();
             });
 
             modelBuilder.Entity<CategoryModel>(entity =>
@@ -208,6 +271,11 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("AllocatedAmount")
                       .HasColumnType("decimal(18, 2)")
                       .IsRequired(true);
+                entity.Property(bc => bc.Currency)
+                      .HasColumnName("Currency")
+                      .HasConversion<string>()
+                      .HasDefaultValue("TRY")
+                      .IsRequired(true);
 
                 // -- İlişkiler --
                 entity.HasOne(bc => bc.Budget)
@@ -258,6 +326,11 @@ namespace FinTrackWebApi.Data
                 entity.Property(a => a.Balance)
                       .HasColumnName("Balance")
                       .HasColumnType("decimal(18, 2)")
+                      .IsRequired(true);
+                entity.Property(a => a.Currency)
+                      .HasColumnName("Currency")
+                      .HasConversion<string>()
+                      .HasDefaultValue("TRY")
                       .IsRequired(true);
                 entity.Property(a => a.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")

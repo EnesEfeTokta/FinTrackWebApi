@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using FinTrackWebApi.Enums;
+﻿using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Models
 {
@@ -13,6 +11,7 @@ namespace FinTrackWebApi.Models
         public AccountType Type { get; set; }
         public bool IsActive { get; set; } = true;
         public decimal Balance { get; set; } = 0;
+        public BaseCurrencyType Currency { get; set; }
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAtUtc { get; set; }
 

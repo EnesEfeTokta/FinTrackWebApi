@@ -16,7 +16,8 @@ namespace FinTrackWebApi.Models
         [Column("CreateAt")]
         public DateTime CreateAt { get; set; } = DateTime.UtcNow;
 
-        public virtual UserSettingsModel? Settings { get; set; }
+        public virtual UserAppSettingsModel? AppSettings { get; set; }
+        public virtual UserNotificationSettingsModel? NotificationSettings { get; set; }
 
         public virtual ICollection<BudgetModel> Budgets { get; set; } = new List<BudgetModel>();
         public virtual ICollection<CategoryModel> Categories { get; set; } =
