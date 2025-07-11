@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace FinTrackWebApi.Dtos
 {
@@ -10,7 +11,7 @@ namespace FinTrackWebApi.Dtos
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = null!;
 
-        public CategoryType CategoryType { get; set; }
+        public TransactionCategoryType CategoryType { get; set; }
 
         public int UserId { get; set; }
         public string Username { get; set; } = null!;

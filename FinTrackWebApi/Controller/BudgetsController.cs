@@ -85,7 +85,7 @@ namespace FinTrackWebApi.Controller
 
                 var budget = await _context
                     .Budgets.AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == authenticatedUserId);
+                    .FirstOrDefaultAsync(b => b.Id == id && b.UserId == authenticatedUserId);
 
                 if (budget == null)
                 {
@@ -141,7 +141,7 @@ namespace FinTrackWebApi.Controller
                     "Successfully created budget for user ID: {UserId}",
                     authenticatedUserId
                 );
-                return CreatedAtAction(nameof(GetBudgets), new { id = budget.BudgetId }, budget);
+                return CreatedAtAction(nameof(GetBudgets), new { id = budget.Id }, budget);
             }
             catch (Exception ex)
             {
@@ -251,7 +251,7 @@ namespace FinTrackWebApi.Controller
                 var budget = await _context
                     .Budgets.Include(b => b.BudgetCategories)
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == authenticatedUserId);
+                    .FirstOrDefaultAsync(b => b.Id == id && b.UserId == authenticatedUserId);
 
                 if (budget == null)
                 {

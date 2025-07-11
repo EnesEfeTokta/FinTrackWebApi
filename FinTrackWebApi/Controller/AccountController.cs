@@ -1,10 +1,11 @@
-﻿using System.Security.Claims;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
@@ -264,7 +265,7 @@ namespace FinTrackWebApi.Controller
             var balance = await _context
                 .Transactions.Where(t => t.AccountId == accountId)
                 .Include(t => t.Category)
-                .SumAsync(t => t.Category.Type == CategoryType.Income ? t.Amount : -t.Amount);
+                .SumAsync(t => t.Category.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
 
             return balance;
         }

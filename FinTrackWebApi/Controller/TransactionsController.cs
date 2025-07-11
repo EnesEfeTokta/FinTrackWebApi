@@ -202,7 +202,7 @@ namespace FinTrackWebApi.Controller
             int userId = GetAuthenticatedUserId();
 
             var category = await _context.Categories.FirstOrDefaultAsync(c =>
-                c.CategoryId == transactionDto.CategoryId && c.UserId == userId
+                c.Id == transactionDto.CategoryId && c.UserId == userId
             );
             if (category == null)
             {

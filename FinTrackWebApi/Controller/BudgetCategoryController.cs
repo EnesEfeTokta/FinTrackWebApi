@@ -89,7 +89,7 @@ namespace FinTrackWebApi.Controller
                 var budgetCategory = await _context
                     .BudgetCategories.AsNoTracking()
                     .FirstOrDefaultAsync(bc =>
-                        bc.BudgetCategoryId == id && bc.Budget.UserId == authenticatedUserId
+                        bc.Id == id && bc.Budget.UserId == authenticatedUserId
                     );
 
                 if (budgetCategory == null)
@@ -133,7 +133,7 @@ namespace FinTrackWebApi.Controller
                 var budget = await _context
                     .Budgets.AsNoTracking()
                     .FirstOrDefaultAsync(b =>
-                        b.BudgetId == budgetCategoryDto.BudgetId && b.UserId == authenticatedUserId
+                        b.Id == budgetCategoryDto.BudgetId && b.UserId == authenticatedUserId
                     );
 
                 if (budget == null)
@@ -158,12 +158,12 @@ namespace FinTrackWebApi.Controller
 
                 _logger.LogInformation(
                     "Successfully created budget category with ID {BudgetCategoryId} for user ID: {UserId}",
-                    budgetCategory.BudgetCategoryId,
+                    budgetCategory.Id,
                     authenticatedUserId
                 );
                 return CreatedAtAction(
                     nameof(GetBudgetCategory),
-                    new { id = budgetCategory.BudgetCategoryId },
+                    new { id = budgetCategory.Id },
                     budgetCategory
                 );
             }
@@ -189,7 +189,7 @@ namespace FinTrackWebApi.Controller
                 int authenticatedUserId = GetAuthenticatedUserId();
 
                 var budgetCategory = await _context.BudgetCategories.FirstOrDefaultAsync(bc =>
-                    bc.BudgetCategoryId == id && bc.Budget.UserId == authenticatedUserId
+                    bc.Id == id && bc.Budget.UserId == authenticatedUserId
                 );
 
                 if (budgetCategory == null)
@@ -233,7 +233,7 @@ namespace FinTrackWebApi.Controller
                 int authenticatedUserId = GetAuthenticatedUserId();
 
                 var budgetCategory = await _context.BudgetCategories.FirstOrDefaultAsync(bc =>
-                    bc.BudgetCategoryId == id && bc.Budget.UserId == authenticatedUserId
+                    bc.Id == id && bc.Budget.UserId == authenticatedUserId
                 );
 
                 if (budgetCategory == null)

@@ -125,62 +125,103 @@ namespace FinTrackWebApi.Data
 
             modelBuilder.Entity<CategoryModel>(entity =>
             {
+                // -- Tablo --
                 entity.ToTable("Categories");
-                entity.HasKey(c => c.CategoryId);
-                entity.Property(c => c.CategoryId).ValueGeneratedOnAdd();
-                entity.Property(c => c.Name).HasColumnName("CategoryName").IsRequired();
-                entity
-                    .Property(c => c.Type)
-                    .HasColumnName("CategoryType")
-                    .HasConversion<string>()
-                    .IsRequired();
-                entity
-                    .HasIndex(c => new
-                    {
-                        c.UserId,
-                        c.Name,
-                        c.Type,
-                    })
-                    .IsUnique();
+                entity.HasKey(c => c.Id);
+                entity.Property(c => c.Id).ValueGeneratedOnAdd();
+                entity.Property(c => c.Name)
+                      .HasColumnName("CategoryName")
+                      .HasMaxLength(100)
+                      .IsRequired(true);
+                entity.Property(c => c.Type)
+                      .HasColumnName("CategoryType")
+                      .HasConversion<string>()
+                      .IsRequired(true);
 
-                entity
-                    .HasMany(c => c.BudgetAllocations)
-                    .WithOne(bc => bc.Category)
-                    .HasForeignKey(bc => bc.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                // -- İlişkiler --
+                entity.HasMany(c => c.BudgetAllocations)
+                      .WithOne(bc => bc.Category)
+                      .HasForeignKey(bc => bc.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(c => c.Transactions)
+                      .WithOne(t => t.Category)
+                      .HasForeignKey(t => t.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
 
-                entity
-                    .HasMany(c => c.Transactions)
-                    .WithOne(t => t.Category)
-                    .HasForeignKey(t => t.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                // -- Index --
+                entity.HasIndex(c => new { c.UserId, c.Name, c.Type })
+                      .IsUnique();
             });
 
             modelBuilder.Entity<BudgetModel>(entity =>
             {
+                // -- Tablo --
                 entity.ToTable("Budgets");
-                entity.HasKey(b => b.BudgetId);
-                entity.Property(b => b.BudgetId).ValueGeneratedOnAdd();
-                entity.Property(b => b.Name).HasColumnName("BudgetName").IsRequired();
-                entity.Property(b => b.Description).IsRequired(false);
+                entity.HasKey(b => b.Id);
+                entity.Property(b => b.Id).ValueGeneratedOnAdd();
+                entity.Property(b => b.Name)
+                      .HasColumnName("BudgetName")
+                      .HasMaxLength(100)
+                      .IsRequired(true);
+                entity.Property(b => b.Description)
+                      .HasColumnName("Description")
+                      .HasMaxLength(500)
+                      .IsRequired(false);
+                entity.Property(b => b.StartDate)
+                      .HasColumnName("StartDate")
+                      .HasColumnType("date")
+                      .IsRequired(true);
+                entity.Property(b => b.EndDate)
+                      .HasColumnName("EndDate")
+                      .HasColumnType("date")
+                      .IsRequired(true);
+                entity.Property(b => b.IsActive)
+                        .HasColumnName("IsActive")
+                        .HasDefaultValue(true)
+                        .IsRequired(true);
+                entity.Property(b => b.CreatedAtUtc)
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(b => b.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .IsRequired(false);
 
-                entity
-                    .HasMany(b => b.BudgetCategories)
-                    .WithOne(bc => bc.Budget)
-                    .HasForeignKey(bc => bc.BudgetId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                // -- İlişkiler --
+                entity.HasOne(b => b.User)
+                      .WithMany(u => u.Budgets)
+                      .HasForeignKey(b => b.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(b => b.BudgetCategories)
+                      .WithOne(bc => bc.Budget)
+                      .HasForeignKey(bc => bc.BudgetId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<BudgetCategoryModel>(entity =>
             {
+                // -- Tablo --
                 entity.ToTable("BudgetCategories");
-                entity.HasKey(bc => bc.BudgetCategoryId);
-                entity.Property(bc => bc.BudgetCategoryId).ValueGeneratedOnAdd();
-                entity
-                    .Property(bc => bc.AllocatedAmount)
-                    .HasColumnType("decimal(18, 2)")
-                    .IsRequired();
-                entity.HasIndex(bc => new { bc.BudgetId, bc.CategoryId }).IsUnique();
+                entity.HasKey(bc => bc.Id);
+                entity.Property(bc => bc.Id).ValueGeneratedOnAdd();
+                entity.Property(bc => bc.AllocatedAmount)
+                      .HasColumnName("AllocatedAmount")
+                      .HasColumnType("decimal(18, 2)")
+                      .IsRequired(true);
+
+                // -- İlişkiler --
+                entity.HasOne(bc => bc.Budget)
+                      .WithMany(b => b.BudgetCategories)
+                      .HasForeignKey(bc => bc.BudgetId)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(bc => bc.Category)
+                      .WithMany(c => c.BudgetAllocations)
+                      .HasForeignKey(bc => bc.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // -- Inkdex --
+                entity.HasIndex(bc => new { bc.BudgetId, bc.CategoryId })
+                      .IsUnique();
             });
 
             modelBuilder.Entity<TransactionModel>(entity =>

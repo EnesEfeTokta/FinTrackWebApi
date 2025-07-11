@@ -86,7 +86,7 @@ namespace FinTrackWebApi.Controller
                 var category = await _context
                     .Categories.AsNoTracking()
                     .FirstOrDefaultAsync(c =>
-                        c.UserId == authenticatedUserId && c.CategoryId == categoryId
+                        c.UserId == authenticatedUserId && c.Id == categoryId
                     );
 
                 if (category == null)
@@ -141,7 +141,7 @@ namespace FinTrackWebApi.Controller
                 );
                 return CreatedAtAction(
                     nameof(GetCategory),
-                    new { categoryId = newCategory.CategoryId },
+                    new { categoryId = newCategory.Id },
                     newCategory
                 );
             }
@@ -167,7 +167,7 @@ namespace FinTrackWebApi.Controller
                 int authenticatedUserId = GetAuthenticatedUserId();
 
                 var existingCategory = await _context.Categories.FirstOrDefaultAsync(c =>
-                    c.UserId == authenticatedUserId && c.CategoryId == categoryId
+                    c.UserId == authenticatedUserId && c.Id == categoryId
                 );
 
                 if (existingCategory == null)
@@ -213,7 +213,7 @@ namespace FinTrackWebApi.Controller
                 int authenticatedUserId = GetAuthenticatedUserId();
 
                 var existingCategory = await _context.Categories.FirstOrDefaultAsync(c =>
-                    c.UserId == authenticatedUserId && c.CategoryId == categoryId
+                    c.UserId == authenticatedUserId && c.Id == categoryId
                 );
 
                 if (existingCategory == null)
