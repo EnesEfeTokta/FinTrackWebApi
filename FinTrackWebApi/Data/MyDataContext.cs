@@ -116,9 +116,43 @@ namespace FinTrackWebApi.Data
 
             modelBuilder.Entity<OtpVerificationModel>(entity =>
             {
-                entity.ToTable("OtpVerification");
-                entity.HasKey(o => o.OtpId);
-                entity.Property(o => o.OtpId).ValueGeneratedOnAdd();
+                // -- Tablo --
+                entity.ToTable("OtpVerifications");
+                entity.HasKey(o => o.Id);
+                entity.Property(o => o.Id).ValueGeneratedOnAdd();
+                entity.Property(o => o.Email)
+                      .HasColumnName("Email")
+                      .HasMaxLength(255)
+                      .IsRequired(true);
+                entity.Property(o => o.OtpCode)
+                        .HasColumnName("OtpCode")
+                        .HasMaxLength(6)
+                        .IsRequired(true);
+                entity.Property(o => o.CreateAt)
+                        .HasColumnName("CreateAt")
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(o => o.ExpireAt)
+                        .HasColumnName("ExpireAt")
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("NOW() + INTERVAL '5 minutes'")
+                        .IsRequired(true);
+                entity.Property(o => o.Username)
+                        .HasColumnName("Username")
+                        .HasMaxLength(100)
+                        .IsRequired(true);
+                entity.Property(o => o.ProfilePicture)
+                        .HasColumnName("ProfilePicture")
+                        .HasMaxLength(255)
+                        .IsRequired(false)
+                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740");
+                entity.Property(o => o.TemporaryPlainPassword)
+                        .HasColumnName("TemporaryPlainPassword")
+                        .HasMaxLength(255)
+                        .IsRequired(true);
+
+                // --Index --
                 entity.HasIndex(o => o.Email);
             });
 

@@ -42,107 +42,107 @@ namespace FinTrackWebApi.Controller
             return userId;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetUserSettings()
-        {
-            int authenticatedUserId = GetAuthenticatedUserId();
+        //[HttpGet]
+        //public async Task<IActionResult> GetUserSettings()
+        //{
+        //    int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = await _context
-                .UserSettings.AsNoTracking()
-                .FirstOrDefaultAsync(s => s.UserId == authenticatedUserId);
-            if (userSettings == null)
-            {
-                _logger.LogWarning(
-                    "User settings not found for user ID: {UserId}",
-                    authenticatedUserId
-                );
-                return NotFound("User settings not found.");
-            }
+        //    var userSettings = await _context
+        //        .UserSettings.AsNoTracking()
+        //        .FirstOrDefaultAsync(s => s.UserId == authenticatedUserId);
+        //    if (userSettings == null)
+        //    {
+        //        _logger.LogWarning(
+        //            "User settings not found for user ID: {UserId}",
+        //            authenticatedUserId
+        //        );
+        //        return NotFound("User settings not found.");
+        //    }
 
-            _logger.LogInformation(
-                "Successfully retrieved settings for user ID: {UserId}",
-                authenticatedUserId
-            );
-            return Ok(userSettings);
-        }
+        //    _logger.LogInformation(
+        //        "Successfully retrieved settings for user ID: {UserId}",
+        //        authenticatedUserId
+        //    );
+        //    return Ok(userSettings);
+        //}
 
-        [HttpPost]
-        public async Task<IActionResult> CreateUserSettings(
-            [FromBody] UserSettingsDto userSettingsDto
-        )
-        {
-            int authenticatedUserId = GetAuthenticatedUserId();
+        //[HttpPost]
+        //public async Task<IActionResult> CreateUserSettings(
+        //    [FromBody] UserSettingsDto userSettingsDto
+        //)
+        //{
+        //    int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = new UserSettingsModel
-            {
-                UserId = authenticatedUserId,
-                Theme = userSettingsDto.Theme,
-                Language = userSettingsDto.Language,
-                Notification = userSettingsDto.Notification,
-            };
-            _context.UserSettings.Add(userSettings);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation(
-                "Successfully created settings for user ID: {UserId}",
-                authenticatedUserId
-            );
-            return CreatedAtAction(
-                nameof(GetUserSettings),
-                new { userId = userSettings.UserId },
-                userSettings
-            );
-        }
+        //    var userSettings = new UserSettingsModel
+        //    {
+        //        UserId = authenticatedUserId,
+        //        Theme = userSettingsDto.Theme,
+        //        Language = userSettingsDto.Language,
+        //        Notification = userSettingsDto.Notification,
+        //    };
+        //    _context.UserSettings.Add(userSettings);
+        //    await _context.SaveChangesAsync();
+        //    _logger.LogInformation(
+        //        "Successfully created settings for user ID: {UserId}",
+        //        authenticatedUserId
+        //    );
+        //    return CreatedAtAction(
+        //        nameof(GetUserSettings),
+        //        new { userId = userSettings.UserId },
+        //        userSettings
+        //    );
+        //}
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateUserSettings(
-            [FromBody] UserSettingsDto userSettingsDto
-        )
-        {
-            int authenticatedUserId = GetAuthenticatedUserId();
+        //[HttpPut]
+        //public async Task<IActionResult> UpdateUserSettings(
+        //    [FromBody] UserSettingsDto userSettingsDto
+        //)
+        //{
+        //    int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
-                s.UserId == authenticatedUserId
-            );
-            if (userSettings == null)
-            {
-                return NotFound("User settings not found.");
-            }
-            userSettings.Theme = userSettingsDto.Theme;
-            userSettings.Language = userSettingsDto.Language;
-            userSettings.Notification = userSettingsDto.Notification;
-            await _context.SaveChangesAsync();
+        //    var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
+        //        s.UserId == authenticatedUserId
+        //    );
+        //    if (userSettings == null)
+        //    {
+        //        return NotFound("User settings not found.");
+        //    }
+        //    userSettings.Theme = userSettingsDto.Theme;
+        //    userSettings.Language = userSettingsDto.Language;
+        //    userSettings.Notification = userSettingsDto.Notification;
+        //    await _context.SaveChangesAsync();
 
-            _logger.LogInformation(
-                "Successfully updated settings for user ID: {UserId}",
-                authenticatedUserId
-            );
-            return NoContent();
-        }
+        //    _logger.LogInformation(
+        //        "Successfully updated settings for user ID: {UserId}",
+        //        authenticatedUserId
+        //    );
+        //    return NoContent();
+        //}
 
-        [HttpDelete]
-        public async Task<IActionResult> DeleteUserSettings()
-        {
-            int authenticatedUserId = GetAuthenticatedUserId();
+        //[HttpDelete]
+        //public async Task<IActionResult> DeleteUserSettings()
+        //{
+        //    int authenticatedUserId = GetAuthenticatedUserId();
 
-            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
-                s.UserId == authenticatedUserId
-            );
-            if (userSettings == null)
-            {
-                _logger.LogWarning(
-                    "User settings not found for user ID: {UserId}",
-                    authenticatedUserId
-                );
-                return NotFound("User settings not found.");
-            }
-            _context.UserSettings.Remove(userSettings);
-            await _context.SaveChangesAsync();
+        //    var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
+        //        s.UserId == authenticatedUserId
+        //    );
+        //    if (userSettings == null)
+        //    {
+        //        _logger.LogWarning(
+        //            "User settings not found for user ID: {UserId}",
+        //            authenticatedUserId
+        //        );
+        //        return NotFound("User settings not found.");
+        //    }
+        //    _context.UserSettings.Remove(userSettings);
+        //    await _context.SaveChangesAsync();
 
-            _logger.LogInformation(
-                "Successfully deleted settings for user ID: {UserId}",
-                authenticatedUserId
-            );
-            return NoContent();
-        }
+        //    _logger.LogInformation(
+        //        "Successfully deleted settings for user ID: {UserId}",
+        //        authenticatedUserId
+        //    );
+        //    return NoContent();
+        //}
     }
 }

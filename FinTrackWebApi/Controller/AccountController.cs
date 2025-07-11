@@ -45,7 +45,7 @@ namespace FinTrackWebApi.Controller
                     .OrderBy(a => a.Name)
                     .Select(a => new
                     {
-                        a.AccountId,
+                        a.Id,
                         a.Name,
                         a.Type,
                         a.IsActive,
@@ -61,11 +61,11 @@ namespace FinTrackWebApi.Controller
                     accountDtos.Add(
                         new AccountDto
                         {
-                            AccountId = acc.AccountId,
+                            AccountId = acc.Id,
                             Name = acc.Name,
                             Type = acc.Type,
                             IsActive = acc.IsActive,
-                            Balance = await CalculateBalanceAsync(acc.AccountId),
+                            Balance = await CalculateBalanceAsync(acc.Id),
                             CreatedAtUtc = acc.CreatedAtUtc,
                             UpdatedAtUtc = acc.UpdatedAtUtc,
                         }
@@ -85,18 +85,18 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpGet("{accountId}")]
-        public async Task<ActionResult<AccountDto>> GetAccount(int accountId)
+        [HttpGet("{Id}")]
+        public async Task<ActionResult<AccountDto>> GetAccount(int Id)
         {
             try
             {
                 int userId = GetAuthenticatedUserId();
 
                 var accountFromDb = await _context
-                    .Accounts.Where(a => a.AccountId == accountId && a.UserId == userId)
+                    .Accounts.Where(a => a.Id == Id && a.UserId == userId)
                     .Select(a => new
                     {
-                        a.AccountId,
+                        a.Id,
                         a.Name,
                         a.Type,
                         a.IsActive,
@@ -109,20 +109,20 @@ namespace FinTrackWebApi.Controller
                 if (accountFromDb == null)
                 {
                     _logger.LogWarning(
-                        "Account with ID {AccountId} not found for user ID: {UserId}",
-                        accountId,
+                        "Account with ID {Id} not found for user ID: {UserId}",
+                        Id,
                         userId
                     );
-                    return NotFound($"Account with ID {accountId} not found.");
+                    return NotFound($"Account with ID {Id} not found.");
                 }
 
                 var accountDto = new AccountDto
                 {
-                    AccountId = accountFromDb.AccountId,
+                    AccountId = accountFromDb.Id,
                     Name = accountFromDb.Name,
                     Type = accountFromDb.Type,
                     IsActive = accountFromDb.IsActive,
-                    Balance = await CalculateBalanceAsync(accountFromDb.AccountId),
+                    Balance = await CalculateBalanceAsync(accountFromDb.Id),
                     CreatedAtUtc = accountFromDb.CreatedAtUtc,
                     UpdatedAtUtc = accountFromDb.UpdatedAtUtc,
                 };
@@ -133,8 +133,8 @@ namespace FinTrackWebApi.Controller
             {
                 _logger.LogError(
                     ex,
-                    "Error retrieving account with ID {AccountId} for user ID: {UserId}",
-                    accountId,
+                    "Error retrieving account with ID {Id} for user ID: {UserId}",
+                    Id,
                     GetAuthenticatedUserId()
                 );
                 return StatusCode(500, "An error occurred while retrieving the account.");
@@ -167,7 +167,7 @@ namespace FinTrackWebApi.Controller
 
                 return CreatedAtAction(
                     nameof(GetAccount),
-                    new { accountId = account.AccountId },
+                    new { Id = account.Id },
                     account
                 );
             }
@@ -182,9 +182,9 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpPut("{accountId}")]
+        [HttpPut("{Id}")]
         public async Task<IActionResult> UpdateAccount(
-            int accountId,
+            int Id,
             [FromBody] AccountUpdateDto accountDto
         )
         {
@@ -197,12 +197,12 @@ namespace FinTrackWebApi.Controller
                 int userId = GetAuthenticatedUserId();
 
                 var account = await _context.Accounts.FirstOrDefaultAsync(a =>
-                    a.AccountId == accountId && a.UserId == userId
+                    a.Id == Id && a.UserId == userId
                 );
 
                 if (account == null)
                 {
-                    return NotFound($"Account with ID {accountId} not found for user {userId}.");
+                    return NotFound($"Account with ID {Id} not found for user {userId}.");
                 }
 
                 account.Name = accountDto.Name;
@@ -219,28 +219,28 @@ namespace FinTrackWebApi.Controller
             {
                 _logger.LogError(
                     ex,
-                    "Error updating account with ID {AccountId} for user {UserId}",
-                    accountId,
+                    "Error updating account with ID {Id} for user {UserId}",
+                    Id,
                     GetAuthenticatedUserId()
                 );
                 return StatusCode(500, "An error occurred while updating the account.");
             }
         }
 
-        [HttpDelete("{accountId}")]
-        public async Task<IActionResult> DeleteAccount(int accountId)
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteAccount(int Id)
         {
             try
             {
                 int userId = GetAuthenticatedUserId();
 
                 var account = await _context.Accounts.FirstOrDefaultAsync(a =>
-                    a.AccountId == accountId && a.UserId == userId
+                    a.Id == Id && a.UserId == userId
                 );
 
                 if (account == null)
                 {
-                    return NotFound($"Account with ID {accountId} not found for user {userId}.");
+                    return NotFound($"Account with ID {Id} not found for user {userId}.");
                 }
 
                 _context.Accounts.Remove(account);
@@ -252,18 +252,18 @@ namespace FinTrackWebApi.Controller
             {
                 _logger.LogError(
                     ex,
-                    "Error deleting account with ID {AccountId} for user {UserId}",
-                    accountId,
+                    "Error deleting account with ID {Id} for user {UserId}",
+                    Id,
                     GetAuthenticatedUserId()
                 );
                 return StatusCode(500, "An error occurred while deleting the account.");
             }
         }
 
-        private async Task<decimal> CalculateBalanceAsync(int accountId)
+        private async Task<decimal> CalculateBalanceAsync(int Id)
         {
             var balance = await _context
-                .Transactions.Where(t => t.AccountId == accountId)
+                .Transactions.Where(t => t.Id == Id)
                 .Include(t => t.Category)
                 .SumAsync(t => t.Category.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
 

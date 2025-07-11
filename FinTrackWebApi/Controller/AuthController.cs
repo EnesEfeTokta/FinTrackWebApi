@@ -225,32 +225,32 @@ namespace FinTrackWebApi.Controller
 
                     await _otpService.RemoveOtpAsync(verifyDto.Email);
 
-                    try
-                    {
-                        UserSettingsModel userSettings = new UserSettingsModel
-                        {
-                            UserId = newUser.Id,
-                            EntryDate = DateTime.UtcNow,
-                            Notification = true,
-                            Currency = "USD",
-                            Language = "en",
-                            Theme = "light",
-                        };
-                        await _context.UserSettings.AddAsync(userSettings);
-                        await _context.SaveChangesAsync();
-                        _logger.LogInformation(
-                            "UserSettings created for UserId: {UserId}",
-                            newUser.Id
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to create user settings for UserId: {UserId}",
-                            newUser.Id
-                        );
-                    }
+                    //try
+                    //{
+                    //    UserSettingsModel userSettings = new UserSettingsModel
+                    //    {
+                    //        UserId = newUser.Id,
+                    //        EntryDate = DateTime.UtcNow,
+                    //        Notification = true,
+                    //        Currency = "USD",
+                    //        Language = "en",
+                    //        Theme = "light",
+                    //    };
+                    //    await _context.UserSettings.AddAsync(userSettings);
+                    //    await _context.SaveChangesAsync();
+                    //    _logger.LogInformation(
+                    //        "UserSettings created for UserId: {UserId}",
+                    //        newUser.Id
+                    //    );
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    _logger.LogError(
+                    //        ex,
+                    //        "Failed to create user settings for UserId: {UserId}",
+                    //        newUser.Id
+                    //    );
+                    //}
 
                     try
                     {
@@ -418,14 +418,14 @@ namespace FinTrackWebApi.Controller
                 userRoles
             );
 
-            var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
-                s.UserId == user.Id
-            );
-            if (userSettings != null)
-            {
-                userSettings.EntryDate = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-            }
+            //var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
+            //    s.UserId == user.Id
+            //);
+            //if (userSettings != null)
+            //{
+            //    userSettings.EntryDate = DateTime.UtcNow;
+            //    await _context.SaveChangesAsync();
+            //}
 
             return Ok(
                 new

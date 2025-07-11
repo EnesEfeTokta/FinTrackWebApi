@@ -45,7 +45,7 @@ namespace FinTrackWebApi.Controller
                     .Where(t => t.UserId == userId)
                     .Select(t => new TransactionDto
                     {
-                        TransactionId = t.TransactionId,
+                        TransactionId = t.Id,
                         CategoryId = t.CategoryId,
                         CategoryName = t.Category.Name,
                         CategoryType = t.Category.Type,
@@ -82,10 +82,10 @@ namespace FinTrackWebApi.Controller
                     .Transactions.AsNoTracking()
                     .Include(t => t.Category)
                     .Include(t => t.Account)
-                    .Where(t => t.UserId == userId && t.TransactionId == transactionId)
+                    .Where(t => t.UserId == userId && t.Id == transactionId)
                     .Select(t => new TransactionDto
                     {
-                        TransactionId = t.TransactionId,
+                        TransactionId = t.Id,
                         CategoryId = t.CategoryId,
                         CategoryName = t.Category.Name,
                         CategoryType = t.Category.Type,
@@ -232,14 +232,14 @@ namespace FinTrackWebApi.Controller
                 await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "Transaction created with ID {TransactionId} for user {UserId}",
-                    transaction.TransactionId,
+                    transaction.Id,
                     userId
                 );
 
                 return Ok(
                     new
                     {
-                        TransactionId = transaction.TransactionId,
+                        TransactionId = transaction.Id,
                         Message = "Transaction created successfully.",
                     }
                 );
@@ -265,7 +265,7 @@ namespace FinTrackWebApi.Controller
             int userId = GetAuthenticatedUserId();
 
             var transaction = await _context.Transactions.FirstOrDefaultAsync(t =>
-                t.TransactionId == transactionId && t.UserId == userId
+                t.Id == transactionId && t.UserId == userId
             );
 
             if (transaction == null)
@@ -290,7 +290,7 @@ namespace FinTrackWebApi.Controller
                 await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "Transaction with ID {TransactionId} updated for user {UserId}",
-                    transaction.TransactionId,
+                    transaction.Id,
                     userId
                 );
                 return Ok(new { Message = "Transaction updated successfully." });
@@ -300,7 +300,7 @@ namespace FinTrackWebApi.Controller
                 _logger.LogError(
                     ex,
                     "Error updating transaction with ID {TransactionId} for user {UserId}",
-                    transaction.TransactionId,
+                    transaction.Id,
                     userId
                 );
                 return StatusCode(500, "An error occurred while updating the transaction.");
@@ -312,7 +312,7 @@ namespace FinTrackWebApi.Controller
         {
             int userId = GetAuthenticatedUserId();
             var transaction = await _context.Transactions.FirstOrDefaultAsync(t =>
-                t.TransactionId == transactionId && t.UserId == userId
+                t.Id == transactionId && t.UserId == userId
             );
             if (transaction == null)
             {
@@ -326,7 +326,7 @@ namespace FinTrackWebApi.Controller
                 await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "Transaction with ID {TransactionId} deleted for user {UserId}",
-                    transaction.TransactionId,
+                    transaction.Id,
                     userId
                 );
                 return Ok(new { Message = "Transaction deleted successfully." });
@@ -336,7 +336,7 @@ namespace FinTrackWebApi.Controller
                 _logger.LogError(
                     ex,
                     "Error deleting transaction with ID {TransactionId} for user {UserId}",
-                    transaction.TransactionId,
+                    transaction.Id,
                     userId
                 );
                 return StatusCode(500, "An error occurred while deleting the transaction.");
