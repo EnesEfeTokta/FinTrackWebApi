@@ -238,11 +238,46 @@ namespace FinTrackWebApi.Data
 
             modelBuilder.Entity<AccountModel>(entity =>
             {
+                // -- Tablo --
                 entity.ToTable("Accounts");
-                entity.HasKey(a => a.AccountId);
-                entity.Property(a => a.AccountId).ValueGeneratedOnAdd();
-                entity.Property(a => a.Balance).HasColumnType("decimal(18, 2)").IsRequired();
-                entity.Property(a => a.Name).IsRequired();
+                entity.HasKey(a => a.Id);
+                entity.Property(a => a.Id).ValueGeneratedOnAdd();
+                entity.Property(a => a.Name)
+                      .HasColumnName("AccountName")
+                      .HasMaxLength(100)
+                      .IsRequired(true);
+                entity.Property(a => a.Type)
+                      .HasColumnName("AccountType")
+                      .HasConversion<string>()
+                      .HasDefaultValue("Cash")
+                      .IsRequired(true);
+                entity.Property(a => a.IsActive)
+                      .HasColumnName("IsActive")
+                      .HasDefaultValue(true)
+                      .IsRequired(true);
+                entity.Property(a => a.Balance)
+                      .HasColumnName("Balance")
+                      .HasColumnType("decimal(18, 2)")
+                      .IsRequired(true);
+                entity.Property(a => a.CreatedAtUtc)
+                      .HasColumnName("CreatedAtUtc")
+                      .HasDefaultValueSql("NOW()")
+                      .IsRequired(true);
+                entity.Property(a => a.UpdatedAtUtc)
+                      .HasColumnName("UpdatedAtUtc")
+                      .IsRequired(false);
+
+                // -- İlişkiler --
+                entity.HasOne(a => a.User)
+                      .WithMany(u => u.Accounts)
+                      .HasForeignKey(a => a.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(a => a.Transactions)
+                      .WithOne(t => t.Account)
+                      .HasForeignKey(t => t.AccountId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // -- Index --
                 entity.HasIndex(a => new { a.UserId, a.Name }).IsUnique();
             });
 
