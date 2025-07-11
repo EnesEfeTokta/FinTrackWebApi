@@ -6,6 +6,7 @@ using FinTrackWebApi.Services.MediaEncryptionService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller
 {
@@ -91,7 +92,7 @@ namespace FinTrackWebApi.Controller
                     FileSize = file.Length,
                     ContentType = file.ContentType,
                     UploadDateUtc = DateTime.UtcNow,
-                    Status = VideoStatus.PendingApproval,
+                    Status = VideoStatusType.PendingApproval,
                     EncryptionKeyHash = _mediaEncryptionService.HashKey(
                         _mediaEncryptionService.GenerateRandomKey(20)
                     ),
@@ -106,9 +107,9 @@ namespace FinTrackWebApi.Controller
                 {
                     DebtId = debtId,
                     VideoMetadataId = videoMetadata.VideoMetadataId,
-                    CreateAtUtc = DateTime.UtcNow,
+                    CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow,
-                    Status = VideoStatus.PendingApproval,
+                    Status = VideoStatusType.PendingApproval,
                 };
 
                 await _context.DebtVideoMetadatas.AddAsync(debtVideoMetadata);
@@ -152,7 +153,7 @@ namespace FinTrackWebApi.Controller
             {
                 return NotFound("Video metadata bulunamadı.");
             }
-            if (videoMetadata.Status != VideoStatus.PendingApproval)
+            if (videoMetadata.Status != VideoStatusType.PendingApproval)
             {
                 return BadRequest("Video zaten onaylanmış veya reddedilmiş.");
             }
@@ -164,12 +165,12 @@ namespace FinTrackWebApi.Controller
                     || !System.IO.File.Exists(videoMetadata.VideoMetadata?.UnencryptedFilePath)
                 )
                 {
-                    videoMetadata.Status = VideoStatus.ProcessingError;
+                    videoMetadata.Status = VideoStatusType.ProcessingError;
                     await _context.SaveChangesAsync();
                     return NotFound("Şifrelenmemiş video dosyası bulunamadı.");
                 }
 
-                videoMetadata.Status = VideoStatus.ProcessingEncryption;
+                videoMetadata.Status = VideoStatusType.ProcessingEncryption;
                 await _context.SaveChangesAsync();
 
                 string userPasswordKey = _mediaEncryptionService.GenerateRandomKey(20);
@@ -193,7 +194,7 @@ namespace FinTrackWebApi.Controller
                 );
                 videoMetadata.VideoMetadata.EncryptionSalt = salt;
                 videoMetadata.VideoMetadata.EncryptionIV = iv;
-                videoMetadata.VideoMetadata.Status = VideoStatus.Encrypted;
+                videoMetadata.VideoMetadata.Status = VideoStatusType.Encrypted;
                 videoMetadata.VideoMetadata.StorageType = VideoStorageType.EncryptedFileSystem;
 
                 System.IO.File.Delete(videoMetadata.VideoMetadata.UnencryptedFilePath);
@@ -267,7 +268,7 @@ namespace FinTrackWebApi.Controller
                     emailBody = emailBody.Replace("[APPROVAL_DATE]", DateTime.UtcNow.ToString());
                     emailBody = emailBody.Replace(
                         "[AGREEMENT_ID]",
-                        videoMetadata.Debt?.DebtId.ToString()
+                        videoMetadata.Debt?.Id.ToString()
                     );
 
                     emailBody = emailBody.Replace(
@@ -306,7 +307,7 @@ namespace FinTrackWebApi.Controller
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Video şifrelenirken hata oluştu.");
-                videoMetadata.Status = VideoStatus.ProcessingError;
+                videoMetadata.Status = VideoStatusType.ProcessingError;
                 await _context.SaveChangesAsync();
                 return StatusCode(500, "Video şifrelenirken hata oluştu.");
             }
@@ -327,7 +328,7 @@ namespace FinTrackWebApi.Controller
                 return NotFound("Video bulunamadı.");
 
             if (
-                video.Status != VideoStatus.Encrypted
+                video.Status != VideoStatusType.Encrypted
                 || string.IsNullOrEmpty(video.EncryptedFilePath)
                 || string.IsNullOrEmpty(video.EncryptionKeyHash)
                 || string.IsNullOrEmpty(video.EncryptionSalt)

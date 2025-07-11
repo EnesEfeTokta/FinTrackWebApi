@@ -5,6 +5,7 @@ using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller
 {
@@ -44,10 +45,10 @@ namespace FinTrackWebApi.Controller
                     .OrderByDescending(n => n.CreatedAtUtc)
                     .Select(n => new NotificationDto
                     {
-                        Id = n.NotificationId,
+                        Id = n.Id,
                         MessageHead = n.MessageHead,
                         MessageBody = n.MessageBody,
-                        NotificationType = n.NotificationType,
+                        NotificationType = n.Type.ToString(),
                         CreatedAt = n.CreatedAtUtc,
                         IsRead = n.IsRead,
                     })
@@ -76,22 +77,24 @@ namespace FinTrackWebApi.Controller
             {
                 int userId = GetAuthenticatedUserId();
 
+                Enum.TryParse<NotificationType>(notificationDto.NotificationType, true, out NotificationType type);
+
                 var notification = new NotificationModel
                 {
                     UserId = userId,
                     MessageHead = notificationDto.MessageHead,
                     MessageBody = notificationDto.MessageBody,
-                    NotificationType = notificationDto.NotificationType,
+                    Type = type,
                     CreatedAtUtc = DateTime.UtcNow,
                     IsRead = false,
                 };
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
-                notificationDto.Id = notification.NotificationId;
+                notificationDto.Id = notification.Id;
                 notificationDto.CreatedAt = notification.CreatedAtUtc;
                 return CreatedAtAction(
                     nameof(GetNotifications),
-                    new { id = notification.NotificationId },
+                    new { id = notification.Id },
                     notificationDto
                 );
             }

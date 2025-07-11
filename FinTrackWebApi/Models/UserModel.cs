@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace FinTrackWebApi.Models
@@ -7,14 +6,9 @@ namespace FinTrackWebApi.Models
     [Table("Users")]
     public class UserModel : IdentityUser<int>
     {
-        [Required]
-        [Column("ProfilePicture")]
-        public string ProfilePicture { get; set; } =
+        public string? ProfilePicture { get; set; } =
             "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740";
-
-        [Required]
-        [Column("CreateAt")]
-        public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         public virtual UserAppSettingsModel? AppSettings { get; set; }
         public virtual UserNotificationSettingsModel? NotificationSettings { get; set; }

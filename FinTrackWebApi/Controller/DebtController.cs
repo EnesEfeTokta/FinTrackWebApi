@@ -1,11 +1,12 @@
-﻿using System.Security.Claims;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.SecureDebtService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {
@@ -142,7 +143,7 @@ namespace FinTrackWebApi.Controller
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
-                    .FirstOrDefaultAsync(d => d.DebtId == debtId);
+                    .FirstOrDefaultAsync(d => d.Id == debtId);
                 if (debt == null)
                 {
                     return NotFound("Debt not found.");
@@ -187,7 +188,7 @@ namespace FinTrackWebApi.Controller
                 var debt = await _context
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
-                    .FirstOrDefaultAsync(d => d.DebtId == debtId);
+                    .FirstOrDefaultAsync(d => d.Id == debtId);
                 if (debt == null)
                 {
                     return NotFound("Debt offer not found.");
@@ -197,14 +198,14 @@ namespace FinTrackWebApi.Controller
                     return Forbid("You are not authorized to accept this debt offer.");
                 }
 
-                if (debt.Status != DebtStatus.PendingBorrowerAcceptance)
+                if (debt.Status != DebtStatusType.PendingBorrowerAcceptance)
                 {
                     return BadRequest("Debt offer is not in a state that can be accepted.");
                 }
 
                 if (decision)
                 {
-                    debt.Status = DebtStatus.PendingOperatorApproval;
+                    debt.Status = DebtStatusType.PendingOperatorApproval;
                     debt.UpdatedAtUtc = DateTime.UtcNow;
 
                     _context.Debts.Update(debt);
@@ -212,7 +213,7 @@ namespace FinTrackWebApi.Controller
                 }
                 else
                 {
-                    debt.Status = DebtStatus.RejectedByBorrower;
+                    debt.Status = DebtStatusType.RejectedByBorrower;
                     debt.UpdatedAtUtc = DateTime.UtcNow;
 
                     _context.Debts.Update(debt);
@@ -225,7 +226,7 @@ namespace FinTrackWebApi.Controller
                         Message = "Debt offer retrieved successfully.",
                         Debt = new
                         {
-                            debt.DebtId,
+                            debt.Id,
                             debt.Lender,
                             debt.Borrower,
                             debt.Amount,

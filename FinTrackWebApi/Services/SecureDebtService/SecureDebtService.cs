@@ -1,4 +1,5 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.EmailService;
 using Microsoft.AspNetCore.Identity;
@@ -80,14 +81,14 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 LenderId = lender.Id,
                 BorrowerId = borrower.Id,
                 Amount = amount,
-                CurrencyId = currency.CurrencyId,
+                CurrencyId = currency.Id,
                 DueDateUtc = DateTime
                     .SpecifyKind(dueDate, DateTimeKind.Unspecified)
                     .ToUniversalTime(),
                 Description = description ?? "Açıklama yok.",
                 CreateAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
-                Status = DebtStatus.PendingBorrowerAcceptance,
+                Status = DebtStatusType.PendingBorrowerAcceptance,
             };
 
             try
@@ -253,7 +254,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 );
                 _logger.LogInformation(
                     "Borç teklifi (ID: {DebtId}) başarıyla oluşturuldu ve {BorrowerEmail} adresine bildirim gönderildi.",
-                    debt.DebtId,
+                    debt.Id,
                     borrower.Email
                 );
 
@@ -295,7 +296,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
                     .Include(d => d.CurrencyModel)
-                    .FirstOrDefaultAsync(d => d.DebtId == debtId);
+                    .FirstOrDefaultAsync(d => d.Id == debtId);
             }
             catch (Exception ex)
             {

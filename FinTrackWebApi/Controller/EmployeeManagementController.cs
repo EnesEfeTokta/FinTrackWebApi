@@ -1,4 +1,5 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -78,8 +79,8 @@ namespace FinTrackWebApi.Controller
         [Authorize(Roles = "VideoApproval,Admin")]
         public async Task<IActionResult> GetPendingDebts([FromQuery] string status)
         {
-            DebtStatus debtStatus = (DebtStatus)Enum.Parse(typeof(DebtStatus), status, true);
-            if (!Enum.IsDefined(typeof(DebtStatus), debtStatus))
+            DebtStatusType debtStatus = (DebtStatusType)Enum.Parse(typeof(DebtStatusType), status, true);
+            if (!Enum.IsDefined(typeof(DebtStatusType), debtStatus))
             {
                 _logger.LogWarning("Invalid debt status: {Status}", status);
                 return BadRequest("Invalid debt status provided.");
@@ -115,7 +116,7 @@ namespace FinTrackWebApi.Controller
                 _logger.LogWarning("Debt with ID {Id} not found.", id);
                 return NotFound("Debt not found.");
             }
-            if (debt.Status != DebtStatus.PendingOperatorApproval)
+            if (debt.Status != DebtStatusType.PendingOperatorApproval)
             {
                 _logger.LogWarning(
                     "Debt with ID {Id} is not in a valid state for approval or rejection.",
@@ -127,12 +128,12 @@ namespace FinTrackWebApi.Controller
             {
                 if (isApproval)
                 {
-                    debt.Status = DebtStatus.Active;
+                    debt.Status = DebtStatusType.Active;
                     _logger.LogInformation("Debt with ID {Id} has been approved.", id);
                 }
                 else
                 {
-                    debt.Status = DebtStatus.RejectedByOperator;
+                    debt.Status = DebtStatusType.RejectedByOperator;
                     _logger.LogInformation("Debt with ID {Id} has been rejected.", id);
                 }
 

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
+using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller
 {
@@ -110,7 +111,7 @@ namespace FinTrackWebApi.Controller
                             );
 
                             var payment = await _context.Payments.FindAsync(paymentId);
-                            if (payment != null && payment.Status == PaymentStatus.Succeeded)
+                            if (payment != null && payment.Status == PaymentStatusType.Succeeded)
                             {
                                 _logger.LogInformation(
                                     "PaymentId {PaymentId} has already been processed and marked as Succeeded. Skipping update.",
@@ -122,7 +123,7 @@ namespace FinTrackWebApi.Controller
                             var userMembership = await _context
                                 .UserMemberships.Include(um => um.Plan)
                                 .Include(um => um.User)
-                                .FirstOrDefaultAsync(um => um.UserMembershipId == userMembershipId);
+                                .FirstOrDefaultAsync(um => um.Id == userMembershipId);
 
                             if (userMembership == null)
                             {
@@ -147,11 +148,11 @@ namespace FinTrackWebApi.Controller
                             }
 
                             if (
-                                userMembership.Status == MembershipStatus.PendingPayment
-                                && payment.Status == PaymentStatus.Pending
+                                userMembership.Status == MembershipStatusType.PendingPayment
+                                && payment.Status == PaymentStatusType.Pending
                             )
                             {
-                                userMembership.Status = MembershipStatus.Active;
+                                userMembership.Status = MembershipStatusType.Active;
                                 userMembership.StartDate = DateTime.UtcNow;
 
                                 if (
@@ -172,7 +173,7 @@ namespace FinTrackWebApi.Controller
                                     );
                                 }
 
-                                payment.Status = PaymentStatus.Succeeded;
+                                payment.Status = PaymentStatusType.Succeeded;
                                 payment.TransactionId = session.PaymentIntentId ?? session.Id;
                                 payment.GatewayResponse =
                                     $"Stripe Checkout Session ID: {session.Id}";
@@ -220,7 +221,7 @@ namespace FinTrackWebApi.Controller
                                         ); // Gerçek dashboard linkiniz
 
                                         string invoiceNumber =
-                                            $"INV-{payment.PaymentId}-{DateTime.UtcNow:yyyyMMdd}"; // Basit bir fatura no
+                                            $"INV-{payment.Id}-{DateTime.UtcNow:yyyyMMdd}"; // Basit bir fatura no
                                         emailBody = emailBody.Replace(
                                             "[InvoiceNumber]",
                                             invoiceNumber
@@ -312,7 +313,7 @@ namespace FinTrackWebApi.Controller
                                         );
                                         emailBody = emailBody.Replace(
                                             "[Currency]",
-                                            payment.Currency.ToUpper()
+                                            payment.Currency.ToString().ToUpper()
                                         );
 
                                         emailBody = emailBody.Replace(
