@@ -1,5 +1,5 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Dtos.BudgetDtos;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

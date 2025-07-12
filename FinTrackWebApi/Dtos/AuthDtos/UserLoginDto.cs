@@ -1,13 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace FinTrackWebApi.Dtos
+﻿namespace FinTrackWebApi.Dtos.AuthDtos
 {
     public class LoginDto
     {
-        [Required]
         public string Email { get; set; } = null!;
 
-        [Required]
         public string Password { get; set; } = null!;
     }
 }

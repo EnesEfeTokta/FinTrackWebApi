@@ -1,19 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace FinTrackWebApi.Dtos
+﻿namespace FinTrackWebApi.Dtos.AuthDtos
 {
-    public class InitiateRegistrationDto
+    public class UserInitiateRegistrationDto
     {
-        [Required]
         public string Username { get; set; } = null!;
-
-        [Required]
         public string Email { get; set; } = null!;
-
-        [Required]
-        [DataType(DataType.Password)]
         public string Password { get; set; } = null!;
-
         public string? ProfilePicture { get; set; }
     }
 }

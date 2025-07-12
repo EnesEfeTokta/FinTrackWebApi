@@ -1,4 +1,4 @@
-﻿using FinTrackWebApi.Dtos;
+﻿using FinTrackWebApi.Dtos.ChatBotDtos;
 
 namespace FinTrackWebApi.Services.ChatBotService
 {

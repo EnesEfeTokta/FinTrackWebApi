@@ -1,5 +1,5 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Dtos.NotificationDtos;
 using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;

@@ -1,10 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace FinTrackWebApi.Dtos
+﻿namespace FinTrackWebApi.Dtos.UserMembershipDtos
 {
     public class UserMembershipDto
     {
-        public int UserMembershipId { get; set; }
+        public int Id { get; set; }
         public int PlanId { get; set; }
         public string? PlanName { get; set; }
         public DateTime StartDate { get; set; }
@@ -15,7 +13,6 @@ namespace FinTrackWebApi.Dtos
 
     public class SubscriptionRequestDto
     {
-        [Required]
         public int PlanId { get; set; }
         public bool AutoRenew { get; set; } = true; // Varsayılan olarak otomatik yenileme açık olabilir
         // Ödeme yöntemi token'ı gibi ek bilgiler buraya gelebilir

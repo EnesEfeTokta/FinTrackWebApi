@@ -1,5 +1,5 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos;
+using FinTrackWebApi.Dtos.UserMembershipDtos;
 using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.PaymentService;

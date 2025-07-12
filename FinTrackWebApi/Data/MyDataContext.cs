@@ -12,7 +12,7 @@ namespace FinTrackWebApi.Data
 
         public DbSet<OtpVerificationModel> OtpVerification { get; set; }
         public DbSet<UserAppSettingsModel> UserAppSettings { get; set; }
-        public DbSet<UserNotificationSettingsModel> UserSecuritySettings { get; set; }
+        public DbSet<UserNotificationSettingsModel> UserNotificationSettings { get; set; }
         public DbSet<CategoryModel> Categories { get; set; }
         public DbSet<BudgetCategoryModel> BudgetCategories { get; set; }
         public DbSet<BudgetModel> Budgets { get; set; }
@@ -770,12 +770,21 @@ namespace FinTrackWebApi.Data
                       .HasMaxLength(1000);
                 entity.Property(n => n.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
+                      .HasColumnType("timestamp")
                       .IsRequired(true)
                       .HasDefaultValueSql("NOW()");
                 entity.Property(n => n.IsRead)
                       .HasColumnName("IsRead")
                       .IsRequired(true)
                       .HasDefaultValue(false);
+                entity.Property(n => n.ReadAtUtc)
+                        .HasColumnName("ReadAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
+                entity.Property(n => n.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
 
                 // -- İlişkiler --
                 entity.HasOne(n => n.User)

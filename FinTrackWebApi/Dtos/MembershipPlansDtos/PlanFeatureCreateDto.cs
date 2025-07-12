@@ -1,7 +1,13 @@
-﻿namespace FinTrackWebApi.Dtos
+﻿using FinTrackWebApi.Enums;
+
+namespace FinTrackWebApi.Dtos.MembershipPlansDtos
 {
-    public class PlanFeatureSetDto
+    public class PlanFeatureCreateDto
     {
+        public string PlanName { get; set; } = null!;
+        public string PlanDescription { get; set; } = null!;
+        public decimal Price { get; set; }
+        public BaseCurrencyType Currency { get; set; }
         public ReportingFeatures Reporting { get; set; } = new();
         public EmailingFeatures Emailing { get; set; } = new();
         public BudgetingFeatures Budgeting { get; set; } = new();

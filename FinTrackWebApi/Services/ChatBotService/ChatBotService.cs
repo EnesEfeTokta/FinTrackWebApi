@@ -1,4 +1,4 @@
-﻿using FinTrackWebApi.Dtos;
+﻿using FinTrackWebApi.Dtos.ChatBotDtos;
 using System.Text;
 using System.Text.Json;
 
