@@ -1,5 +1,4 @@
 ﻿using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace FinTrackWebApi.Dtos

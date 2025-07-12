@@ -1,6 +1,6 @@
-﻿using System.Text;
+﻿using FinTrackWebApi.Dtos;
+using System.Text;
 using System.Text.Json;
-using FinTrackWebApi.Dtos;
 
 namespace FinTrackWebApi.Services.ChatBotService
 {

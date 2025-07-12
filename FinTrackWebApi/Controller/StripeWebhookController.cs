@@ -1,6 +1,5 @@
-﻿using System.Globalization;
-using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.PaymentService;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
-using FinTrackWebApi.Enums;
+using System.Globalization;
 
 namespace FinTrackWebApi.Controller
 {

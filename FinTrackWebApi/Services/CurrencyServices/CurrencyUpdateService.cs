@@ -1,11 +1,11 @@
-﻿using System.Globalization;
-using System.Text.Json;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.CurrencyServices.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using System.Globalization;
+using System.Text.Json;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {

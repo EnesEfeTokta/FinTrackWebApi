@@ -1,8 +1,8 @@
 ﻿using FinTrackWebApi.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller
 {

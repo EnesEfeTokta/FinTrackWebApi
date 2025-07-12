@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace FinTrackWebApi.Models
+﻿namespace FinTrackWebApi.Models
 {
     public class CurrencyModel
     {

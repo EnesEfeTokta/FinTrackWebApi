@@ -1,7 +1,7 @@
-﻿using System.Security.Cryptography;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace FinTrackWebApi.Services.OtpService
 {

@@ -14,7 +14,7 @@ namespace FinTrackWebApi.Models
         public decimal Amount { get; set; }
         public string Description { get; set; } = string.Empty;
         public DateTime CreateAtUtc { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAtUtc { get; set; }
         public DateTime DueDateUtc { get; set; }
         public DebtStatusType Status { get; set; }
 

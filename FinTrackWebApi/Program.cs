@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json.Serialization;
 using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.ChatBotService;
@@ -19,6 +17,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 

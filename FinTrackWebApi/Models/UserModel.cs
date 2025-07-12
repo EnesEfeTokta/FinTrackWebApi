@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models
 {
@@ -12,6 +12,8 @@ namespace FinTrackWebApi.Models
 
         public virtual UserAppSettingsModel? AppSettings { get; set; }
         public virtual UserNotificationSettingsModel? NotificationSettings { get; set; }
+
+        public virtual ICollection<FeedbackModel>? Feedbacks { get; set; } = new List<FeedbackModel>();
 
         public virtual ICollection<BudgetModel> Budgets { get; set; } = new List<BudgetModel>();
         public virtual ICollection<CategoryModel> Categories { get; set; } =

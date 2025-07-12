@@ -28,6 +28,7 @@ namespace FinTrackWebApi.Data
         public DbSet<DebtModel> Debts { get; set; }
         public DbSet<VideoMetadataModel> VideoMetadatas { get; set; }
         public DbSet<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; }
+        public DbSet<FeedbackModel> Feedbacks { get; set; }
 
         public DbSet<EmployeesModel> Employees { get; set; }
         public DbSet<DepartmentModel> Departments { get; set; }
@@ -112,6 +113,11 @@ namespace FinTrackWebApi.Data
                     .HasMany(u => u.UploadedVideos)
                     .WithOne(v => v.UploadedUser)
                     .HasForeignKey(v => v.UploadedByUserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasMany(f => f.Feedbacks)
+                    .WithOne(u => u.User)
+                    .HasForeignKey(f => f.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -234,7 +240,7 @@ namespace FinTrackWebApi.Data
                       .WithOne(u => u.NotificationSettings)
                       .HasForeignKey<UserNotificationSettingsModel>(s => s.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
-                
+
                 // -- Index --
                 entiy.HasIndex(s => s.UserId).IsUnique();
             });
@@ -800,6 +806,10 @@ namespace FinTrackWebApi.Data
                       .HasColumnType("timestamp")
                       .HasDefaultValueSql("NOW()")
                       .IsRequired(true);
+                entity.Property(d => d.UpdatedAtUtc)
+                      .HasColumnName("UpdatedAtUtc")
+                      .HasColumnType("timestamp")
+                      .IsRequired(false);
                 entity.Property(d => d.DueDateUtc)
                       .HasColumnName("DueDateUtc")
                       .HasColumnType("date")
@@ -921,6 +931,7 @@ namespace FinTrackWebApi.Data
                 entity.HasKey(dvm => dvm.Id);
                 entity.Property(dvm => dvm.Id).ValueGeneratedOnAdd();
                 entity.Property(dvm => dvm.Status)
+                      .HasColumnName("Status")
                       .HasConversion<string>()
                       .HasMaxLength(50)
                       .HasDefaultValue("PendingApproval")
@@ -986,6 +997,46 @@ namespace FinTrackWebApi.Data
                     .WithMany(d => d.EmployeeDepartments)
                     .HasForeignKey(ed => ed.DepartmentId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<FeedbackModel>(entity =>
+            {
+                // -- Tablo --
+                entity.ToTable("Feedbacks");
+                entity.HasKey(f => f.Id);
+                entity.Property(f => f.Id).ValueGeneratedOnAdd();
+                entity.Property(f => f.Subject)
+                      .HasColumnName("Subject")
+                      .HasMaxLength(255)
+                      .IsRequired(true);
+                entity.Property(f => f.Description)
+                      .HasColumnName("Description")
+                      .HasMaxLength(500)
+                      .IsRequired(true);
+                entity.Property(f => f.Type)
+                       .HasColumnName("Type")
+                       .HasConversion<string>()
+                       .HasDefaultValue("GeneralFeedback")
+                       .IsRequired(true);
+                entity.Property(f => f.SavedFilePath)
+                      .HasColumnName("SavedFilePath")
+                      .HasMaxLength(500)
+                      .IsRequired(false);
+                entity.Property(f => f.CreatedAtUtc)
+                      .HasColumnName("CreatedAtUtc")
+                      .HasColumnType("timestamp")
+                      .HasDefaultValue("NOW()")
+                      .IsRequired(true);
+                entity.Property(f => f.UpdatedAtUtc)
+                      .HasColumnName("UpdatedAtUtc")
+                      .HasColumnType("timestamp")
+                      .IsRequired(false);
+
+                // -- İlişkiler --
+                entity.HasOne(fu => fu.User)
+                      .WithMany(f => f.Feedbacks)
+                      .HasForeignKey(fu => fu.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

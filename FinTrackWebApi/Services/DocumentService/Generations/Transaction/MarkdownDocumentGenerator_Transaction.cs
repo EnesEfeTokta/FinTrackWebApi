@@ -1,5 +1,5 @@
-﻿using System.Text;
-using FinTrackWebApi.Services.DocumentService.Models;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using System.Text;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {
