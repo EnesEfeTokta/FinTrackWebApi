@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Employees
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -64,7 +64,7 @@ namespace FinTrackWebApi.Controller
                 var debts = await _context
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
-                    .Include(d => d.CurrencyModel)
+                    .Include(d => d.Currency)
                     .ToListAsync();
                 return Ok(debts);
             }
@@ -91,7 +91,7 @@ namespace FinTrackWebApi.Controller
                 var pendingDebts = await _context
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
-                    .Include(d => d.CurrencyModel)
+                    .Include(d => d.Currency)
                     .Where(d => d.Status == debtStatus)
                     .ToListAsync();
                 return Ok(pendingDebts);

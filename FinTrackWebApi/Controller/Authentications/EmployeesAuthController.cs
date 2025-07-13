@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Authentications
 {
     [Route("api/[controller]")]
     [ApiController]

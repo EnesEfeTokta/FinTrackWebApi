@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Users
 {
     [ApiController]
     [Route("api/[controller]")]

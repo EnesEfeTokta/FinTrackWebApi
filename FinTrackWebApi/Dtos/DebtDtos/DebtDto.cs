@@ -14,7 +14,7 @@ namespace FinTrackWebApi.Dtos.DebtDtos
         public string BorrowerEmail { get; set; } = null!;
         public string? BorrowerProfilePicture { get; set; }
         public decimal Amount { get; set; }
-        public string CurrencyCode { get; set; } = null!;
+        public BaseCurrencyType Currency { get; set; }
         public DateTime DueDateUtc { get; set; }
         public string Description { get; set; } = null!;
         public DebtStatusType Status { get; set; }
@@ -23,5 +23,6 @@ namespace FinTrackWebApi.Dtos.DebtDtos
         public DateTime? PaidAtUtc { get; set; }
         public DateTime? OperatorApprovalAtUtc { get; set; }
         public DateTime? BorrowerApprovalAtUtc { get; set; }
+        public DateTime? PaymentConfirmationAtUtc { get; set; }
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Debts
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -106,7 +106,7 @@ namespace FinTrackWebApi.Controller
                 var debtVideoMetadata = new DebtVideoMetadataModel
                 {
                     DebtId = debtId,
-                    VideoMetadataId = videoMetadata.VideoMetadataId,
+                    VideoMetadataId = videoMetadata.Id,
                     CreatedAtUtc = DateTime.UtcNow,
                     UpdatedAtUtc = DateTime.UtcNow,
                     Status = VideoStatusType.PendingApproval,
@@ -146,7 +146,7 @@ namespace FinTrackWebApi.Controller
                 .Include(v => v.VideoMetadata)
                 .ThenInclude(v => v.UploadedUser)
                 .Include(dvm => dvm.Debt)
-                .ThenInclude(d => d.CurrencyModel)
+                .ThenInclude(d => d.Currency)
                 .FirstOrDefaultAsync(v => v.VideoMetadataId == videoId);
 
             if (videoMetadata == null)
@@ -255,39 +255,39 @@ namespace FinTrackWebApi.Controller
                     );
                     emailBody = emailBody.Replace(
                         "[DETAIL_DEBT_CURRENCY]",
-                        videoMetadata.Debt?.CurrencyModel?.Code ?? "N/A"
+                        videoMetadata?.Debt?.Currency.ToString()
                     );
                     emailBody = emailBody.Replace(
                         "[DETAIL_DEBT_DUE_DATE]",
-                        videoMetadata.Debt?.DueDateUtc.ToString() ?? "N/A"
+                        videoMetadata?.Debt?.DueDateUtc.ToString() ?? "N/A"
                     );
                     emailBody = emailBody.Replace(
                         "[DETAIL_DEBT_DESCRIPTION]",
-                        videoMetadata.Debt?.Description
+                        videoMetadata?.Debt?.Description
                     );
                     emailBody = emailBody.Replace("[APPROVAL_DATE]", DateTime.UtcNow.ToString());
                     emailBody = emailBody.Replace(
                         "[AGREEMENT_ID]",
-                        videoMetadata.Debt?.Id.ToString()
+                        videoMetadata?.Debt?.Id.ToString()
                     );
 
                     emailBody = emailBody.Replace(
                         "[VIDEO_FILE_NAME]",
-                        videoMetadata.VideoMetadata.OriginalFileName ?? "N/A"
+                        videoMetadata?.VideoMetadata.OriginalFileName ?? "N/A"
                     );
                     emailBody = emailBody.Replace("[ENCRYPTION_KEY]", userPasswordKey ?? "N/A");
 
                     emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
 
                     await _emailSender.SendEmailAsync(
-                        videoMetadata.Debt?.Lender?.Email ?? "N/A",
+                        videoMetadata?.Debt?.Lender?.Email ?? "N/A",
                         emailSubject,
                         emailBody
                     );
 
                     _logger.LogInformation(
                         "Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}",
-                        videoMetadata.VideoMetadata.UploadedUser?.Email
+                        videoMetadata?.VideoMetadata.UploadedUser?.Email
                     );
                 }
                 catch (Exception emailEx)

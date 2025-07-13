@@ -1,4 +1,6 @@
-﻿namespace FinTrackWebApi.Models
+﻿using FinTrackWebApi.Enums;
+
+namespace FinTrackWebApi.Models
 {
     public class TransactionModel
     {
@@ -10,6 +12,8 @@
         public int AccountId { get; set; }
         public virtual AccountModel Account { get; set; } = null!;
         public decimal Amount { get; set; }
+        public BaseCurrencyType Currency { get; set; }
+        public TransactionCategoryType Type { get; set; }
         public DateTime TransactionDateUtc { get; set; }
         public string Description { get; set; } = null!;
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

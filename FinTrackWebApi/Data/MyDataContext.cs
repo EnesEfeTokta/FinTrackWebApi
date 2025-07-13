@@ -255,10 +255,6 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("CategoryName")
                       .HasMaxLength(100)
                       .IsRequired(true);
-                entity.Property(c => c.Type)
-                      .HasColumnName("CategoryType")
-                      .HasConversion<string>()
-                      .IsRequired(true);
                 entity.Property(c => c.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
                       .HasColumnType("timestamp")
@@ -280,7 +276,7 @@ namespace FinTrackWebApi.Data
                       .OnDelete(DeleteBehavior.Restrict);
 
                 // -- Index --
-                entity.HasIndex(c => new { c.UserId, c.Name, c.Type })
+                entity.HasIndex(c => new { c.UserId, c.Name })
                       .IsUnique();
             });
 
@@ -381,6 +377,17 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("Amount")
                       .HasColumnType("decimal(18, 2)")
                       .IsRequired(true);
+                entity.Property(t => t.Currency)
+                        .HasColumnName("Currency")
+                        .HasConversion<string>()
+                        .HasDefaultValue("TRY")
+                        .IsRequired(true);
+                entity.Property(t => t.Type)
+                        .HasColumnName("Type")
+                        .HasConversion<string>()
+                        .IsRequired(true)
+                        .HasDefaultValue("Expense")
+                        .HasMaxLength(50);
                 entity.Property(t => t.TransactionDateUtc)
                       .HasColumnName("TransactionDateUtc")
                       .HasColumnType("timestamp")
@@ -806,6 +813,12 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("Amount")
                       .HasColumnType("decimal(18, 2)")
                       .IsRequired(true);
+                entity.Property(d => d.Currency)
+                        .HasColumnName("Currency")
+                        .HasConversion<string>()
+                        .HasMaxLength(5)
+                        .HasDefaultValue("TRY")
+                        .IsRequired(true);
                 entity.Property(d => d.Description)
                       .HasColumnName("Description")
                       .HasMaxLength(500)
@@ -828,6 +841,22 @@ namespace FinTrackWebApi.Data
                       .HasMaxLength(50)
                       .HasDefaultValue("Pending")
                       .IsRequired();
+                entity.Property(d => d.PaidAtUtc)
+                        .HasColumnName("PaidAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
+                entity.Property(d => d.OperatorApprovalAtUtc)
+                        .HasColumnName("OperatorApprovalAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
+                entity.Property(d => d.BorrowerApprovalAtUtc)
+                        .HasColumnName("BorrowerApprovalAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
+                entity.Property(d => d.PaymentConfirmationAtUtc)
+                        .HasColumnName("PaymentConfirmationAtUtc")
+                        .HasColumnType("timestamp")
+                        .IsRequired(false);
 
                 // -- İlişkiler --
                 entity
@@ -840,12 +869,6 @@ namespace FinTrackWebApi.Data
                     .HasOne(d => d.Borrower)
                     .WithMany(u => u.DebtsAsBorrower)
                     .HasForeignKey(d => d.BorrowerId)
-                    .OnDelete(DeleteBehavior.Restrict);
-                entity
-                    .HasOne(d => d.CurrencyModel)
-                    .WithMany()
-                    .HasForeignKey(d => d.CurrencyId)
-                    .IsRequired()
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

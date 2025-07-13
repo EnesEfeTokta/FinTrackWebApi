@@ -1,5 +1,4 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos;
 using FinTrackWebApi.Dtos.AuthDtos;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Security;
@@ -7,29 +6,29 @@ using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using FinTrackWebApi.Enums;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Authentications
 {
-    [Route("api/[controller]")]
+    [Route("user/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class UserAuthController : ControllerBase
     {
         private readonly MyDataContext _context;
         private readonly IConfiguration _configuration;
         private readonly IEmailSender _emailSender;
         private readonly IOtpService _otpService;
-        private readonly ILogger<AuthController> _logger;
+        private readonly ILogger<UserAuthController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<UserModel> _userManager;
         private readonly SignInManager<UserModel> _signInManager;
 
-        public AuthController(
+        public UserAuthController(
             MyDataContext context,
             IConfiguration configuration,
             IOtpService otpService,
             IEmailSender emailService,
-            ILogger<AuthController> logger,
+            ILogger<UserAuthController> logger,
             IWebHostEnvironment webHostEnvironment,
             UserManager<UserModel> userManager,
             SignInManager<UserModel> signInManager
@@ -45,9 +44,9 @@ namespace FinTrackWebApi.Controller
             _signInManager = signInManager;
         }
 
-        [HttpPost("user/initiate-registration")]
+        [HttpPost("initiate-registration")]
         public async Task<IActionResult> UserInitiateRegistration(
-            [FromBody] InitiateRegistrationDto initiateDto
+            [FromBody] UserInitiateRegistrationDto initiateDto
         )
         {
             if (
@@ -159,7 +158,7 @@ namespace FinTrackWebApi.Controller
             );
         }
 
-        [HttpPost("user/verify-otp-and-register")]
+        [HttpPost("verify-otp-and-register")]
         public async Task<IActionResult> UserVerifyOtpAndRegister(
             [FromBody] VerifyOtpRequestDto verifyDto
         )
@@ -226,32 +225,93 @@ namespace FinTrackWebApi.Controller
 
                     await _otpService.RemoveOtpAsync(verifyDto.Email);
 
-                    //try
-                    //{
-                    //    UserSettingsModel userSettings = new UserSettingsModel
-                    //    {
-                    //        UserId = newUser.Id,
-                    //        EntryDate = DateTime.UtcNow,
-                    //        Notification = true,
-                    //        Currency = "USD",
-                    //        Language = "en",
-                    //        Theme = "light",
-                    //    };
-                    //    await _context.UserSettings.AddAsync(userSettings);
-                    //    await _context.SaveChangesAsync();
-                    //    _logger.LogInformation(
-                    //        "UserSettings created for UserId: {UserId}",
-                    //        newUser.Id
-                    //    );
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    _logger.LogError(
-                    //        ex,
-                    //        "Failed to create user settings for UserId: {UserId}",
-                    //        newUser.Id
-                    //    );
-                    //}
+                    #region User Settings Creation
+                    try
+                    {
+                        var userAppSettings = new UserAppSettingsModel
+                        {
+                            UserId = newUser.Id,
+                            Appearance = AppearanceType.Light,
+                            BaseCurrency = BaseCurrencyType.USD,
+                            CreatedAtUtc = DateTime.UtcNow
+                        };
+                        await _context.UserAppSettings.AddAsync(userAppSettings);
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation(
+                            "UserSettings created for UserId: {UserId}",
+                            newUser.Id
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Failed to create user app settings for UserId: {UserId}",
+                            newUser.Id
+                        );
+                    }
+
+                    try
+                    {
+                        var userNotificationSettings = new UserNotificationSettingsModel
+                        {
+                            UserId = newUser.Id,
+                            SpendingLimitWarning = true,
+                            ExpectedBillReminder = true,
+                            WeeklySpendingSummary = true,
+                            NewFeaturesAndAnnouncements = true,
+                            EnableDesktopNotifications = true,
+                            CreatedAtUtc = DateTime.UtcNow
+                        };
+                        await _context.UserNotificationSettings.AddAsync(
+                            userNotificationSettings
+                        );
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation(
+                            "UserNotificationSettings created for UserId: {UserId}",
+                            newUser.Id
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Failed to create user notification settings for UserId: {UserId}",
+                            newUser.Id
+                        );
+                    }
+                    #endregion
+
+                    #region User Memebership Creation
+                    try
+                    {
+                        var userMembership = new UserMembershipModel
+                        {
+                            UserId = newUser.Id,
+                            MembershipPlanId = 1,
+                            StartDate = DateTime.UtcNow,
+                            EndDate = DateTime.UtcNow.AddYears(1),
+                            Status = MembershipStatusType.Active,
+                            AutoRenew = true,
+                            CreatedAtUtc = DateTime.UtcNow
+
+                        };
+                        await _context.UserMemberships.AddAsync(userMembership);
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation(
+                            "UserMembership created for UserId: {UserId}",
+                            newUser.Id
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(
+                            ex,
+                            "Failed to create user membership for UserId: {UserId}",
+                            newUser.Id
+                        );
+                    }
+                    #endregion
 
                     try
                     {
@@ -343,7 +403,7 @@ namespace FinTrackWebApi.Controller
             }
         }
 
-        [HttpPost("user/login")]
+        [HttpPost("login")]
         public async Task<IActionResult> UserLogin([FromBody] LoginDto loginDto)
         {
             if (
@@ -432,49 +492,12 @@ namespace FinTrackWebApi.Controller
                 new
                 {
                     UserId = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    ProfilePicture = user.ProfilePicture,
-                    AccessToken = generatedToken.AccessToken,
-                    RefreshToken = generatedToken.RefreshToken,
+                    user.UserName,
+                    user.Email,
+                    user.ProfilePicture,
+                    generatedToken.AccessToken,
+                    generatedToken.RefreshToken,
                     Roles = userRoles,
-                }
-            );
-        }
-
-        [HttpPost("employee/login")]
-        public async Task<IActionResult> EmployeeLogin([FromBody] LoginDto loginDto)
-        {
-            var employee = await _context.Employees.FirstOrDefaultAsync(e =>
-                e.Email == loginDto.Email
-            );
-
-            if (employee == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, employee.Password))
-            {
-                return Unauthorized("Invalid credentials for employee.");
-            }
-
-            var employeeRoles = new List<string>
-            {
-                employee.EmployeeStatus.ToString() ?? "Employee",
-            };
-
-            Token generatedToken = TokenHandler.CreateToken(
-                _configuration,
-                employee.EmployeeId,
-                employee.Name,
-                employee.Email,
-                employeeRoles
-            );
-
-            return Ok(
-                new
-                {
-                    employee.EmployeeId,
-                    employee.Name,
-                    employee.Email,
-                    AccessToken = generatedToken.AccessToken,
-                    RefreshToken = generatedToken.RefreshToken,
                 }
             );
         }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Reports
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -144,9 +144,6 @@ namespace FinTrackWebApi.Controller
             }
 
             var reportData = await BuildBudgetReportDataAsync();
-            reportData.Items = reportData
-                .Items.Where(item => item.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
-                .ToList();
 
             return await GenerateAndReturnReport(
                 format,
@@ -226,7 +223,6 @@ namespace FinTrackWebApi.Controller
                     Name = bc.Budget.Name,
                     Description = bc.Budget.Description ?? "-",
                     Category = bc.Category.Name,
-                    Type = bc.Category.Type.ToString(),
                     StartDate = bc.Budget.StartDate,
                     EndDate = bc.Budget.EndDate,
                     CreatedAt = bc.Budget.CreatedAtUtc,
@@ -270,7 +266,7 @@ namespace FinTrackWebApi.Controller
                 );
             }
 
-            if (!Enum.TryParse(type, true, out Services.DocumentService.DocumentType requestedType))
+            if (!Enum.TryParse(type, true, out DocumentType requestedType))
             {
                 return BadRequest(
                     "Invalid or unsupported type requested. Supported types: Budget, Transaction, Account"
@@ -385,7 +381,7 @@ namespace FinTrackWebApi.Controller
                 );
             }
 
-            if (!Enum.TryParse(type, true, out Services.DocumentService.DocumentType requestedType))
+            if (!Enum.TryParse(type, true, out DocumentType requestedType))
             {
                 return BadRequest(
                     "Invalid or unsupported type requested. Supported types: Budget, Transaction, Account"

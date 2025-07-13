@@ -1,12 +1,12 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos.Categories;
+using FinTrackWebApi.Dtos.CategoriesDtos;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Categories
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -43,25 +43,37 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                int authenticatedUserId = GetAuthenticatedUserId();
+                int userId = GetAuthenticatedUserId();
 
-                var categories = await _context
+                var categoriesFromDb = await _context
                     .Categories.AsNoTracking()
-                    .Where(c => c.UserId == authenticatedUserId)
+                    .Where(c => c.UserId == userId)
                     .ToListAsync();
 
-                if (categories == null || categories.Count == 0)
+                if (categoriesFromDb == null || categoriesFromDb.Count == 0)
                 {
                     _logger.LogWarning(
                         "No categories found for user ID: {UserId}",
-                        authenticatedUserId
+                        userId
                     );
                     return NotFound("No categories found.");
                 }
 
+                var categories = new List<CategoryDto>();
+                foreach (var category in categoriesFromDb)
+                {
+                    categories.Add(new CategoryDto
+                    {
+                        Id = category.Id,
+                        Name = category.Name,
+                        CreatedAtUtc = category.CreatedAtUtc,
+                        UpdatedAtUtc = category.UpdatedAtUtc
+                    });
+                }
+
                 _logger.LogInformation(
                     "Successfully retrieved categories for user ID: {UserId}",
-                    authenticatedUserId
+                    userId
                 );
                 return Ok(categories);
             }
@@ -77,41 +89,49 @@ namespace FinTrackWebApi.Controller
         }
 
         [HttpGet("{categoryId}")]
-        public async Task<IActionResult> GetCategory(int categoryId)
+        public async Task<IActionResult> GetCategory(int Id)
         {
             try
             {
-                int authenticatedUserId = GetAuthenticatedUserId();
+                int userId = GetAuthenticatedUserId();
 
                 var category = await _context
                     .Categories.AsNoTracking()
                     .FirstOrDefaultAsync(c =>
-                        c.UserId == authenticatedUserId && c.Id == categoryId
+                        c.UserId == userId && c.Id == Id
                     );
 
                 if (category == null)
                 {
                     _logger.LogWarning(
                         "Category with ID {CategoryId} not found for user ID: {UserId}",
-                        categoryId,
-                        authenticatedUserId
+                        Id,
+                        userId
                     );
-                    return NotFound($"Category with ID {categoryId} not found.");
+                    return NotFound($"Category with ID {Id} not found.");
                 }
+
+                var categoryDto = new CategoryDto
+                {
+                    Id = category.Id,
+                    Name = category.Name,
+                    CreatedAtUtc = category.CreatedAtUtc,
+                    UpdatedAtUtc = category.UpdatedAtUtc
+                };
 
                 _logger.LogInformation(
                     "Successfully retrieved category with ID {CategoryId} for user ID: {UserId}",
-                    categoryId,
-                    authenticatedUserId
+                    Id,
+                    userId
                 );
-                return Ok(category);
+                return Ok(categoryDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(
                     ex,
                     "Error retrieving category with ID {CategoryId} for user ID: {UserId}",
-                    categoryId,
+                    Id,
                     GetAuthenticatedUserId()
                 );
                 return StatusCode(500, "Internal server error while retrieving the category.");
@@ -123,13 +143,13 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                int authenticatedUserId = GetAuthenticatedUserId();
+                int userId = GetAuthenticatedUserId();
 
                 var newCategory = new CategoryModel
                 {
-                    UserId = authenticatedUserId,
+                    UserId = userId,
                     Name = categoryDto.Name,
-                    Type = categoryDto.Type,
+                    CreatedAtUtc = DateTime.UtcNow
                 };
 
                 _context.Categories.Add(newCategory);
@@ -137,13 +157,9 @@ namespace FinTrackWebApi.Controller
 
                 _logger.LogInformation(
                     "Successfully created category for user ID: {UserId}",
-                    authenticatedUserId
+                    userId
                 );
-                return CreatedAtAction(
-                    nameof(GetCategory),
-                    new { categoryId = newCategory.Id },
-                    newCategory
-                );
+                return Ok(true);
             }
             catch (Exception ex)
             {
@@ -164,10 +180,10 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                int authenticatedUserId = GetAuthenticatedUserId();
+                int userId = GetAuthenticatedUserId();
 
                 var existingCategory = await _context.Categories.FirstOrDefaultAsync(c =>
-                    c.UserId == authenticatedUserId && c.Id == categoryId
+                    c.UserId == userId && c.Id == categoryId
                 );
 
                 if (existingCategory == null)
@@ -175,13 +191,13 @@ namespace FinTrackWebApi.Controller
                     _logger.LogWarning(
                         "Category with ID {CategoryId} not found for user ID: {UserId}",
                         categoryId,
-                        authenticatedUserId
+                        userId
                     );
                     return NotFound($"Category with ID {categoryId} not found.");
                 }
 
                 existingCategory.Name = categoryDto.Name;
-                existingCategory.Type = categoryDto.Type;
+                existingCategory.UpdatedAtUtc = DateTime.UtcNow;
 
                 _context.Categories.Update(existingCategory);
                 await _context.SaveChangesAsync();
@@ -189,7 +205,7 @@ namespace FinTrackWebApi.Controller
                 _logger.LogInformation(
                     "Successfully updated category with ID {CategoryId} for user ID: {UserId}",
                     categoryId,
-                    authenticatedUserId
+                    userId
                 );
                 return Ok(existingCategory);
             }
@@ -210,10 +226,10 @@ namespace FinTrackWebApi.Controller
         {
             try
             {
-                int authenticatedUserId = GetAuthenticatedUserId();
+                int userId = GetAuthenticatedUserId();
 
                 var existingCategory = await _context.Categories.FirstOrDefaultAsync(c =>
-                    c.UserId == authenticatedUserId && c.Id == categoryId
+                    c.UserId == userId && c.Id == categoryId
                 );
 
                 if (existingCategory == null)
@@ -221,7 +237,7 @@ namespace FinTrackWebApi.Controller
                     _logger.LogWarning(
                         "Category with ID {CategoryId} not found for user ID: {UserId}",
                         categoryId,
-                        authenticatedUserId
+                        userId
                     );
                     return NotFound($"Category with ID {categoryId} not found.");
                 }
@@ -232,7 +248,7 @@ namespace FinTrackWebApi.Controller
                 _logger.LogInformation(
                     "Successfully deleted category with ID {CategoryId} for user ID: {UserId}",
                     categoryId,
-                    authenticatedUserId
+                    userId
                 );
                 return NoContent();
             }

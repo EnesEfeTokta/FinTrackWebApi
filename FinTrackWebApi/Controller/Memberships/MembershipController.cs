@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Memberships
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -60,7 +60,7 @@ namespace FinTrackWebApi.Controller
                 .OrderByDescending(um => um.EndDate)
                 .Select(um => new UserMembershipDto
                 {
-                    UserMembershipId = um.Id,
+                    Id = um.Id,
                     PlanId = um.MembershipPlanId,
                     PlanName = um.Plan.Name,
                     StartDate = um.StartDate,
@@ -84,7 +84,7 @@ namespace FinTrackWebApi.Controller
                 .OrderByDescending(um => um.StartDate)
                 .Select(um => new UserMembershipDto
                 {
-                    UserMembershipId = um.Id,
+                    Id = um.Id,
                     PlanId = um.MembershipPlanId,
                     PlanName = um.Plan.Name,
                     StartDate = um.StartDate,
@@ -283,8 +283,8 @@ namespace FinTrackWebApi.Controller
                 payment.GatewayResponse = gatewayResponseMessage;
             }
             if (
-                (membership != null && _context.Entry(membership).State == EntityState.Modified)
-                || (payment != null && _context.Entry(payment).State == EntityState.Modified)
+                membership != null && _context.Entry(membership).State == EntityState.Modified
+                || payment != null && _context.Entry(payment).State == EntityState.Modified
             )
             {
                 await _context.SaveChangesAsync();

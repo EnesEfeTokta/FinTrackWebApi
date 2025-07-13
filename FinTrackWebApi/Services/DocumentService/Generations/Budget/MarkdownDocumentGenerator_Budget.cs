@@ -26,10 +26,10 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
             sb.AppendLine();
             sb.AppendLine("## Budget Details");
             sb.AppendLine(
-                "| # | Name | Description | Category | Type | Start | End | Created | Updated | Allocated |"
+                "| # | Name | Description | Category | Start | End | Created | Updated | Allocated |"
             );
             sb.AppendLine(
-                "|---|------|-------------|----------|------|-------|-----|---------|--------|-----------|"
+                "|---|------|-------------|----------|-------|-----|---------|--------|-----------|"
             );
 
             if (reportData.Items != null && reportData.Items.Any())
@@ -46,7 +46,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                     string description = Truncate(item.Description, 25);
                     string category = Truncate(item.Category, 15);
                     sb.AppendLine(
-                        $"| {index++} | {name} | {description} | {category} | {item.Type} | {item.StartDate:yyyy-MM-dd} | {item.EndDate:yyyy-MM-dd} | {item.CreatedAt:yyyy-MM-dd} | {updatedAtStr} | {allocatedStr} |"
+                        $"| {index++} | {name} | {description} | {category} | {item.StartDate:yyyy-MM-dd} | {item.EndDate:yyyy-MM-dd} | {item.CreatedAt:yyyy-MM-dd} | {updatedAtStr} | {allocatedStr} |"
                     );
                 }
             }

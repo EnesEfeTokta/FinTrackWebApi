@@ -103,7 +103,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                                     header.Cell().Element(HeaderCellStyle).Text("Name");
                                     header.Cell().Element(HeaderCellStyle).Text("Description");
                                     header.Cell().Element(HeaderCellStyle).Text("Category");
-                                    header.Cell().Element(HeaderCellStyle).Text("Type");
                                     header.Cell().Element(HeaderCellStyle).Text("Start");
                                     header.Cell().Element(HeaderCellStyle).Text("End");
                                     header.Cell().Element(HeaderCellStyle).Text("Created");
@@ -130,7 +129,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                                     table.Cell().Element(DataCellStyle).Text(item.Name);
                                     table.Cell().Element(DataCellStyle).Text(item.Description);
                                     table.Cell().Element(DataCellStyle).Text(item.Category);
-                                    table.Cell().Element(DataCellStyle).Text(item.Type);
                                     table
                                         .Cell()
                                         .Element(DataCellStyle)

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Notifications
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -48,7 +48,7 @@ namespace FinTrackWebApi.Controller
                         Id = n.Id,
                         MessageHead = n.MessageHead,
                         MessageBody = n.MessageBody,
-                        NotificationType = n.Type.ToString(),
+                        NotificationType = n.Type,
                         CreatedAt = n.CreatedAtUtc,
                         IsRead = n.IsRead,
                     })
@@ -77,14 +77,12 @@ namespace FinTrackWebApi.Controller
             {
                 int userId = GetAuthenticatedUserId();
 
-                Enum.TryParse<NotificationType>(notificationDto.NotificationType, true, out NotificationType type);
-
                 var notification = new NotificationModel
                 {
                     UserId = userId,
                     MessageHead = notificationDto.MessageHead,
                     MessageBody = notificationDto.MessageBody,
-                    Type = type,
+                    Type = notificationDto.NotificationType,
                     CreatedAtUtc = DateTime.UtcNow,
                     IsRead = false,
                 };

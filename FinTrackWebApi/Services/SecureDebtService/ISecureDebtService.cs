@@ -1,14 +1,15 @@
-﻿using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Enums;
+using FinTrackWebApi.Models;
 
 namespace FinTrackWebApi.Services.SecureDebtService
 {
     public interface ISecureDebtService
     {
         Task<CreateDebtOfferResult> CreateDebtOfferAsync(
-            string lenderUserId,
-            string borrowerEmail,
+            UserModel lender,
+            UserModel borrower,
             decimal amount,
-            CurrencyModel currency,
+            BaseCurrencyType currency,
             DateTime dueDate,
             string? description
         );

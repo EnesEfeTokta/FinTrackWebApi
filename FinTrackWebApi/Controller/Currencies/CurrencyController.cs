@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Currencies
 {
     [Route("api/[controller]")]
     [ApiController]

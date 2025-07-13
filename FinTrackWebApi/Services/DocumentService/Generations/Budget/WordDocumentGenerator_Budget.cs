@@ -126,7 +126,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                     AddHeaderCell(headerRow, "Name");
                     AddHeaderCell(headerRow, "Description");
                     AddHeaderCell(headerRow, "Category");
-                    AddHeaderCell(headerRow, "Type");
                     AddHeaderCell(headerRow, "Start");
                     AddHeaderCell(headerRow, "End");
                     AddHeaderCell(headerRow, "Created");
@@ -142,7 +141,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                         AddTableCell(dataRow, item.Name);
                         AddTableCell(dataRow, item.Description);
                         AddTableCell(dataRow, item.Category);
-                        AddTableCell(dataRow, item.Type);
                         AddTableCell(dataRow, item.StartDate.ToString("yyyy-MM-dd"));
                         AddTableCell(dataRow, item.EndDate.ToString("yyyy-MM-dd"));
                         AddTableCell(dataRow, item.CreatedAt.ToString("yyyy-MM-dd"));

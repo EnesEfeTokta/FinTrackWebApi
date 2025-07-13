@@ -1,6 +1,4 @@
-﻿using FinTrackWebApi.Enums;
-
-namespace FinTrackWebApi.Models
+﻿namespace FinTrackWebApi.Models
 {
     public class CategoryModel
     {
@@ -8,7 +6,6 @@ namespace FinTrackWebApi.Models
         public int UserId { get; set; }
         public virtual UserModel User { get; set; } = null!;
         public string Name { get; set; } = null!;
-        public TransactionCategoryType Type { get; set; }
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAtUtc { get; set; }
 

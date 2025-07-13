@@ -10,7 +10,7 @@ using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
 
-namespace FinTrackWebApi.Controller
+namespace FinTrackWebApi.Controller.Stripe
 {
     [Route("api/stripe/webhook")]
     [ApiController]
@@ -166,7 +166,7 @@ namespace FinTrackWebApi.Controller
                                 else if (userMembership.Plan != null)
                                 {
                                     int defaultDuration =
-                                        (userMembership.Plan.Price == 0) ? 365 * 100 : 30;
+                                        userMembership.Plan.Price == 0 ? 365 * 100 : 30;
                                     userMembership.EndDate = userMembership.StartDate.AddDays(
                                         defaultDuration
                                     );

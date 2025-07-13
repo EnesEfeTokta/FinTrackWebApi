@@ -35,12 +35,11 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                 "--------------------------------------------------------------------------------------------------------------------------------------------------------------"
             );
             sb.AppendFormat(
-                "| {0,-3} | {1,-20} | {2,-25} | {3,-15} | {4,-10} | {5,-10} | {6,-10} | {7,-10} | {8,-10} | {9,15} |\n",
+                "| {0,-3} | {1,-20} | {2,-25} | {3,-15} | {5,-10} | {6,-10} | {7,-10} | {8,-10} | {9,15} |\n",
                 "#",
                 "Name",
                 "Description",
                 "Category",
-                "Type",
                 "Start",
                 "End",
                 "Created",
@@ -67,12 +66,11 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                     string category = Truncate(item.Category, 15);
 
                     sb.AppendFormat(
-                        "| {0,-3} | {1,-20} | {2,-25} | {3,-15} | {4,-10} | {5,-10:yyyy-MM-dd} | {6,-10:yyyy-MM-dd} | {7,-10:yyyy-MM-dd} | {8,-10} | {9,15} |\n",
+                        "| {0,-3} | {1,-20} | {2,-25} | {3,-15} | {5,-10:yyyy-MM-dd} | {6,-10:yyyy-MM-dd} | {7,-10:yyyy-MM-dd} | {8,-10} | {9,15} |\n",
                         index++,
                         name,
                         description,
                         category,
-                        item.Type,
                         item.StartDate,
                         item.EndDate,
                         item.CreatedAt,

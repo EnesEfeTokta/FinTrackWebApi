@@ -54,7 +54,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                 worksheet.Cell(headerRow, 2).Value = "Name";
                 worksheet.Cell(headerRow, 3).Value = "Description";
                 worksheet.Cell(headerRow, 4).Value = "Category";
-                worksheet.Cell(headerRow, 5).Value = "Type";
                 worksheet.Cell(headerRow, 6).Value = "Start Date";
                 worksheet.Cell(headerRow, 7).Value = "End Date";
                 worksheet.Cell(headerRow, 8).Value = "Created At";
@@ -82,7 +81,6 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Budget
                         worksheet.Cell(currentRow, 2).Value = item.Name;
                         worksheet.Cell(currentRow, 3).Value = item.Description;
                         worksheet.Cell(currentRow, 4).Value = item.Category;
-                        worksheet.Cell(currentRow, 5).Value = item.Type;
 
                         worksheet.Cell(currentRow, 6).Value = item.StartDate;
                         worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "yyyy-MM-dd";
