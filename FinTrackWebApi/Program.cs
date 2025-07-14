@@ -212,6 +212,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
@@ -237,13 +238,6 @@ builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
 builder.Services.AddScoped<IMediaEncryptionService, MediaEncryptionService>();
 builder.Services.AddScoped<IChatBotService, ChatBotService>();
-
-builder
-    .Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-    });
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();

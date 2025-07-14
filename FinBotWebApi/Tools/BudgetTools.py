@@ -1,5 +1,6 @@
 # -*- coding: windows-1254 -*-
 
+import decimal
 import logging
 import os
 from typing import List, Dict, Any, Optional
@@ -99,11 +100,14 @@ CREATE_BUDGET_TOOL = {
         "properties": {
             "name": {"type": "STRING", "description": "Bütçenin adı (örneğin 'Aylık Harcamalar', 'Tatil Fonu')."},
             "description": {"type": "STRING", "description": "Bütçe için kısa bir açıklama (isteğe bağlı)."},
-            "start_date": {"type": "STRING", "description": "Bütçenin başlangıç tarihi (YYYY-AA-GG formatında)."},
-            "end_date": {"type": "STRING", "description": "Bütçenin bitiş tarihi (YYYY-AA-GG formatında)."},
+            "category": {"type": "STRING", "description": "Bütçenin kategorisi (örneğin 'Gıda', 'Ulaşım', 'Eğlence')."},
+            "start_date": {"type": "STRING", "description": "Bütçenin başlangıç tarihi (YYYY-AA-GG formatında olmalı ama kullanıcı diğer formatlarda girer ise onu da YYYY-AA-GG formatına çevir.)."},
+            "allocatedAmount": {"type": "NUMBER", "description": "Bütçeye ayrılan toplam miktar (isteğe bağlı, varsayılan: 0)."},
+            "currency" : {"type": "STRING", "description": "Bütçenin para birimi (Sadece alabileceği değerler 'TRY', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF')."},
+            "end_date": {"type": "STRING", "description": "Bütçenin bitiş tarihi (YYYY-AA-GG formatında olmalı ama kullanıcı diğer formatlarda girer ise onu da YYYY-AA-GG formatına çevir.)."},
             "is_active": {"type": "BOOLEAN", "description": "Bütçenin aktif olup olmadığı (varsayılan: true)."}
         },
-        "required": ["name", "start_date", "end_date"]
+        "required": ["name", "category", "allocatedAmount", "currency", "start_date", "end_date"]
     }
 }
 
@@ -118,14 +122,26 @@ def get_budget_details(budget_id: int, auth_token: Optional[str]) -> Dict[str, A
     logger.info(f"Python: get_budget_details called. BudgetID: {budget_id}")
     return _make_api_request(f"/Budgets/{budget_id}", auth_token)
 
-def create_budget(name: str, start_date: str, end_date: str, description: Optional[str] = None, is_active: bool = True, auth_token: Optional[str] = None) -> Dict[str, Any]:
+def create_budget(
+    name: str, 
+    start_date: str, 
+    end_date: str, 
+    allocatedAmount: decimal,
+    currency: str,
+    category: str,
+    description: Optional[str] = None, 
+    is_active: bool = True, 
+    auth_token: Optional[str] = None) -> Dict[str, Any]:
     """Creates a new budget."""
     logger.info(f"Python: create_budget called. Name: {name}, Start: {start_date}, End: {end_date}")
     payload = {
         "name": name,
         "description": description,
+        "category": category,
         "startDate": start_date,
         "endDate": end_date,
+        "allocatedAmount": allocatedAmount,
+        "currency": currency.upper(),
         "isActive": is_active
     }
     return _make_api_request("/Budgets", auth_token, method="POST", json_data=payload)

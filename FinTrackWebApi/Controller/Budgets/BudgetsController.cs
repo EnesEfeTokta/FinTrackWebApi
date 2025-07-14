@@ -118,7 +118,10 @@ namespace FinTrackWebApi.Controller.Budgets
                 int userId = GetAuthenticatedUserId();
 
                 var bc = await _context
-                    .BudgetCategories.AsNoTracking()
+                    .BudgetCategories
+                    .Include(b => b.Budget)
+                    .Include(b => b.Category)
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(b => b.Budget.UserId == userId && b.Category.UserId == userId);
 
                 if (bc == null)
@@ -178,7 +181,8 @@ namespace FinTrackWebApi.Controller.Budgets
                     UserId = userId,
                     Name = budgetDto.Name,
                     Description = budgetDto.Description,
-                    StartDate = DateTime.UtcNow,
+                    StartDate = budgetDto.StartDate,
+                    EndDate = budgetDto.EndDate,
                     IsActive = budgetDto.IsActive,
                     CreatedAtUtc = DateTime.UtcNow
                 };
@@ -307,8 +311,10 @@ namespace FinTrackWebApi.Controller.Budgets
             {
                 int userId = GetAuthenticatedUserId();
 
-                var bc = await _context.BudgetCategories.AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Id == id);
+                var bc = await _context.BudgetCategories
+                    .Include(b => b.Budget)
+                    .Include(b => b.Category)
+                    .FirstOrDefaultAsync(bc => bc.Id == id && bc.Budget.UserId == userId && bc.Category.UserId == userId);
                 if (bc == null)
                 {
                     _logger.LogWarning(
