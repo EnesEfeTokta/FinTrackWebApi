@@ -10,7 +10,7 @@ using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller.Authentications
 {
-    [Route("user/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class UserAuthController : ControllerBase
     {
@@ -52,12 +52,15 @@ namespace FinTrackWebApi.Controller.Authentications
             if (
                 initiateDto == null
                 || string.IsNullOrWhiteSpace(initiateDto.Email)
-                || string.IsNullOrWhiteSpace(initiateDto.Username)
+                || string.IsNullOrWhiteSpace(initiateDto.FirstName)
+                || string.IsNullOrWhiteSpace(initiateDto.LastName)
                 || string.IsNullOrWhiteSpace(initiateDto.Password)
             )
             {
                 return BadRequest(new { Message = "Email, Username, and Password are required." });
             }
+
+            string UserName = initiateDto.FirstName.Trim() + "_" + initiateDto.LastName.Trim();
 
             if (await _userManager.FindByEmailAsync(initiateDto.Email) != null)
             {
@@ -67,11 +70,11 @@ namespace FinTrackWebApi.Controller.Authentications
                 );
                 return BadRequest(new { Message = "This email address is already registered." });
             }
-            if (await _userManager.FindByNameAsync(initiateDto.Username) != null)
+            if (await _userManager.FindByNameAsync(UserName) != null)
             {
                 _logger.LogWarning(
                     "Registration initiation failed: Username {Username} already exists in Identity.",
-                    initiateDto.Username
+                    UserName
                 );
                 return BadRequest(new { Message = "This username is already taken." });
             }
@@ -83,7 +86,7 @@ namespace FinTrackWebApi.Controller.Authentications
             bool stored = await _otpService.StoreOtpAsync(
                 initiateDto.Email,
                 hashedOtp,
-                initiateDto.Username,
+                UserName,
                 initiateDto.Password,
                 initiateDto.ProfilePicture,
                 expiryTime
@@ -123,7 +126,7 @@ namespace FinTrackWebApi.Controller.Authentications
                 {
                     emailBody = await reader.ReadToEndAsync();
                 }
-                emailBody = emailBody.Replace("[UserName]", initiateDto.Username);
+                emailBody = emailBody.Replace("[UserName]", UserName);
                 emailBody = emailBody.Replace("[VERIFICATION_CODE]", otp);
                 emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
 

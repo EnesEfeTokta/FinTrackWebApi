@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Notifications
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")]
     public class NotificationController : ControllerBase

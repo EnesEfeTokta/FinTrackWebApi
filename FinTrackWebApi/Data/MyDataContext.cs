@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Data
 {
@@ -49,7 +50,7 @@ namespace FinTrackWebApi.Data
                         .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740");
                 entity.Property(u => u.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
 
@@ -133,16 +134,16 @@ namespace FinTrackWebApi.Data
                       .IsRequired(true);
                 entity.Property(o => o.OtpCode)
                         .HasColumnName("OtpCode")
-                        .HasMaxLength(6)
+                        .HasMaxLength(255)
                         .IsRequired(true);
                 entity.Property(o => o.CreateAt)
                         .HasColumnName("CreateAt")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(o => o.ExpireAt)
                         .HasColumnName("ExpireAt")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW() + INTERVAL '5 minutes'")
                         .IsRequired(true);
                 entity.Property(o => o.Username)
@@ -172,21 +173,21 @@ namespace FinTrackWebApi.Data
                 entity.Property(s => s.Appearance)
                       .HasColumnName("Appearance")
                       .HasConversion<string>()
-                      .HasDefaultValue("Dark")
+                      .HasDefaultValue(AppearanceType.Dark)
                       .IsRequired(true);
                 entity.Property(s => s.BaseCurrency)
                       .HasColumnName("BaseCurrency")
                       .HasConversion<string>()
-                      .HasDefaultValue("TRY")
+                      .HasDefaultValue(BaseCurrencyType.TRY)
                       .IsRequired(true);
                 entity.Property(s => s.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(s => s.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -227,12 +228,12 @@ namespace FinTrackWebApi.Data
                       .IsRequired(true);
                 entiy.Property(s => s.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .HasDefaultValueSql("NOW()")
                       .IsRequired(true);
                 entiy.Property(s => s.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -257,12 +258,12 @@ namespace FinTrackWebApi.Data
                       .IsRequired(true);
                 entity.Property(c => c.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .HasDefaultValueSql("NOW()")
                       .IsRequired(true);
                 entity.Property(c => c.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -308,12 +309,12 @@ namespace FinTrackWebApi.Data
                         .IsRequired(true);
                 entity.Property(b => b.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(b => b.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -321,10 +322,6 @@ namespace FinTrackWebApi.Data
                       .WithMany(u => u.Budgets)
                       .HasForeignKey(b => b.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
-                entity.HasMany(b => b.BudgetCategories)
-                      .WithOne(bc => bc.Budget)
-                      .HasForeignKey(bc => bc.BudgetId)
-                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<BudgetCategoryModel>(entity =>
@@ -340,16 +337,16 @@ namespace FinTrackWebApi.Data
                 entity.Property(bc => bc.Currency)
                       .HasColumnName("Currency")
                       .HasConversion<string>()
-                      .HasDefaultValue("TRY")
+                      .HasDefaultValue(BaseCurrencyType.TRY)
                       .IsRequired(true);
                 entity.Property(bc => bc.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(bc => bc.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -380,17 +377,17 @@ namespace FinTrackWebApi.Data
                 entity.Property(t => t.Currency)
                         .HasColumnName("Currency")
                         .HasConversion<string>()
-                        .HasDefaultValue("TRY")
+                        .HasDefaultValue(BaseCurrencyType.TRY)
                         .IsRequired(true);
                 entity.Property(t => t.Type)
                         .HasColumnName("Type")
                         .HasConversion<string>()
                         .IsRequired(true)
-                        .HasDefaultValue("Expense")
+                        .HasDefaultValue(TransactionCategoryType.Expense)
                         .HasMaxLength(50);
                 entity.Property(t => t.TransactionDateUtc)
                       .HasColumnName("TransactionDateUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .IsRequired(true);
                 entity.Property(t => t.Description)
                         .HasColumnName("Description")
@@ -398,12 +395,12 @@ namespace FinTrackWebApi.Data
                         .IsRequired(false);
                 entity.Property(t => t.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(t => t.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -440,7 +437,7 @@ namespace FinTrackWebApi.Data
                 entity.Property(a => a.Type)
                       .HasColumnName("AccountType")
                       .HasConversion<string>()
-                      .HasDefaultValue("Cash")
+                      .HasDefaultValue(AccountType.Cash)
                       .IsRequired(true);
                 entity.Property(a => a.IsActive)
                       .HasColumnName("IsActive")
@@ -453,7 +450,7 @@ namespace FinTrackWebApi.Data
                 entity.Property(a => a.Currency)
                       .HasColumnName("Currency")
                       .HasConversion<string>()
-                      .HasDefaultValue("TRY")
+                      .HasDefaultValue(BaseCurrencyType.TRY)
                       .IsRequired(true);
                 entity.Property(a => a.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
@@ -471,7 +468,7 @@ namespace FinTrackWebApi.Data
                 entity.HasMany(a => a.Transactions)
                       .WithOne(t => t.Account)
                       .HasForeignKey(t => t.AccountId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 // -- Index --
                 entity.HasIndex(a => new { a.UserId, a.Name }).IsUnique();
@@ -512,7 +509,7 @@ namespace FinTrackWebApi.Data
                       .HasMaxLength(20);
                 entity.Property(cs => cs.FetchTimestamp)
                         .HasColumnName("FetchTimestamp")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(true)
                         .HasDefaultValueSql("NOW()");
 
@@ -555,17 +552,17 @@ namespace FinTrackWebApi.Data
                         .IsRequired(true);
                 entity.Property(c => c.LastUpdatedUtc)
                         .HasColumnName("LastUpdatedUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(true)
                         .HasDefaultValueSql("NOW()");
                 entity.Property(c => c.AvailableFrom)
                         .HasColumnName("AvailableFrom")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(true)
                         .HasDefaultValueSql("NOW() - INTERVAL '1 year'");
                 entity.Property(c => c.AvailableUntil)
                         .HasColumnName("AvailableUntil")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false)
                         .HasDefaultValueSql("NOW() + INTERVAL '1 year'");
                 entity.Property(c => c.IconUrl)
@@ -612,12 +609,12 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("Currency")
                       .HasMaxLength(5)
                       .HasConversion<string>()
-                      .HasDefaultValue("TRY")
+                      .HasDefaultValue(BaseCurrencyType.TRY)
                       .IsRequired(true);
                 entity.Property(e => e.BillingCycle)
                       .HasColumnName("BillingCycle")
                       .HasConversion<string>()
-                      .HasDefaultValue("Monthly")
+                      .HasDefaultValue(BillingCycleType.Monthly)
                       .IsRequired(true)
                       .HasMaxLength(50);
                 entity.Property(e => e.DurationInDays)
@@ -651,21 +648,21 @@ namespace FinTrackWebApi.Data
                 entity.Property(e => e.Status)
                       .HasColumnName("Status")
                       .HasConversion<string>()
-                      .HasDefaultValue("PendingPayment")
+                      .HasDefaultValue(MembershipStatusType.PendingPayment)
                       .HasMaxLength(50)
                       .IsRequired(true);
                 entity.Property(e => e.StartDate)
                         .HasColumnName("StartDate")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(true)
                         .HasDefaultValueSql("NOW()");
                 entity.Property(e => e.EndDate)
                         .HasColumnName("EndDate")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(true);
                 entity.Property(e => e.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(e => e.AutoRenew)
@@ -674,7 +671,7 @@ namespace FinTrackWebApi.Data
                       .IsRequired(true);
                 entity.Property(e => e.CancellationDate)
                         .HasColumnName("CancellationDate")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -712,7 +709,7 @@ namespace FinTrackWebApi.Data
                       .HasConversion<string>()
                       .IsRequired(true)
                       .HasMaxLength(5)
-                      .HasDefaultValue("TRY");
+                      .HasDefaultValue(BaseCurrencyType.TRY);
                 entity.Property(e => e.PaymentDate)
                       .HasColumnName("PaymentDate")
                       .IsRequired(true);
@@ -727,12 +724,12 @@ namespace FinTrackWebApi.Data
                 entity.Property(e => e.Status)
                       .HasColumnName("Status")
                       .HasConversion<string>()
-                      .HasDefaultValue("Pending")
+                      .HasDefaultValue(PaymentStatusType.Pending)
                       .HasMaxLength(50)
                       .IsRequired(true);
                 entity.Property(e => e.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(e => e.GatewayResponse)
@@ -775,9 +772,15 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("MessageBody")
                       .IsRequired(true)
                       .HasMaxLength(1000);
+                entity.Property(n => n.Type)
+                        .HasColumnName("Type")
+                        .HasConversion<string>()
+                        .HasDefaultValue(NotificationType.Info)
+                        .IsRequired(true)
+                        .HasMaxLength(50);
                 entity.Property(n => n.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .IsRequired(true)
                       .HasDefaultValueSql("NOW()");
                 entity.Property(n => n.IsRead)
@@ -786,11 +789,11 @@ namespace FinTrackWebApi.Data
                       .HasDefaultValue(false);
                 entity.Property(n => n.ReadAtUtc)
                         .HasColumnName("ReadAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
                 entity.Property(n => n.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -817,7 +820,7 @@ namespace FinTrackWebApi.Data
                         .HasColumnName("Currency")
                         .HasConversion<string>()
                         .HasMaxLength(5)
-                        .HasDefaultValue("TRY")
+                        .HasDefaultValue(BaseCurrencyType.TRY)
                         .IsRequired(true);
                 entity.Property(d => d.Description)
                       .HasColumnName("Description")
@@ -825,12 +828,12 @@ namespace FinTrackWebApi.Data
                       .IsRequired(true);
                 entity.Property(d => d.CreateAtUtc)
                       .HasColumnName("CreateAtUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .HasDefaultValueSql("NOW()")
                       .IsRequired(true);
                 entity.Property(d => d.UpdatedAtUtc)
                       .HasColumnName("UpdatedAtUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .IsRequired(false);
                 entity.Property(d => d.DueDateUtc)
                       .HasColumnName("DueDateUtc")
@@ -839,23 +842,23 @@ namespace FinTrackWebApi.Data
                 entity.Property(d => d.Status)
                       .HasConversion<string>()
                       .HasMaxLength(50)
-                      .HasDefaultValue("Pending")
+                      .HasDefaultValue(DebtStatusType.PendingBorrowerAcceptance)
                       .IsRequired();
                 entity.Property(d => d.PaidAtUtc)
                         .HasColumnName("PaidAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
                 entity.Property(d => d.OperatorApprovalAtUtc)
                         .HasColumnName("OperatorApprovalAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
                 entity.Property(d => d.BorrowerApprovalAtUtc)
                         .HasColumnName("BorrowerApprovalAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
                 entity.Property(d => d.PaymentConfirmationAtUtc)
                         .HasColumnName("PaymentConfirmationAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -904,7 +907,7 @@ namespace FinTrackWebApi.Data
                         .IsRequired(true);
                 entity.Property(v => v.UploadDateUtc)
                         .HasColumnName("UploadDateUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(v => v.Duration)
@@ -915,7 +918,7 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("Status")
                       .HasConversion<string>()
                       .HasMaxLength(50)
-                      .HasDefaultValue("PendingApproval")
+                      .HasDefaultValue(VideoStatusType.PendingApproval)
                       .IsRequired(true);
                 entity.Property(v => v.EncryptionKeyHash)
                         .HasColumnName("EncryptionKeyHash")
@@ -932,17 +935,17 @@ namespace FinTrackWebApi.Data
                 entity.Property(v => v.StorageType)
                         .HasColumnName("StorageType")
                         .HasConversion<string>()
-                        .HasDefaultValue("FileSystem")
+                        .HasDefaultValue(VideoStorageType.FileSystem)
                         .IsRequired(true)
                         .HasMaxLength(50);
                 entity.Property(v => v.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(v => v.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -966,16 +969,16 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("Status")
                       .HasConversion<string>()
                       .HasMaxLength(50)
-                      .HasDefaultValue("PendingApproval")
+                      .HasDefaultValue(VideoStatusType.PendingApproval)
                       .IsRequired(true);
                 entity.Property(dvm => dvm.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()")
                         .IsRequired(true);
                 entity.Property(dvm => dvm.UpdatedAtUtc)
                         .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .IsRequired(false);
 
                 // -- İlişkiler --
@@ -1048,7 +1051,7 @@ namespace FinTrackWebApi.Data
                 entity.Property(f => f.Type)
                        .HasColumnName("Type")
                        .HasConversion<string>()
-                       .HasDefaultValue("GeneralFeedback")
+                       .HasDefaultValue(FeedbackType.GeneralFeedback)
                        .IsRequired(true);
                 entity.Property(f => f.SavedFilePath)
                       .HasColumnName("SavedFilePath")
@@ -1056,12 +1059,12 @@ namespace FinTrackWebApi.Data
                       .IsRequired(false);
                 entity.Property(f => f.CreatedAtUtc)
                       .HasColumnName("CreatedAtUtc")
-                      .HasColumnType("timestamp")
-                      .HasDefaultValue("NOW()")
+                      .HasColumnType("timestamp with time zone")
+                      .HasDefaultValueSql("NOW()")
                       .IsRequired(true);
                 entity.Property(f => f.UpdatedAtUtc)
                       .HasColumnName("UpdatedAtUtc")
-                      .HasColumnType("timestamp")
+                      .HasColumnType("timestamp with time zone")
                       .IsRequired(false);
 
                 // -- İlişkiler --

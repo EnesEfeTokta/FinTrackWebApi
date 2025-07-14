@@ -9,6 +9,7 @@
         JPY,
         AUD,
         CAD,
-        CHF
+        CHF,
+        Error
     }
 }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Controller.Currencies
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")]
     public class CurrencyController : ControllerBase

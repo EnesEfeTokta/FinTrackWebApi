@@ -11,7 +11,7 @@ using System.Security.Claims;
 namespace FinTrackWebApi.Controller.Debts
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [Authorize(Roles = "User,Admin")]
     public class DebtController : ControllerBase
     {

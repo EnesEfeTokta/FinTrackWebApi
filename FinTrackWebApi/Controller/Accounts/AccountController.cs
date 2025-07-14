@@ -64,10 +64,10 @@ namespace FinTrackWebApi.Controller.Accounts
                         {
                             Id = acc.Id,
                             Name = acc.Name,
-                            Type = acc.Type,
+                            Type = acc.Type ?? AccountType.Error,
                             IsActive = acc.IsActive,
                             Balance = await CalculateBalanceAsync(acc.Id),
-                            Currency = acc.Currency,
+                            Currency = acc.Currency ?? BaseCurrencyType.Error,
                             CreatedAtUtc = acc.CreatedAtUtc,
                             UpdatedAtUtc = acc.UpdatedAtUtc,
                         }
@@ -123,10 +123,10 @@ namespace FinTrackWebApi.Controller.Accounts
                 {
                     Id = accountFromDb.Id,
                     Name = accountFromDb.Name,
-                    Type = accountFromDb.Type,
+                    Type = accountFromDb.Type ?? AccountType.Error,
                     IsActive = accountFromDb.IsActive,
                     Balance = await CalculateBalanceAsync(accountFromDb.Id),
-                    Currency = accountFromDb.Currency,
+                    Currency = accountFromDb.Currency ?? BaseCurrencyType.Error,
                     CreatedAtUtc = accountFromDb.CreatedAtUtc,
                     UpdatedAtUtc = accountFromDb.UpdatedAtUtc,
                 };

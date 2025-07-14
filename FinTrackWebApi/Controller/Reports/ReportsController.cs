@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Reports
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")]
     public class ReportsController : ControllerBase

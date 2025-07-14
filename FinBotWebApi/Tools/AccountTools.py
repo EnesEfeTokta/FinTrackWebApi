@@ -106,13 +106,13 @@ CREATE_ACCOUNT_TOOL = {
 def get_user_accounts(auth_token: Optional[str]) -> List[Dict[str, Any]]:
     """Fetches all financial accounts of the user from the FinTrack API."""
     logger.info(f"Python: get_user_accounts called.")
-    result = _make_api_request("/api/Account", auth_token)
+    result = _make_api_request("/Account", auth_token)
     return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
 
 def get_account_details(account_id: int, auth_token: Optional[str]) -> Dict[str, Any]:
     """Fetches the details of a specific financial account from the FinTrack API."""
     logger.info(f"Python: get_account_details called. AccountID: {account_id}")
-    return _make_api_request(f"/api/Account/{account_id}", auth_token)
+    return _make_api_request(f"/Account/{account_id}", auth_token)
 
 def create_account(name: str, type: str, balance: float, auth_token: Optional[str]) -> Dict[str, Any]:
     """Creates a new financial account."""
@@ -122,7 +122,7 @@ def create_account(name: str, type: str, balance: float, auth_token: Optional[st
         "type": type,
         "balance": balance
     }
-    return _make_api_request("/api/Account", auth_token, method="POST", json_data=payload)
+    return _make_api_request("/Account", auth_token, method="POST", json_data=payload)
 
 
 ACCOUNT_AVAILABLE_TOOLS = [

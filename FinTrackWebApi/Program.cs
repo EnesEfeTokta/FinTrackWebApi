@@ -205,8 +205,14 @@ builder.Services.ConfigureApplicationCookie(options =>
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
         return Task.CompletedTask;
     };
-    options.Cookie.Name = "FinTrack.AuthCookie.Suppressed"; // �sim �nemli de�il kullan�lmayacak.
+    options.Cookie.Name = "FinTrack.AuthCookie.Suppressed";
 });
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IOtpService, OtpService>();

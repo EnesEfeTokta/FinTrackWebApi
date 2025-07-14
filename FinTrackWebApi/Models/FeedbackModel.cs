@@ -9,7 +9,7 @@ namespace FinTrackWebApi.Models
         public virtual UserModel User { get; set; } = null!;
         public string Subject { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public FeedbackType Type { get; set; }
+        public FeedbackType? Type { get; set; }
         public string? SavedFilePath { get; set; }
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAtUtc { get; set; }

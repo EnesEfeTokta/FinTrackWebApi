@@ -9,7 +9,7 @@ using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller.Transactions
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")]
     public class TransactionsController : ControllerBase

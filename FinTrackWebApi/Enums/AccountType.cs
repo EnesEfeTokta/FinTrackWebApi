@@ -9,5 +9,6 @@
         Investment, // Yatırım
         Loan, // Kredi
         Other, // Diğer
+        Error // Hata
     }
 }

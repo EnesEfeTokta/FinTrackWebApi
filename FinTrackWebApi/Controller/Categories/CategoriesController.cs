@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Categories
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")]
     public class CategoriesController : ControllerBase

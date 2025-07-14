@@ -8,7 +8,7 @@ using System.Text.Json;
 
 [Authorize(Roles = "User,Admin")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ChatController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
@@ -54,12 +54,12 @@ public class ChatController : ControllerBase
         try
         {
             var httpClient = _httpClientFactory.CreateClient();
-            var token = HttpContext.GetTokenAsync("access_token").Result;
+            var token = await HttpContext.GetTokenAsync("access_token");
 
             // Python servisine gönderilecek veri
             var payload = new
             {
-                userId = userId,
+                userId,
                 clientChatSessionId = request.ClientChatSessionId,
                 message = request.Message,
                 authToken = token,

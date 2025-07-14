@@ -39,7 +39,7 @@ namespace FinTrackWebApi.Services.ChatBotService
 
                 var payload = new
                 {
-                    userId = userId,
+                    userId,
                     clientChatSessionId = request.ClientChatSessionId,
                     message = request.Message,
                 };

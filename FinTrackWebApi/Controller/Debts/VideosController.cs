@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Debts
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin,User,VideoApproval")]
     public class VideosController : ControllerBase

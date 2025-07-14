@@ -84,14 +84,14 @@ def get_current_user_active_membership(auth_token: Optional[str]) -> Dict[str, A
     Retrieves the current active membership status of the user from the FinTrack API.
     """
     logger.info(f"Python: get_current_user_active_membership called.")
-    return _make_api_request("/api/Membership/current", auth_token)
+    return _make_api_request("/Membership/current", auth_token)
 
 def get_user_membership_history(auth_token: Optional[str]) -> List[Dict[str, Any]]:
     """
     Retrieves the entire membership history of the user from the FinTrack API.
     """
     logger.info(f"Python: get_user_membership_history called.")
-    result = _make_api_request("/api/Membership/history", auth_token)
+    result = _make_api_request("/Membership/history", auth_token)
 
     return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
 

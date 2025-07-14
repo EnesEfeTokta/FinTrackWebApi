@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Memberships
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class MembershipController : ControllerBase
@@ -187,7 +187,7 @@ namespace FinTrackWebApi.Controller.Memberships
                 UserId = userId,
                 UserMembershipId = newMembership.Id,
                 Amount = planToSubscribe.Price,
-                Currency = planToSubscribe.Currency,
+                Currency = planToSubscribe.Currency ?? BaseCurrencyType.Error,
                 PaymentDate = DateTime.UtcNow,
                 Status = PaymentStatusType.Pending,
             };

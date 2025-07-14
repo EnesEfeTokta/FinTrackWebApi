@@ -46,7 +46,7 @@ namespace FinTrackWebApi.Utils
                 else
                 {
                     _logger.LogError(
-                        "DateTime dizesi ayrıştırılamadı: ‘{DateString}’. Beklenen biçim: ‘{ExpectedFormat}’.",
+                        "DateTime string could not be parsed: ‘{DateString}’. Expected format: ‘{ExpectedFormat}’.",
                         dateString,
                         ExpectedApiFormat
                     );

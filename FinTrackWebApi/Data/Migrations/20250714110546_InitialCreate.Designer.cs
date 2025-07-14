@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250604160031_InitialCreate")]
+    [Migration("20250714110546_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -27,41 +27,56 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.AccountModel", b =>
                 {
-                    b.Property<int>("AccountId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AccountId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("Balance");
 
                     b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreateAt");
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("IsActive");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Name");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("AccountName");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Cash")
                         .HasColumnName("AccountType");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdateAt");
+                        .HasColumnName("UpdatedAtUtc");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("AccountId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
@@ -71,11 +86,11 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.BudgetCategoryModel", b =>
                 {
-                    b.Property<int>("BudgetCategoryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BudgetCategoryId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AllocatedAmount")
                         .HasColumnType("decimal(18, 2)")
@@ -87,7 +102,24 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");
 
-                    b.HasKey("BudgetCategoryId");
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
@@ -99,15 +131,17 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.BudgetModel", b =>
                 {
-                    b.Property<int>("BudgetId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BudgetId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc");
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -115,20 +149,23 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("Description");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("date")
                         .HasColumnName("EndDate");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("IsActive");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("BudgetName");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("date")
                         .HasColumnName("StartDate");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
@@ -138,7 +175,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("BudgetId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
@@ -147,28 +184,34 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.CategoryModel", b =>
                 {
-                    b.Property<int>("CategoryId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("CategoryName");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("CategoryType");
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("CategoryId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("UserId", "Name", "Type")
+                    b.HasIndex("UserId", "Name")
                         .IsUnique();
 
                     b.ToTable("Categories", (string)null);
@@ -176,52 +219,58 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.CurrencyModel", b =>
                 {
-                    b.Property<int>("CurrencyId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CurrencyId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("AvailableFrom")
+                    b.Property<DateTime>("AvailableFrom")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("AvailableFrom");
+                        .HasColumnName("AvailableFrom")
+                        .HasDefaultValueSql("NOW() - INTERVAL '1 year'");
 
                     b.Property<DateTime?>("AvailableUntil")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("AvailableUntil");
+                        .HasColumnName("AvailableUntil")
+                        .HasDefaultValueSql("NOW() + INTERVAL '1 year'");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
-                        .HasColumnName("Code");
+                        .HasColumnName("CurrencyCode");
 
                     b.Property<string>("CountryCode")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("CountryCode");
 
                     b.Property<string>("CountryName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("CountryName");
 
                     b.Property<string>("IconUrl")
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
+                        .HasDefaultValue("https://currencyfreaks.com/photos/flags/usd.png")
                         .HasColumnName("IconUrl");
 
                     b.Property<DateTime>("LastUpdatedUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedUtc");
+                        .HasColumnName("LastUpdatedUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("Name");
+                        .HasColumnName("CurrencyName");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -229,7 +278,7 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("Status");
 
-                    b.HasKey("CurrencyId");
+                    b.HasKey("Id");
 
                     b.HasIndex("Code")
                         .IsUnique();
@@ -239,23 +288,24 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.CurrencySnapshotModel", b =>
                 {
-                    b.Property<int>("CurrencySnapshotId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CurrencySnapshotId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BaseCurrency")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("BaseCurrency");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime>("FetchTimestamp")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FetchTimestamp");
+                        .HasColumnName("FetchTimestamp")
+                        .HasDefaultValueSql("NOW()");
 
-                    b.HasKey("CurrencySnapshotId");
+                    b.HasKey("Id");
 
                     b.HasIndex("FetchTimestamp");
 
@@ -264,25 +314,36 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.DebtModel", b =>
                 {
-                    b.Property<int>("DebtId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DebtId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("Amount");
 
+                    b.Property<DateTime?>("BorrowerApprovalAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("BorrowerApprovalAtUtc");
+
                     b.Property<int>("BorrowerId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreateAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreateAtUtc");
+                        .HasColumnName("CreateAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
-                    b.Property<int>("CurrencyId")
-                        .HasColumnType("integer");
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -291,27 +352,38 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("Description");
 
                     b.Property<DateTime>("DueDateUtc")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("date")
                         .HasColumnName("DueDateUtc");
 
                     b.Property<int>("LenderId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("OperatorApprovalAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("OperatorApprovalAtUtc");
+
+                    b.Property<DateTime?>("PaidAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("PaidAtUtc");
+
+                    b.Property<DateTime?>("PaymentConfirmationAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("PaymentConfirmationAtUtc");
+
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasColumnName("Status");
+                        .HasDefaultValue("PendingBorrowerAcceptance");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
+                    b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("UpdatedAtUtc");
 
-                    b.HasKey("DebtId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BorrowerId");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("LenderId");
 
@@ -320,32 +392,37 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.DebtVideoMetadataModel", b =>
                 {
-                    b.Property<int>("DebtVideoMetadataId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DebtVideoMetadataId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreateAtUtc")
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreateAtUtc");
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
-                    b.Property<int>("DebtId")
+                    b.Property<int?>("DebtId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Status")
-                        .HasMaxLength(100)
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("PendingApproval")
                         .HasColumnName("Status");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
+                    b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("UpdatedAtUtc");
 
-                    b.Property<int>("VideoMetadataId")
+                    b.Property<int?>("VideoMetadataId")
                         .HasColumnType("integer");
 
-                    b.HasKey("DebtVideoMetadataId");
+                    b.HasKey("Id");
 
                     b.HasIndex("DebtId");
 
@@ -532,11 +609,11 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.ExchangeRateModel", b =>
                 {
-                    b.Property<int>("ExchangeRateId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ExchangeRateId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CurrencyId")
                         .HasColumnType("integer");
@@ -545,10 +622,9 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(18, 6)")
-                        .HasColumnName("Rate");
+                        .HasColumnType("decimal(18, 6)");
 
-                    b.HasKey("ExchangeRateId");
+                    b.HasKey("Id");
 
                     b.HasIndex("CurrencyId");
 
@@ -558,30 +634,86 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("ExchangeRates", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.MembershipPlanModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.FeedbackModel", b =>
                 {
-                    b.Property<int>("MembershipPlanId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MembershipPlanId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("SavedFilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("SavedFilePath");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Subject");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("GeneralFeedback")
+                        .HasColumnName("Type");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Feedbacks", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.MembershipPlanModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BillingCycle")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Monthly")
                         .HasColumnName("BillingCycle");
 
                     b.Property<string>("Currency")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
                         .HasDefaultValue("TRY")
                         .HasColumnName("Currency");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("Description");
 
                     b.Property<int?>("DurationInDays")
@@ -602,13 +734,13 @@ namespace FinTrackWebApi.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("Name");
+                        .HasColumnName("PlanName");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("Price");
 
-                    b.HasKey("MembershipPlanId");
+                    b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -618,15 +750,17 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.NotificationModel", b =>
                 {
-                    b.Property<string>("NotificationId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<bool>("IsRead")
                         .ValueGeneratedOnAdd()
@@ -646,16 +780,26 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("MessageHead");
 
-                    b.Property<string>("NotificationType")
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ReadAtUtc");
+
+                    b.Property<string>("Type")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasColumnName("NotificationType");
+                        .HasDefaultValue("Info")
+                        .HasColumnName("Type");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("NotificationId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
@@ -664,37 +808,47 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.OtpVerificationModel", b =>
                 {
-                    b.Property<int>("OtpId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OtpId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreateAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreateAt");
+                        .HasColumnName("CreateAt")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("Email");
 
                     b.Property<DateTime>("ExpireAt")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ExpireAt");
+                        .HasColumnName("ExpireAt")
+                        .HasDefaultValueSql("NOW() + INTERVAL '5 minutes'");
 
                     b.Property<string>("OtpCode")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("OtpCode");
 
                     b.Property<string>("ProfilePicture")
-                        .HasColumnType("text")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740")
                         .HasColumnName("ProfilePicture");
 
                     b.Property<string>("TemporaryPlainPassword")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("TemporaryPlainPassword");
 
                     b.Property<int?>("UserModelId")
@@ -702,44 +856,53 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("Username");
 
-                    b.HasKey("OtpId");
+                    b.HasKey("Id");
 
                     b.HasIndex("Email");
 
                     b.HasIndex("UserModelId");
 
-                    b.ToTable("OtpVerification", (string)null);
+                    b.ToTable("OtpVerifications", (string)null);
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.PaymentModel", b =>
                 {
-                    b.Property<int>("PaymentId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PaymentId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("Amount");
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
                         .HasDefaultValue("TRY")
                         .HasColumnName("Currency");
 
                     b.Property<string>("GatewayResponse")
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("GatewayResponse");
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("Notes");
 
                     b.Property<DateTime>("PaymentDate")
@@ -753,13 +916,15 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Pending")
                         .HasColumnName("Status");
 
                     b.Property<string>("TransactionId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("TransactionId");
 
                     b.Property<int>("UserId")
@@ -768,7 +933,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Property<int?>("UserMembershipId")
                         .HasColumnType("integer");
 
-                    b.HasKey("PaymentId");
+                    b.HasKey("Id");
 
                     b.HasIndex("TransactionId")
                         .IsUnique()
@@ -783,46 +948,60 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("FinTrackWebApi.Models.TransactionModel", b =>
                 {
-                    b.Property<int>("TransactionId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TransactionId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AccountId")
-                        .HasColumnType("integer")
-                        .HasColumnName("AccountId");
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("Amount");
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("CategoryId");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAt");
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("Description");
 
                     b.Property<DateTime>("TransactionDateUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("TransactionDate");
+                        .HasColumnName("TransactionDateUtc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Expense")
+                        .HasColumnName("Type");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAt");
+                        .HasColumnName("UpdatedAtUtc");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("integer")
-                        .HasColumnName("UserId");
+                        .HasColumnType("integer");
 
-                    b.HasKey("TransactionId");
+                    b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
@@ -835,21 +1014,72 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Transactions", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserMembershipModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.UserAppSettingsModel", b =>
                 {
-                    b.Property<int>("UserMembershipId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserMembershipId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Appearance")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Dark")
+                        .HasColumnName("Appearance");
+
+                    b.Property<string>("BaseCurrency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("BaseCurrency");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserAppSettings", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.UserMembershipModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("AutoRenew")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("AutoRenew");
 
                     b.Property<DateTime?>("CancellationDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("CancellationDate");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone")
@@ -859,19 +1089,23 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDate")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("StartDate");
+                        .HasColumnName("StartDate")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
+                        .HasDefaultValue("PendingPayment")
                         .HasColumnName("Status");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("UserMembershipId");
+                    b.HasKey("Id");
 
                     b.HasIndex("EndDate");
 
@@ -897,9 +1131,11 @@ namespace FinTrackWebApi.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreateAt")
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreateAt");
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -932,8 +1168,10 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("ProfilePicture")
-                        .IsRequired()
-                        .HasColumnType("text")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740")
                         .HasColumnName("ProfilePicture");
 
                     b.Property<string>("SecurityStamp")
@@ -958,79 +1196,107 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserSettingsModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.UserNotificationSettingsModel", b =>
                 {
-                    b.Property<int>("SettingsId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SettingsId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Currency");
-
-                    b.Property<DateTime>("EntryDate")
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("EntryDate");
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Language");
-
-                    b.Property<bool>("Notification")
+                    b.Property<bool>("EnableDesktopNotifications")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasColumnName("Notification");
+                        .HasDefaultValue(true)
+                        .HasColumnName("EnableDesktopNotifications");
 
-                    b.Property<string>("Theme")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("Theme");
+                    b.Property<bool>("ExpectedBillReminder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("ExpectedBillReminder");
+
+                    b.Property<bool>("NewFeaturesAndAnnouncements")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("NewFeaturesAndAnnouncements");
+
+                    b.Property<bool>("SpendingLimitWarning")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("SpendingLimitWarning");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("SettingsId");
+                    b.Property<bool>("WeeklySpendingSummary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("WeeklySpendingSummary");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserSettings", (string)null);
+                    b.ToTable("UserNotificationSettings", (string)null);
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.VideoMetadataModel", b =>
                 {
-                    b.Property<int>("VideoMetadataId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("VideoMetadataId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("ContentType");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval")
                         .HasColumnName("Duration");
 
                     b.Property<string>("EncryptedFilePath")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("EncryptedFilePath");
 
                     b.Property<string>("EncryptionIV")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("EncryptionIV");
 
                     b.Property<string>("EncryptionKeyHash")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("EncryptionKeyHash");
 
                     b.Property<string>("EncryptionSalt")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("EncryptionSalt");
 
                     b.Property<long>("FileSize")
@@ -1038,36 +1304,51 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("FileSize");
 
                     b.Property<string>("OriginalFileName")
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("OriginalFileName");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("PendingApproval")
                         .HasColumnName("Status");
 
                     b.Property<string>("StorageType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("FileSystem")
                         .HasColumnName("StorageType");
 
                     b.Property<string>("StoredFileName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("StoredFileName");
 
                     b.Property<string>("UnencryptedFilePath")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("UnencryptedFilePath");
 
-                    b.Property<DateTime>("UploadDateUtc")
+                    b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UploadDateUtc");
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<DateTime>("UploadDateUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UploadDateUtc")
+                        .HasDefaultValueSql("NOW()");
 
                     b.Property<int>("UploadedByUserId")
                         .HasColumnType("integer");
 
-                    b.HasKey("VideoMetadataId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UploadedByUserId");
 
@@ -1222,7 +1503,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.BudgetModel", "Budget")
                         .WithMany("BudgetCategories")
                         .HasForeignKey("BudgetId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FinTrackWebApi.Models.CategoryModel", "Category")
@@ -1241,7 +1522,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.UserModel", "User")
                         .WithMany("Budgets")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1266,12 +1547,6 @@ namespace FinTrackWebApi.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.CurrencyModel", "CurrencyModel")
-                        .WithMany()
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("FinTrackWebApi.Models.UserModel", "Lender")
                         .WithMany("DebtsAsLender")
                         .HasForeignKey("LenderId")
@@ -1279,8 +1554,6 @@ namespace FinTrackWebApi.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Borrower");
-
-                    b.Navigation("CurrencyModel");
 
                     b.Navigation("Lender");
                 });
@@ -1290,14 +1563,12 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.DebtModel", "Debt")
                         .WithMany("DebtVideoMetadatas")
                         .HasForeignKey("DebtId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("FinTrackWebApi.Models.VideoMetadataModel", "VideoMetadata")
                         .WithMany("DebtVideoMetadatas")
                         .HasForeignKey("VideoMetadataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Debt");
 
@@ -1328,7 +1599,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.CurrencyModel", "Currency")
                         .WithMany("ExchangeRates")
                         .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FinTrackWebApi.Models.CurrencySnapshotModel", "CurrencySnapshot")
@@ -1342,12 +1613,23 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("CurrencySnapshot");
                 });
 
+            modelBuilder.Entity("FinTrackWebApi.Models.FeedbackModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                        .WithMany("Feedbacks")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FinTrackWebApi.Models.NotificationModel", b =>
                 {
                     b.HasOne("FinTrackWebApi.Models.UserModel", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1365,7 +1647,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.UserModel", "User")
                         .WithMany("Payments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FinTrackWebApi.Models.UserMembershipModel", "UserMembership")
@@ -1383,7 +1665,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.AccountModel", "Account")
                         .WithMany("Transactions")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FinTrackWebApi.Models.CategoryModel", "Category")
@@ -1395,12 +1677,23 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.UserModel", "User")
                         .WithMany("Transactions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Account");
 
                     b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.UserAppSettingsModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                        .WithOne("AppSettings")
+                        .HasForeignKey("FinTrackWebApi.Models.UserAppSettingsModel", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1416,7 +1709,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasOne("FinTrackWebApi.Models.UserModel", "User")
                         .WithMany("UserMemberships")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Plan");
@@ -1424,11 +1717,11 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserSettingsModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.UserNotificationSettingsModel", b =>
                 {
                     b.HasOne("FinTrackWebApi.Models.UserModel", "User")
-                        .WithOne("Settings")
-                        .HasForeignKey("FinTrackWebApi.Models.UserSettingsModel", "UserId")
+                        .WithOne("NotificationSettings")
+                        .HasForeignKey("FinTrackWebApi.Models.UserNotificationSettingsModel", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1553,6 +1846,8 @@ namespace FinTrackWebApi.Data.Migrations
                 {
                     b.Navigation("Accounts");
 
+                    b.Navigation("AppSettings");
+
                     b.Navigation("Budgets");
 
                     b.Navigation("Categories");
@@ -1561,13 +1856,15 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.Navigation("DebtsAsLender");
 
+                    b.Navigation("Feedbacks");
+
+                    b.Navigation("NotificationSettings");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("OtpVerifications");
 
                     b.Navigation("Payments");
-
-                    b.Navigation("Settings");
 
                     b.Navigation("Transactions");
 

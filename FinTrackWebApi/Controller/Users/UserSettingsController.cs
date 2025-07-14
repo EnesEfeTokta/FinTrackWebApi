@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Users
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Authorize(Roles = "User,Admin")]
     public class UserSettingsController : ControllerBase

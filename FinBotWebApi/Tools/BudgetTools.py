@@ -110,13 +110,13 @@ CREATE_BUDGET_TOOL = {
 def get_user_budgets(auth_token: Optional[str]) -> List[Dict[str, Any]]:
     """Kullanýcýnýn tüm bütçelerini FinTrack API'sinden alýr."""
     logger.info(f"Python: get_user_budgets çaðrýldý.")
-    result = _make_api_request("/api/Budgets/budgets", auth_token)
+    result = _make_api_request("/Budgets", auth_token)
     return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
 
 def get_budget_details(budget_id: int, auth_token: Optional[str]) -> Dict[str, Any]:
     """Fetches the details of a specific budget from the FinTrack API."""
     logger.info(f"Python: get_budget_details called. BudgetID: {budget_id}")
-    return _make_api_request(f"/api/Budgets/{budget_id}", auth_token)
+    return _make_api_request(f"/Budgets/{budget_id}", auth_token)
 
 def create_budget(name: str, start_date: str, end_date: str, description: Optional[str] = None, is_active: bool = True, auth_token: Optional[str] = None) -> Dict[str, Any]:
     """Creates a new budget."""
@@ -128,7 +128,7 @@ def create_budget(name: str, start_date: str, end_date: str, description: Option
         "endDate": end_date,
         "isActive": is_active
     }
-    return _make_api_request("/api/Budgets", auth_token, method="POST", json_data=payload)
+    return _make_api_request("/Budgets", auth_token, method="POST", json_data=payload)
 
 BUDGET_AVAILABLE_TOOLS = [
     GET_USER_BUDGETS_TOOL,

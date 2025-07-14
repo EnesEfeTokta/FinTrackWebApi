@@ -178,8 +178,7 @@ namespace FinTrackWebApi.Controller.Budgets
                     UserId = userId,
                     Name = budgetDto.Name,
                     Description = budgetDto.Description,
-                    StartDate = budgetDto.StartDate,
-                    EndDate = budgetDto.EndDate,
+                    StartDate = DateTime.UtcNow,
                     IsActive = budgetDto.IsActive,
                     CreatedAtUtc = DateTime.UtcNow
                 };
