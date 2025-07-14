@@ -3,7 +3,6 @@ using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.EmailService;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Services.SecureDebtService
 {

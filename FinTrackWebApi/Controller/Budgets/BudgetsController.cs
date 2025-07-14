@@ -381,7 +381,7 @@ namespace FinTrackWebApi.Controller.Budgets
                 await _context.SaveChangesAsync();
 
                 _context.Budgets.Remove(bc.Budget);
-                await _context.SaveChangesAsync();  
+                await _context.SaveChangesAsync();
 
                 _logger.LogInformation(
                     "Successfully deleted budget with ID {BudgetId} for user ID: {UserId}",

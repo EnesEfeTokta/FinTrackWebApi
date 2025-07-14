@@ -1,12 +1,12 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.AuthDtos;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller.Authentications
 {

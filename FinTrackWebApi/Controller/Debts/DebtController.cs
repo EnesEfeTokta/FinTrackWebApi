@@ -1,7 +1,6 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.DebtDtos;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.SecureDebtService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

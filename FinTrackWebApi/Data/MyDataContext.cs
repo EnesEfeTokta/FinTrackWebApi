@@ -1,8 +1,8 @@
-﻿using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Enums;
+using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Data
 {

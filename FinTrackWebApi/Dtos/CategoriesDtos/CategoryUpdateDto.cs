@@ -1,6 +1,4 @@
-﻿using FinTrackWebApi.Enums;
-
-namespace FinTrackWebApi.Dtos.CategoriesDtos
+﻿namespace FinTrackWebApi.Dtos.CategoriesDtos
 {
     public class CategoryUpdateDto
     {
