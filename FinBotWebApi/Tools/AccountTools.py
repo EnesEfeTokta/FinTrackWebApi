@@ -55,7 +55,7 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
         try:
             error_detail = http_err.response.json() if http_err.response else {"message": "No error details received from server."}
             return {"error": f"API Error: {http_err.response.status_code if http_err.response else 'Unknown'}", "details": error_detail}
-        except ValueError: # JSON parse error
+        except ValueError:
             return {"error": f"API Error: {http_err.response.status_code if http_err.response else 'Unknown'}", "details": http_err.response.text if http_err.response else 'No response'}
     except requests.exceptions.RequestException as req_err:
         logger.error(f"Python: FinTrack API Request Error: {req_err}")
@@ -96,33 +96,43 @@ CREATE_ACCOUNT_TOOL = {
         "type": "OBJECT",
         "properties": {
             "name": {"type": "STRING", "description": "Oluþturulacak hesabýn adý (örneðin 'Maaþ Hesabým', 'Nakit Cüzdaný')."},
-            "type": {"type": "STRING", "description": "Hesabýn türü (örneðin 'Banka', 'Nakit', 'Kredi Kartý', 'Yatýrým'). API'nin kabul ettiði türleri kullanýn."},
-            "balance": {"type": "NUMBER", "description": "Hesabýn baþlangýç bakiyesi."}
+            "type": {"type": "STRING", "description": "Hesabýn türü (örneðin 'Checking', 'Savings', 'CreditCard', 'Cash').  Sadece alabileceði deðerler 'Checking', 'Savings', 'CreditCard', 'Cash', 'Investment', 'Loan', 'Other'."},
+            "balance": {"type": "NUMBER", "description": "Hesabýn baþlangýç bakiyesi."},
+            "is_active": {"type": "BOOLEAN", "description": "Hesabýn aktif olup olmadýðýný belirtir. Varsayýlan olarak True."},
+            "currency": {"type": "STRING", "description": "Hesabýn para birimi (örneðin 'TRY', 'USD', 'EUR'). Sadece alabileceði deðerler 'TRY', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF'."}
         },
-        "required": ["name", "type", "balance"]
+        "required": ["name", "type", "balance", "currency"]
     }
 }
 
 def get_user_accounts(auth_token: Optional[str]) -> List[Dict[str, Any]]:
     """Fetches all financial accounts of the user from the FinTrack API."""
     logger.info(f"Python: get_user_accounts called.")
-    result = _make_api_request("/api/Account", auth_token)
+    result = _make_api_request("/Account", auth_token)
     return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
 
 def get_account_details(account_id: int, auth_token: Optional[str]) -> Dict[str, Any]:
     """Fetches the details of a specific financial account from the FinTrack API."""
     logger.info(f"Python: get_account_details called. AccountID: {account_id}")
-    return _make_api_request(f"/api/Account/{account_id}", auth_token)
+    return _make_api_request(f"/Account/{account_id}", auth_token)
 
-def create_account(name: str, type: str, balance: float, auth_token: Optional[str]) -> Dict[str, Any]:
+def create_account(
+    name: str, 
+    type: str, 
+    balance: float,
+    is_active: bool,
+    currency: str,
+    auth_token: Optional[str]) -> Dict[str, Any]:
     """Creates a new financial account."""
     logger.info(f"Python: create_account called. Name: {name}, Type: {type}, Balance: {balance}")
     payload = {
         "name": name,
-        "type": type,
-        "balance": balance
+        "type": type.upper(),
+        "is_active": is_active,
+        "balance": balance,
+        "currency": currency.upper()
     }
-    return _make_api_request("/api/Account", auth_token, method="POST", json_data=payload)
+    return _make_api_request("/Account", auth_token, method="POST", json_data=payload)
 
 
 ACCOUNT_AVAILABLE_TOOLS = [

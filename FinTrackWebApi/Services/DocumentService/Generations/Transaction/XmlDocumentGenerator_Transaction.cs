@@ -1,7 +1,7 @@
-﻿using System.Text;
+﻿using FinTrackWebApi.Services.DocumentService.Models;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using FinTrackWebApi.Services.DocumentService.Models;
 
 namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 {

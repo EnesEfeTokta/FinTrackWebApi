@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json.Serialization;
 using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.ChatBotService;
@@ -19,6 +17,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -205,8 +205,15 @@ builder.Services.ConfigureApplicationCookie(options =>
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
         return Task.CompletedTask;
     };
-    options.Cookie.Name = "FinTrack.AuthCookie.Suppressed"; // �sim �nemli de�il kullan�lmayacak.
+    options.Cookie.Name = "FinTrack.AuthCookie.Suppressed";
 });
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IOtpService, OtpService>();
@@ -231,13 +238,6 @@ builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHostedService<CurrencyUpdateService>();
 builder.Services.AddScoped<IMediaEncryptionService, MediaEncryptionService>();
 builder.Services.AddScoped<IChatBotService, ChatBotService>();
-
-builder
-    .Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-    });
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();

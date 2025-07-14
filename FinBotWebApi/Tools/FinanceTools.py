@@ -105,7 +105,7 @@ def get_all_user_transactions(auth_token: Optional[str]) -> List[Dict[str, Any]]
     auth_token: User's JWT.
     """
     logger.info(f"Python: get_all_user_transactions called.")
-    return _make_fin_track_api_request("/api/Transactions", auth_token)
+    return _make_fin_track_api_request("/Transactions", auth_token)
 
 def get_user_transactions_by_category_type(category_type: str, auth_token: Optional[str]) -> List[Dict[str, Any]]:
     """
@@ -114,7 +114,7 @@ def get_user_transactions_by_category_type(category_type: str, auth_token: Optio
     auth_token: User's JWT.
     """
     logger.info(f"Python: get_user_transactions_by_category_type called. CategoryType: {category_type}")
-    return _make_fin_track_api_request(f"/api/Transactions/category-type/{category_type}", auth_token)
+    return _make_fin_track_api_request(f"/Transactions/category-type/{category_type}", auth_token)
 
 def get_user_transactions_by_category_name(category_name: str, auth_token: Optional[str]) -> List[Dict[str, Any]]:
     """
@@ -123,7 +123,7 @@ def get_user_transactions_by_category_name(category_name: str, auth_token: Optio
     auth_token: User's JWT.
     """
     logger.info(f"Python: get_user_transactions_by_category_name called. CategoryName: {category_name}")
-    return _make_fin_track_api_request(f"/api/Transactions/category-name/{category_name}", auth_token)
+    return _make_fin_track_api_request(f"/Transactions/category-name/{category_name}", auth_token)
 
 
 FUNCTION_MAPPING = {

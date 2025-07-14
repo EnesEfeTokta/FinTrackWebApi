@@ -1,58 +1,25 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Models
 {
-    [Table("Debts")]
     public class DebtModel
     {
-        [Key]
-        [Required]
-        public int DebtId { get; set; }
-
-        [Required]
-        [ForeignKey("LenderId")]
+        public int Id { get; set; }
         public int LenderId { get; set; }
         public virtual UserModel? Lender { get; set; }
-
-        [Required]
-        [ForeignKey("BorrowerId")]
         public int BorrowerId { get; set; }
         public virtual UserModel? Borrower { get; set; }
-
-        [Required]
-        [ForeignKey("CurrencyId")]
-        public int CurrencyId { get; set; }
-        public virtual CurrencyModel? CurrencyModel { get; set; }
-
-        [Required]
-        [Column("Amount")]
         public decimal Amount { get; set; }
-
-        [Required]
-        [Column("Description")]
-        [MaxLength(500)]
+        public BaseCurrencyType Currency { get; set; }
         public string Description { get; set; } = string.Empty;
-
-        [Required]
-        [Column("CreateAtUtc")]
-        [DataType(DataType.DateTime)]
         public DateTime CreateAtUtc { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        [Column("UpdatedAtUtc")]
-        [DataType(DataType.DateTime)]
-        public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        [Column("DueDateUtc")]
-        [DataType(DataType.DateTime)]
+        public DateTime? UpdatedAtUtc { get; set; }
         public DateTime DueDateUtc { get; set; }
-
-        [Required]
-        [Column("Status")]
-        [MaxLength(100)]
-        public DebtStatus Status { get; set; } = DebtStatus.PendingBorrowerAcceptance;
+        public DebtStatusType Status { get; set; }
+        public DateTime? PaidAtUtc { get; set; }
+        public DateTime? OperatorApprovalAtUtc { get; set; }
+        public DateTime? BorrowerApprovalAtUtc { get; set; }
+        public DateTime? PaymentConfirmationAtUtc { get; set; }
 
         //[Required]
         //[ForeignKey("OperatorId")]
@@ -76,18 +43,5 @@ namespace FinTrackWebApi.Models
 
         public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } =
             new List<DebtVideoMetadataModel>();
-    }
-
-    public enum DebtStatus
-    {
-        PendingBorrowerAcceptance, // Borç Alan Onayı Bekliyor
-        PendingOperatorApproval, // Operatör Onayı Bekliyor (eğer varsa)
-        Active, // Aktif Borç
-        PaymentConfirmationPending, // Ödeme Onayı Bekliyor
-        Paid, // Ödendi
-        Defaulted, // Vadesi Geçmiş/Ödenmemiş
-        RejectedByBorrower, // Borç Alan Tarafından Reddedildi
-        RejectedByOperator, // Operatör Tarafından Reddedildi (eğer varsa)
-        CancelledByLender, // Borç Veren Tarafından İptal Edildi
     }
 }

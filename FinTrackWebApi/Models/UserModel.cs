@@ -1,22 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
 
 namespace FinTrackWebApi.Models
 {
     [Table("Users")]
     public class UserModel : IdentityUser<int>
     {
-        [Required]
-        [Column("ProfilePicture")]
-        public string ProfilePicture { get; set; } =
+        public string? ProfilePicture { get; set; } =
             "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740";
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
-        [Required]
-        [Column("CreateAt")]
-        public DateTime CreateAt { get; set; } = DateTime.UtcNow;
+        public virtual UserAppSettingsModel? AppSettings { get; set; }
+        public virtual UserNotificationSettingsModel? NotificationSettings { get; set; }
 
-        public virtual UserSettingsModel? Settings { get; set; }
+        public virtual ICollection<FeedbackModel>? Feedbacks { get; set; } = new List<FeedbackModel>();
 
         public virtual ICollection<BudgetModel> Budgets { get; set; } = new List<BudgetModel>();
         public virtual ICollection<CategoryModel> Categories { get; set; } =

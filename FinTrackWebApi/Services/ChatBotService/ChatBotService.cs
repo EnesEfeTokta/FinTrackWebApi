@@ -1,6 +1,6 @@
-﻿using System.Text;
+﻿using FinTrackWebApi.Dtos.ChatBotDtos;
+using System.Text;
 using System.Text.Json;
-using FinTrackWebApi.Dtos;
 
 namespace FinTrackWebApi.Services.ChatBotService
 {
@@ -39,7 +39,7 @@ namespace FinTrackWebApi.Services.ChatBotService
 
                 var payload = new
                 {
-                    userId = userId,
+                    userId,
                     clientChatSessionId = request.ClientChatSessionId,
                     message = request.Message,
                 };

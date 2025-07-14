@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-using FinTrackWebApi.Services.CurrencyServices.Models;
+﻿using FinTrackWebApi.Services.CurrencyServices.Models;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {

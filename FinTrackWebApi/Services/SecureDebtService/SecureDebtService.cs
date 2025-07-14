@@ -1,8 +1,8 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.EmailService;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace FinTrackWebApi.Services.SecureDebtService
 {
@@ -34,60 +34,28 @@ namespace FinTrackWebApi.Services.SecureDebtService
 
         // Borç teklifi oluşturma metodu.
         public async Task<CreateDebtOfferResult> CreateDebtOfferAsync(
-            string lenderId,
-            string borrowerEmail,
+            UserModel lender,
+            UserModel borrower,
             decimal amount,
-            CurrencyModel currency,
+            BaseCurrencyType currency,
             DateTime dueDate,
             string? description
         )
         {
-            var lender = await _userManager.FindByIdAsync(lenderId);
-            if (lender == null)
-            {
-                return new CreateDebtOfferResult
-                {
-                    Success = false,
-                    Message = "Borç veren kullanıcı bulunamadı.",
-                };
-            }
-
-            var borrower = await _userManager.FindByEmailAsync(borrowerEmail);
-            if (borrower == null)
-            {
-                _logger.LogWarning(
-                    "Borç teklifi için borç alacak kullanıcı bulunamadı: {BorrowerEmail}",
-                    borrowerEmail
-                );
-                return new CreateDebtOfferResult
-                {
-                    Success = false,
-                    Message = $"'{borrowerEmail}' e-posta adresine sahip kullanıcı bulunamadı.",
-                };
-            }
-
-            if (lender.Id == borrower.Id)
-            {
-                return new CreateDebtOfferResult
-                {
-                    Success = false,
-                    Message = "Kendinize borç teklif edemezsiniz.",
-                };
-            }
 
             var debt = new DebtModel
             {
                 LenderId = lender.Id,
                 BorrowerId = borrower.Id,
                 Amount = amount,
-                CurrencyId = currency.CurrencyId,
+                Currency = currency,
                 DueDateUtc = DateTime
                     .SpecifyKind(dueDate, DateTimeKind.Unspecified)
                     .ToUniversalTime(),
-                Description = description ?? "Açıklama yok.",
+                Description = description ?? "No description available.",
                 CreateAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
-                Status = DebtStatus.PendingBorrowerAcceptance,
+                Status = DebtStatusType.PendingBorrowerAcceptance,
             };
 
             try
@@ -96,32 +64,27 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     "STAGE 1: Before AddAsync - debt.LenderId: {LenderId}, debt.BorrowerId: {BorrowerId}, debt.CurrencyId: {CurrencyId}",
                     debt.LenderId,
                     debt.BorrowerId,
-                    debt.CurrencyId
+                    debt.Currency
                 );
                 _logger.LogInformation(
                     "STAGE 1: Before AddAsync - lender object from UserManager - Id: {LenderId}, UserName: {LenderUserName}",
                     lender.Id,
                     lender.UserName
-                ); // lender nesnesinin ID'si nedir?
+                );
                 _logger.LogInformation(
                     "STAGE 1: Before AddAsync - borrower object from UserManager - Id: {BorrowerId}, UserName: {BorrowerUserName}",
                     borrower.Id,
                     borrower.UserName
-                ); // borrower nesnesinin ID'si nedir?
+                );
 
                 await _context.Debts.AddAsync(debt);
 
-                // --- STAGE 2: After AddAsync, BEFORE SaveChanges ---
                 _logger.LogInformation(
                     "STAGE 2: After AddAsync, Before SaveChanges - debt.LenderId: {LenderId}, debt.BorrowerId: {BorrowerId}",
                     debt.LenderId,
                     debt.BorrowerId
                 );
 
-                // Change Tracker'ı detaylı incele:
-                _logger.LogInformation("--- ChangeTracker State BEFORE SaveChanges ---");
-
-                // DebtModel girdisini bul
                 var debtEntry = _context
                     .ChangeTracker.Entries<DebtModel>()
                     .FirstOrDefault(e => e.Entity == debt);
@@ -134,13 +97,12 @@ namespace FinTrackWebApi.Services.SecureDebtService
                         debtEntry.Property(d => d.BorrowerId).CurrentValue
                     );
 
-                    // Lender navigation property'sinin işaret ettiği UserModel'in ID'sine bak
                     var lenderNavEntry = debtEntry.Reference(d => d.Lender).TargetEntry;
                     if (lenderNavEntry != null)
                     {
                         _logger.LogInformation(
                             "Debt's Lender Navigation Property points to UserModel with Id: {NavLenderId}, State: {NavLenderState}",
-                            lenderNavEntry.Property("Id").CurrentValue, // "Id" property adının doğru olduğundan emin olun
+                            lenderNavEntry.Property("Id").CurrentValue,
                             lenderNavEntry.State
                         );
                     }
@@ -151,13 +113,12 @@ namespace FinTrackWebApi.Services.SecureDebtService
                         );
                     }
 
-                    // Borrower navigation property'sinin işaret ettiği UserModel'in ID'sine bak
                     var borrowerNavEntry = debtEntry.Reference(d => d.Borrower).TargetEntry;
                     if (borrowerNavEntry != null)
                     {
                         _logger.LogInformation(
                             "Debt's Borrower Navigation Property points to UserModel with Id: {NavBorrowerId}, State: {NavBorrowerState}",
-                            borrowerNavEntry.Property("Id").CurrentValue, // "Id" property adının doğru olduğundan emin olun
+                            borrowerNavEntry.Property("Id").CurrentValue,
                             borrowerNavEntry.State
                         );
                     }
@@ -173,7 +134,6 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     _logger.LogWarning("Debt entity not found in ChangeTracker after AddAsync!");
                 }
 
-                // _context tarafından takip edilen TÜM UserModel örneklerini logla
                 var trackedUsers = _context.ChangeTracker.Entries<UserModel>().ToList();
                 if (trackedUsers.Any())
                 {
@@ -191,7 +151,6 @@ namespace FinTrackWebApi.Services.SecureDebtService
                             userEntity.Email,
                             userEntry.State
                         );
-                        // Özellikle negatif ID'li kullanıcılar var mı ve state'leri ne?
                     }
                 }
                 else
@@ -203,123 +162,97 @@ namespace FinTrackWebApi.Services.SecureDebtService
                 _logger.LogInformation("--- End of ChangeTracker State BEFORE SaveChanges ---");
 
                 await _context.SaveChangesAsync();
-
-                // E-Posta bildirimini gönderme.
-                string subject = "Request New Secured Debt";
-                string emailBody = string.Empty;
-
-                string emailTemplatePath = Path.Combine(
-                    _webHostEnvironment.ContentRootPath,
-                    "Services",
-                    "EmailService",
-                    "EmailHtmlSchemes",
-                    "BorrowerInformationScheme.html"
+                _logger.LogInformation(
+                    "STAGE 3: After SaveChanges - debt.LenderId: {LenderId}, debt.BorrowerId: {BorrowerId}",
+                    debt.LenderId,
+                    debt.BorrowerId
                 );
-                if (!File.Exists(emailTemplatePath))
+
+                try
                 {
-                    _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                    string subject = "Request New Secured Debt";
+                    string emailBody = string.Empty;
+
+                    string emailTemplatePath = Path.Combine(
+                        _webHostEnvironment.ContentRootPath,
+                        "Services",
+                        "EmailService",
+                        "EmailHtmlSchemes",
+                        "BorrowerInformationScheme.html"
+                    );
+                    if (!File.Exists(emailTemplatePath))
+                    {
+                        _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                        return new CreateDebtOfferResult
+                        {
+                            Success = false,
+                            Message = "E-posta şablonu bulunamadı.",
+                        };
+                    }
+
+                    using (StreamReader reader = new StreamReader(emailTemplatePath))
+                    {
+                        emailBody = await reader.ReadToEndAsync();
+                    }
+
+                    emailBody = emailBody.Replace("[BORROWER_NAME]", borrower.UserName);
+                    emailBody = emailBody.Replace("[LENDER_NAME]", lender.UserName);
+                    emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", lender.UserName);
+                    emailBody = emailBody.Replace("[DETAIL_DEBT_AMOUNT]", debt.Amount.ToString());
+                    emailBody = emailBody.Replace(
+                        "[DETAIL_DEBT_CURRENCY]",
+                        debt.Currency.ToString() ?? "Unknown Currency"
+                    );
+                    emailBody = emailBody.Replace(
+                        "[DETAIL_DEBT_DUE_DATE]",
+                        debt.DueDateUtc.ToString("yyyy-MM-dd HH:mm:ss")
+                    );
+                    emailBody = emailBody.Replace("[DETAIL_DEBT_DESCRIPTION]", debt.Description);
+                    emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+                    await _emailSender.SendEmailAsync(
+                        borrower.Email
+                            ?? throw new ArgumentException("We need the borrower's email address."),
+                        subject,
+                        emailBody
+                    );
+                    _logger.LogInformation(
+                        "Debt offer (ID: {DebtId}) was successfully created and a notification was sent to {BorrowerEmail}.",
+                        debt.Id,
+                        borrower.Email
+                    );
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogError(
+                        emailEx,
+                        "An error occurred while sending the debt offer email. Debt offer ID: {DebtId}",
+                        debt.Id
+                    );
                     return new CreateDebtOfferResult
                     {
                         Success = false,
-                        Message = "E-posta şablonu bulunamadı.",
+                        Message = "The quote has been created, but the email notification failed.",
                     };
                 }
-
-                using (StreamReader reader = new StreamReader(emailTemplatePath))
-                {
-                    emailBody = await reader.ReadToEndAsync();
-                }
-
-                emailBody = emailBody.Replace("[BORROWER_NAME]", borrower.UserName);
-                emailBody = emailBody.Replace("[LENDER_NAME]", lender.UserName);
-                emailBody = emailBody.Replace("[DETAIL_LENDER_NAME]", lender.UserName);
-                emailBody = emailBody.Replace("[DETAIL_DEBT_AMOUNT]", debt.Amount.ToString());
-                emailBody = emailBody.Replace(
-                    "[DETAIL_DEBT_CURRENCY]",
-                    debt.CurrencyModel?.Name ?? "Bilinmiyor"
-                );
-                emailBody = emailBody.Replace(
-                    "[DETAIL_DEBT_DUE_DATE]",
-                    debt.DueDateUtc.ToString("yyyy-MM-dd HH:mm:ss")
-                );
-                emailBody = emailBody.Replace("[DETAIL_DEBT_DESCRIPTION]", debt.Description);
-                emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
-
-                await _emailSender.SendEmailAsync(
-                    borrower.Email
-                        ?? throw new ArgumentException("We need the borrower's email address."),
-                    subject,
-                    emailBody
-                );
-                _logger.LogInformation(
-                    "Borç teklifi (ID: {DebtId}) başarıyla oluşturuldu ve {BorrowerEmail} adresine bildirim gönderildi.",
-                    debt.DebtId,
-                    borrower.Email
-                );
 
                 // TODO: Eğer borç veren kullanıcıya da bildirim göndermek gerekli. Bunun için Bildirim servisi oluşturulmalı.
                 return new CreateDebtOfferResult
                 {
                     Success = true,
                     Message =
-                        "Borç teklifi başarıyla oluşturuldu ve borç alacak kişiye bildirildi.",
+                        "The debt offer was successfully created and communicated to the debtor.",
                     CreatedDebt = debt,
                 };
             }
-            catch (DbUpdateException dbEx)
+            catch (Exception ex)
             {
-                _logger.LogError(dbEx, "Borç teklifi oluşturulurken veritabanı hatası.");
+                _logger.LogError(ex, "Unexpected error while creating a debt offer.");
                 return new CreateDebtOfferResult
                 {
                     Success = false,
-                    Message = "Teklif oluşturulamadı (veritabanı).",
+                    Message = "Offer could not be created (general error).",
                 };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Borç teklifi oluşturulurken beklenmedik hata.");
-                return new CreateDebtOfferResult
-                {
-                    Success = false,
-                    Message = "Teklif oluşturulamadı (genel hata).",
-                };
-            }
-        }
-
-        // Borç bilgilerini alma metotları.
-        public async Task<DebtModel?> GetDebtByIdAsync(int debtId)
-        {
-            try
-            {
-                return await _context
-                    .Debts.Include(d => d.Lender)
-                    .Include(d => d.Borrower)
-                    .Include(d => d.CurrencyModel)
-                    .FirstOrDefaultAsync(d => d.DebtId == debtId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Borç bilgisi alınırken hata oluştu.");
-                return null;
-            }
-        }
-
-        // Kullanıcıya ait borçları alma metodu.
-        public async Task<List<DebtModel>> GetDebtsByIdAsync(int Id)
-        {
-            try
-            {
-                return await _context
-                    .Debts.Include(d => d.Lender)
-                    .Include(d => d.Borrower)
-                    .Include(d => d.CurrencyModel)
-                    .Where(d => d.LenderId == Id || d.BorrowerId == Id)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Kullanıcı borçları alınırken hata oluştu.");
-                return new List<DebtModel>();
             }
         }
     }

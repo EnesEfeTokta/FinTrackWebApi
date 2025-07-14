@@ -1,29 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Models
 {
-    [Table("BudgetCategories")]
     public class BudgetCategoryModel
     {
-        [Key]
-        [Required]
-        public int BudgetCategoryId { get; set; }
-
-        [Required]
-        [ForeignKey("Budget")]
+        public int Id { get; set; }
         public int BudgetId { get; set; }
-
-        [Required]
-        [ForeignKey("Category")]
-        public int CategoryId { get; set; }
-
-        [Required]
-        [Column("AllocatedAmount", TypeName = "decimal(18, 2)")]
-        [Range(0.00, (double)decimal.MaxValue)]
-        public decimal AllocatedAmount { get; set; }
-
         public virtual BudgetModel Budget { get; set; } = null!;
+        public int CategoryId { get; set; }
         public virtual CategoryModel Category { get; set; } = null!;
+        public decimal AllocatedAmount { get; set; }
+        public BaseCurrencyType Currency { get; set; }
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAtUtc { get; set; }
     }
 }

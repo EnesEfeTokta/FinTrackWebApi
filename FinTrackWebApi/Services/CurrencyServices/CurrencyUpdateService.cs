@@ -1,11 +1,11 @@
-﻿using System.Globalization;
-using System.Text.Json;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Models;
 using FinTrackWebApi.Services.CurrencyServices.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using System.Globalization;
+using System.Text.Json;
 
 namespace FinTrackWebApi.Services.CurrencyServices
 {
@@ -181,7 +181,7 @@ namespace FinTrackWebApi.Services.CurrencyServices
             {
                 var dbCurrenciesMap = await dbContext
                     .Currencies.AsNoTracking()
-                    .ToDictionaryAsync(c => c.Code, c => c.CurrencyId, cancellationToken);
+                    .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
 
                 var newCurrencyCodesToAdd = new List<string>();
                 // newRatesResponse.Rates null olmayacağı için (yukarıdaki kontrol sayesinde) doğrudan erişebiliriz.
@@ -222,7 +222,7 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
                     var newlyAddedCurrencies = await dbContext
                         .Currencies.Where(c => newCurrencyCodesToAdd.Contains(c.Code))
-                        .ToDictionaryAsync(c => c.Code, c => c.CurrencyId, cancellationToken);
+                        .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
                     foreach (var addedCurrency in newlyAddedCurrencies)
                     {
                         dbCurrenciesMap[addedCurrency.Key] = addedCurrency.Value;

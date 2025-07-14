@@ -32,5 +32,17 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
+    <Folder Include="Middlewares\" />
+    <Folder Include="Models\Account\" />
+    <Folder Include="Models\Budget\" />
+    <Folder Include="Models\Debt\" />
+    <Folder Include="Models\Currency\" />
+    <Folder Include="Models\Feedback\" />
+    <Folder Include="Models\Membership\" />
+    <Folder Include="Models\Empoyee\" />
+    <Folder Include="Models\Report\" />
+    <Folder Include="Models\User\" />
+    <Folder Include="Models\Notification\" />
+    <Folder Include="Models\Otp\" />
   </ItemGroup>
 </Project>

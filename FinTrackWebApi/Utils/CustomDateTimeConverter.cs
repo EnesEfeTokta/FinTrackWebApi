@@ -2,11 +2,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace FinTrackWebApi.Utils // Namespace'inizi kontrol edin
+namespace FinTrackWebApi.Utils
 {
     public class CustomDateTimeConverter : JsonConverter<DateTime>
     {
-        // API bu formatta +00 (UTC) gönderiyor
         private const string ExpectedApiFormat = "yyyy-MM-dd HH:mm:ss+00";
 
         public override DateTime Read(
@@ -20,15 +19,10 @@ namespace FinTrackWebApi.Utils // Namespace'inizi kontrol edin
                 string? dateString = reader.GetString();
                 if (string.IsNullOrWhiteSpace(dateString))
                 {
-                    // Null veya boş string için varsayılan veya hata
-                    // throw new JsonException("Date string is null or empty.");
-                    _logger.LogWarning("API'den gelen tarih string'i boş veya null."); // Loglama ekle
-                    return default; // Veya uygun bir varsayılan değer
+                    _logger.LogWarning("The date string from the API is empty or null.");
+                    return default;
                 }
 
-                // ---- ÖNEMLİ DEĞİŞİKLİK BURADA ----
-                // DateTimeStyles.AdjustToUniversal, string'deki +00 offset'ini kullanarak
-                // sonucu UTC'ye çevirir ve Kind'i Utc yapar.
                 if (
                     DateTime.TryParseExact(
                         dateString,
@@ -38,26 +32,21 @@ namespace FinTrackWebApi.Utils // Namespace'inizi kontrol edin
                         out DateTime result
                     )
                 )
-                // ---- /ÖNEMLİ DEĞİŞİKLİK BURADA ----
                 {
-                    // result.Kind şimdi Utc olmalı
                     if (result.Kind != DateTimeKind.Utc)
                     {
-                        // Beklenmedik bir durum, loglayalım
                         _logger.LogWarning(
-                            "TryParseExact AdjustToUniversal kullanılmasına rağmen Kind Utc değil: {Kind}",
+                            "TryParseExact AdjustToUniversal is used, but Kind is not Utc: {Kind}",
                             result.Kind
                         );
-                        // Güvenlik için tekrar ayarlayalım
                         return DateTime.SpecifyKind(result, DateTimeKind.Utc);
                     }
                     return result;
                 }
                 else
                 {
-                    // Loglama ekleyerek hangi formatın geldiğini görebiliriz
                     _logger.LogError(
-                        "DateTime string'i parse edilemedi: '{DateString}'. Beklenen format: '{ExpectedFormat}'.",
+                        "DateTime string could not be parsed: ‘{DateString}’. Expected format: ‘{ExpectedFormat}’.",
                         dateString,
                         ExpectedApiFormat
                     );
@@ -67,7 +56,7 @@ namespace FinTrackWebApi.Utils // Namespace'inizi kontrol edin
                 }
             }
             _logger.LogError(
-                "DateTime parse edilirken beklenmedik token tipi: {TokenType}",
+                "Unexpected token type while parsing DateTime: {TokenType}",
                 reader.TokenType
             );
             throw new JsonException(
@@ -81,17 +70,13 @@ namespace FinTrackWebApi.Utils // Namespace'inizi kontrol edin
             JsonSerializerOptions options
         )
         {
-            // Her zaman UTC ve ISO 8601 formatında yazmak en güvenlisidir.
             writer.WriteStringValue(
                 value.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture)
             );
         }
 
-        // Loglama için ILogger ekleyin (Dependency Injection ile alınabilir veya statik olabilir)
-        // Bu örnekte statik kullanıyoruz, ancak DI daha iyi bir pratiktir.
         private static readonly ILogger<CustomDateTimeConverter> _logger = LoggerFactory
             .Create(builder => builder.AddConsole())
             .CreateLogger<CustomDateTimeConverter>();
-        // Veya Logger'ı dışarıdan alacak bir yapı kurun.
     }
 }
