@@ -1,9 +1,8 @@
 version: '3.8'
 
 services:
-
+  # ASP.Net'in yapılandırması
   fintrackwebapi:
-    # fintrackwebapi'nin yapılandırması
     build:
       context: ./FinTrackWebApi
       dockerfile: Dockerfile
@@ -16,10 +15,29 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db_postgres;Port=5432;Database=myfintrackdb;Username=postgres;Password=140xxx-+
     depends_on:
       - finbotwebapi
-      - db_postgres # Bu doğru
+      - db_postgres
     networks:
       - fintrac_network
 
+  # Ngrok 'un' yapılandırması
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok_tunnel
+    restart: unless-stopped
+    ports:
+      - "4040:4040"
+    environment:
+       - NGROK_AUTHTOKEN=2wuCJxMriYB0MvVAanMEzZwsVGK_3UfHpEqo3wyQ73BGuRGYX
+    command:
+      - "http"
+      - "fintrack_api:8080"
+      - "--log=stdout"
+    depends_on:
+      - fintrackwebapi
+    networks:
+      - fintrac_network
+
+  # FinBot yapılandırması
   finbotwebapi:
     build:
       context: ./FinBotWebApi
@@ -32,9 +50,10 @@ services:
     networks:
       - fintrac_network
 
-  db_postgres: # ANAHTAR: "db_postgres" servisi "fintrackwebapi" ve "finbotwebapi" ile AYNI SEVİYEDE OLMALI
+  # Veritabanının yapılandırması
+  db_postgres:
     image: postgres:15
-    container_name: postgres_db_container
+    container_name: postgres_db
     ports:
       - "5433:5432"
     environment:
