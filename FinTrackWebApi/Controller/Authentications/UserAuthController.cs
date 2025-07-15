@@ -60,7 +60,7 @@ namespace FinTrackWebApi.Controller.Authentications
                 return BadRequest(new { Message = "Email, Username, and Password are required." });
             }
 
-            string UserName = initiateDto.FirstName.Trim() + "_" + initiateDto.LastName.Trim();
+            string UserName = initiateDto.FirstName.Replace(" ", "").Trim() + "_" + initiateDto.LastName.Replace(" ", "").Trim();
 
             if (await _userManager.FindByEmailAsync(initiateDto.Email) != null)
             {
@@ -216,6 +216,7 @@ namespace FinTrackWebApi.Controller.Authentications
                         newUser.Email,
                         newUser.Id
                     );
+
                     var roleResult = await _userManager.AddToRoleAsync(newUser, "User");
                     if (!roleResult.Succeeded)
                     {
@@ -228,7 +229,6 @@ namespace FinTrackWebApi.Controller.Authentications
 
                     await _otpService.RemoveOtpAsync(verifyDto.Email);
 
-                    #region User Settings Creation
                     try
                     {
                         var userAppSettings = new UserAppSettingsModel
@@ -239,23 +239,7 @@ namespace FinTrackWebApi.Controller.Authentications
                             CreatedAtUtc = DateTime.UtcNow
                         };
                         await _context.UserAppSettings.AddAsync(userAppSettings);
-                        await _context.SaveChangesAsync();
-                        _logger.LogInformation(
-                            "UserSettings created for UserId: {UserId}",
-                            newUser.Id
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to create user app settings for UserId: {UserId}",
-                            newUser.Id
-                        );
-                    }
 
-                    try
-                    {
                         var userNotificationSettings = new UserNotificationSettingsModel
                         {
                             UserId = newUser.Id,
@@ -266,55 +250,30 @@ namespace FinTrackWebApi.Controller.Authentications
                             EnableDesktopNotifications = true,
                             CreatedAtUtc = DateTime.UtcNow
                         };
-                        await _context.UserNotificationSettings.AddAsync(
-                            userNotificationSettings
-                        );
-                        await _context.SaveChangesAsync();
-                        _logger.LogInformation(
-                            "UserNotificationSettings created for UserId: {UserId}",
-                            newUser.Id
-                        );
+                        await _context.UserNotificationSettings.AddAsync(userNotificationSettings);
+
+                        //var userMembership = new UserMembershipModel
+                        //{
+                        //    UserId = newUser.Id,
+                        //    MembershipPlanId = 1,
+                        //    StartDate = DateTime.UtcNow,
+                        //    EndDate = DateTime.UtcNow.AddYears(1),
+                        //    Status = MembershipStatusType.Active,
+                        //    AutoRenew = true,
+                        //    CreatedAtUtc = DateTime.UtcNow
+                        //};
+                        //await _context.UserMemberships.AddAsync(userMembership);
+
+                        //await _context.SaveChangesAsync();
+
+                        //_logger.LogInformation("Initial settings and membership created for UserId: {UserId}", newUser.Id);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(
-                            ex,
-                            "Failed to create user notification settings for UserId: {UserId}",
-                            newUser.Id
-                        );
+                        _logger.LogError(ex, "Failed to create initial user settings/membership for UserId: {UserId}. The transaction will be rolled back.", newUser.Id);
+                        await _userManager.DeleteAsync(newUser);
+                        return StatusCode(500, new { Message = "An error occurred while setting up the user account. Please try again." });
                     }
-                    #endregion
-
-                    #region User Memebership Creation
-                    try
-                    {
-                        var userMembership = new UserMembershipModel
-                        {
-                            UserId = newUser.Id,
-                            MembershipPlanId = 1,
-                            StartDate = DateTime.UtcNow,
-                            EndDate = DateTime.UtcNow.AddYears(1),
-                            Status = MembershipStatusType.Active,
-                            AutoRenew = true,
-                            CreatedAtUtc = DateTime.UtcNow
-
-                        };
-                        await _context.UserMemberships.AddAsync(userMembership);
-                        await _context.SaveChangesAsync();
-                        _logger.LogInformation(
-                            "UserMembership created for UserId: {UserId}",
-                            newUser.Id
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(
-                            ex,
-                            "Failed to create user membership for UserId: {UserId}",
-                            newUser.Id
-                        );
-                    }
-                    #endregion
 
                     try
                     {
@@ -330,10 +289,7 @@ namespace FinTrackWebApi.Controller.Authentications
 
                         if (!System.IO.File.Exists(welcomeEmailTemplatePath))
                         {
-                            _logger.LogError(
-                                "Welcome email template not found at {Path}",
-                                welcomeEmailTemplatePath
-                            );
+                            _logger.LogError("Welcome email template not found at {Path}", welcomeEmailTemplatePath);
                         }
                         else
                         {
@@ -341,29 +297,15 @@ namespace FinTrackWebApi.Controller.Authentications
                             {
                                 welcomeEmailBody = await reader.ReadToEndAsync();
                             }
-                            welcomeEmailBody = welcomeEmailBody.Replace(
-                                "[UserName]",
-                                newUser.UserName
-                            );
-                            welcomeEmailBody = welcomeEmailBody.Replace(
-                                "[YEAR]",
-                                DateTime.UtcNow.ToString("yyyy")
-                            );
-                            await _emailSender.SendEmailAsync(
-                                newUser.Email,
-                                welcomeEmailSubject,
-                                welcomeEmailBody
-                            );
+                            welcomeEmailBody = welcomeEmailBody.Replace("[UserName]", newUser.UserName);
+                            welcomeEmailBody = welcomeEmailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+                            await _emailSender.SendEmailAsync(newUser.Email, welcomeEmailSubject, welcomeEmailBody);
                             _logger.LogInformation("Welcome email sent to {Email}.", newUser.Email);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(
-                            ex,
-                            "Error sending welcome email to {Email}",
-                            newUser.Email
-                        );
+                        _logger.LogError(ex, "Error sending welcome email to {Email}", newUser.Email);
                     }
 
                     return Ok(
@@ -392,17 +334,10 @@ namespace FinTrackWebApi.Controller.Authentications
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "An unexpected error occurred during user registration for {Email}.",
-                    verifyDto.Email
-                );
+                _logger.LogError(ex, "An unexpected error occurred during user registration for {Email}.", verifyDto.Email);
                 if (otpData != null)
                     await _otpService.RemoveOtpAsync(otpData.Email);
-                return StatusCode(
-                    500,
-                    new { Message = "An unexpected error occurred during registration." }
-                );
+                return StatusCode(500, new { Message = "An unexpected error occurred during registration." });
             }
         }
 
@@ -421,75 +356,31 @@ namespace FinTrackWebApi.Controller.Authentications
             var user = await _userManager.FindByEmailAsync(loginDto.Email);
             if (user == null)
             {
-                _logger.LogWarning(
-                    "Login attempt for email {Email} failed: User not found.",
-                    loginDto.Email
-                );
+                _logger.LogWarning("Login attempt for email {Email} failed: User not found.", loginDto.Email);
                 return Unauthorized(new { Message = "Invalid credentials." });
             }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(
-                user,
-                loginDto.Password,
-                lockoutOnFailure: true
-            );
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, lockoutOnFailure: true);
             if (!result.Succeeded)
             {
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning(
-                        "User account locked out for email {Email}.",
-                        loginDto.Email
-                    );
-                    return Unauthorized(
-                        new
-                        {
-                            Message = $"Account locked out. Please try again later. (Until: {user.LockoutEnd?.ToLocalTime()})",
-                            IsLockedOut = true,
-                            LockoutEndDateUtc = user.LockoutEnd,
-                        }
-                    );
+                    _logger.LogWarning("User account locked out for email {Email}.", loginDto.Email);
+                    return Unauthorized(new { Message = $"Account locked out. Please try again later. (Until: {user.LockoutEnd?.ToLocalTime()})", IsLockedOut = true, LockoutEndDateUtc = user.LockoutEnd, });
                 }
                 if (result.IsNotAllowed)
                 {
-                    _logger.LogWarning(
-                        "Login not allowed for email {Email} (e.g., email not confirmed, if configured).",
-                        loginDto.Email
-                    );
-                    return Unauthorized(
-                        new
-                        {
-                            Message = "Login not allowed. Please confirm your email or contact support.",
-                        }
-                    );
+                    _logger.LogWarning("Login not allowed for email {Email} (e.g., email not confirmed, if configured).", loginDto.Email);
+                    return Unauthorized(new { Message = "Login not allowed. Please confirm your email or contact support.", });
                 }
-                _logger.LogWarning(
-                    "Login attempt for email {Email} failed: Invalid password. AccessFailedCount: {AccessFailedCount}",
-                    loginDto.Email,
-                    user.AccessFailedCount
-                );
+                _logger.LogWarning("Login attempt for email {Email} failed: Invalid password. AccessFailedCount: {AccessFailedCount}", loginDto.Email, user.AccessFailedCount);
                 return Unauthorized(new { Message = "Invalid credentials." });
             }
 
             _logger.LogInformation("User {Email} logged in successfully.", loginDto.Email);
             var userRoles = await _userManager.GetRolesAsync(user);
 
-            Token generatedToken = TokenHandler.CreateToken(
-                _configuration,
-                user.Id,
-                user.UserName ?? "",
-                user.Email ?? "",
-                userRoles
-            );
-
-            //var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
-            //    s.UserId == user.Id
-            //);
-            //if (userSettings != null)
-            //{
-            //    userSettings.EntryDate = DateTime.UtcNow;
-            //    await _context.SaveChangesAsync();
-            //}
+            Token generatedToken = TokenHandler.CreateToken(_configuration, user.Id, user.UserName ?? "", user.Email ?? "", userRoles);
 
             return Ok(
                 new

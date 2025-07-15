@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250714110546_InitialCreate")]
+    [Migration("20250715193950_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
