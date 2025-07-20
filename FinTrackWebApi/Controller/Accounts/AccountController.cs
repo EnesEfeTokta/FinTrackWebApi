@@ -1,7 +1,7 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.AccountDtos;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -220,7 +220,7 @@ namespace FinTrackWebApi.Controller.Accounts
                 _context.Accounts.Update(account);
                 await _context.SaveChangesAsync();
 
-                return NoContent();
+                return Ok(true);
             }
             catch (Exception ex)
             {
@@ -253,7 +253,7 @@ namespace FinTrackWebApi.Controller.Accounts
                 _context.Accounts.Remove(account);
                 await _context.SaveChangesAsync();
 
-                return NoContent();
+                return Ok(true);
             }
             catch (Exception ex)
             {
@@ -272,7 +272,7 @@ namespace FinTrackWebApi.Controller.Accounts
             var balance = await _context
                 .Transactions.Where(t => t.Id == Id)
                 .Include(t => t.Category)
-                .SumAsync(t => t.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
+                .SumAsync(t => t.Category.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
 
             return balance;
         }

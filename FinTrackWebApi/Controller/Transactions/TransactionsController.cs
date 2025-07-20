@@ -1,7 +1,7 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.TransactionDtos;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Tranaction;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,8 +40,7 @@ namespace FinTrackWebApi.Controller.Transactions
             {
                 int userId = GetAuthenticatedUserId();
 
-                var transactions = await _context
-                    .Transactions.AsNoTracking()
+                var transactions = await _context.Transactions
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId)
@@ -93,8 +92,7 @@ namespace FinTrackWebApi.Controller.Transactions
             {
                 int userId = GetAuthenticatedUserId();
 
-                var transaction = await _context
-                    .Transactions.AsNoTracking()
+                var transaction = await _context.Transactions
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId && t.Id == Id)
@@ -154,11 +152,21 @@ namespace FinTrackWebApi.Controller.Transactions
                     return BadRequest($"Invalid category type '{type}'.");
                 }
 
-                var transactions = await _context
-                    .Transactions.AsNoTracking()
+                var transactions = await _context.Transactions
                     .Include(t => t.Category)
                     .Include(t => t.Account)
-                    .Where(t => t.UserId == userId && t.Type == categoryType)
+                    .Where(t => t.UserId == userId && t.Category.Type == categoryType)
+                    .Select(t => new TransactionDto
+                    {
+                        Id = t.Id,
+                        Category = t.Category,
+                        Account = t.Account,
+                        Amount = t.Amount,
+                        TransactionDateUtc = t.TransactionDateUtc,
+                        Description = t.Description,
+                        CreatedAtUtc = t.CreatedAtUtc,
+                        UpdatedAtUtc = t.UpdatedAtUtc
+                    })
                     .ToListAsync();
 
                 if (transactions == null || transactions.Count == 0)
@@ -196,20 +204,41 @@ namespace FinTrackWebApi.Controller.Transactions
             {
                 int userId = GetAuthenticatedUserId();
 
-                var transactions = await _context
-                    .Transactions.AsNoTracking()
+                var transactions = await _context.Transactions
                     .Include(t => t.Category)
                     .Include(t => t.Account)
                     .Where(t => t.UserId == userId && t.Category.Name == category)
+                    .Select(t => new TransactionDto
+                    {
+                        Id = t.Id,
+                        Category = t.Category,
+                        Account = t.Account,
+                        Amount = t.Amount,
+                        TransactionDateUtc = t.TransactionDateUtc,
+                        Description = t.Description,
+                        CreatedAtUtc = t.CreatedAtUtc,
+                        UpdatedAtUtc = t.UpdatedAtUtc
+                    })
                     .ToListAsync();
 
                 if (transactions == null || transactions.Count == 0)
                 {
+                    _logger.LogInformation(
+                        "No transactions found for category name '{CategoryName}' for user {UserId}",
+                        category,
+                        userId
+                    );
                     return NotFound(
                         $"No transactions found for category name '{category}' for user {userId}."
                     );
                 }
 
+                _logger.LogInformation(
+                    "Retrieved {TransactionCount} transactions for category name '{CategoryName}' for user {UserId}",
+                    transactions.Count,
+                    category,
+                    userId
+                );
                 return Ok(transactions);
             }
             catch (Exception ex)
@@ -240,39 +269,36 @@ namespace FinTrackWebApi.Controller.Transactions
 
             int userId = GetAuthenticatedUserId();
 
-            var category = await _context.Categories.FirstOrDefaultAsync(c =>
-                c.Id == transactionDto.CategoryId && c.UserId == userId
-            );
-            if (category == null)
-            {
-                _logger.LogWarning(
-                    "Category with ID {CategoryId} not found for user {UserId}",
-                    transactionDto.CategoryId,
-                    userId
-                );
-                return BadRequest(
-                    $"Category with ID {transactionDto.CategoryId} not found for this user."
-                );
-            }
-
-            var transaction = new TransactionModel
-            {
-                UserId = userId,
-                CategoryId = transactionDto.CategoryId,
-                AccountId = transactionDto.AccountId,
-                Amount = transactionDto.Amount,
-                TransactionDateUtc = DateTime.SpecifyKind(
-                    transactionDto.TransactionDateUtc,
-                    DateTimeKind.Utc
-                ),
-                Description = transactionDto.Description,
-                CreatedAtUtc = DateTime.UtcNow,
-            };
-
-            _context.Transactions.Add(transaction);
-
             try
             {
+                var category = await _context.Categories.FirstOrDefaultAsync(c =>
+                    c.Id == transactionDto.CategoryId && c.UserId == userId
+                );
+                if (category == null)
+                {
+                    _logger.LogWarning(
+                        "Category with ID {CategoryId} not found for user {UserId}",
+                        transactionDto.CategoryId,
+                        userId
+                    );
+                    return BadRequest(
+                        $"Category with ID {transactionDto.CategoryId} not found for this user."
+                    );
+                }
+
+                var transaction = new TransactionModel
+                {
+                    UserId = userId,
+                    CategoryId = transactionDto.CategoryId,
+                    AccountId = transactionDto.AccountId,
+                    Amount = transactionDto.Amount,
+                    TransactionDateUtc = transactionDto.TransactionDateUtc,
+                    Description = transactionDto.Description ?? "No description",
+                    CreatedAtUtc = DateTime.UtcNow,
+                };
+
+                _context.Transactions.Add(transaction);
+
                 await _context.SaveChangesAsync();
                 _logger.LogInformation(
                     "Transaction created with ID {TransactionId} for user {UserId}",
@@ -329,7 +355,7 @@ namespace FinTrackWebApi.Controller.Transactions
                 transactionDto.TransactionDateUtc,
                 DateTimeKind.Utc
             );
-            transaction.Description = transactionDto.Description;
+            transaction.Description = transactionDto.Description ?? "No description";
             transaction.UpdatedAtUtc = DateTime.UtcNow;
 
             try

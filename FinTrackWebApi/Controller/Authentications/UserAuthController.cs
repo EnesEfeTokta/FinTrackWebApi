@@ -1,7 +1,8 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.AuthDtos;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Otp;
+using FinTrackWebApi.Models.User;
 using FinTrackWebApi.Security;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;

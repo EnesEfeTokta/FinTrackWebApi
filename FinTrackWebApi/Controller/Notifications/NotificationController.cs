@@ -69,7 +69,7 @@ namespace FinTrackWebApi.Controller.Notifications
 
         [HttpPost]
         public async Task<ActionResult<NotificationDto>> CreateNotification(
-            [FromBody] NotificationDto notificationDto
+            [FromBody] NotificationCreateDto notificationDto
         )
         {
             try
@@ -87,8 +87,7 @@ namespace FinTrackWebApi.Controller.Notifications
                 };
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
-                notificationDto.Id = notification.Id;
-                notificationDto.CreatedAt = notification.CreatedAtUtc;
+
                 return CreatedAtAction(
                     nameof(GetNotifications),
                     new { id = notification.Id },

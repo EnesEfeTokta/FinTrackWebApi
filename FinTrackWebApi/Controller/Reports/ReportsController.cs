@@ -127,33 +127,6 @@ namespace FinTrackWebApi.Controller.Reports
         }
 
         /// <summary>
-        /// Kullanıcının bütçe raporunu belirtilen türde döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="type">İstenilen tür</param>
-        /// <returns></returns>
-        [HttpGet("budget-report-by-type/{type}")]
-        public async Task<IActionResult> GetBudgetReportByType(
-            [FromQuery] string format,
-            string type
-        )
-        {
-            if (string.IsNullOrWhiteSpace(type))
-            {
-                return BadRequest("Type cannot be null or empty.");
-            }
-
-            var reportData = await BuildBudgetReportDataAsync();
-
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Budget.ToString(),
-                reportData,
-                $"Financial_Budget_Report_By_Type_{type}_{DateTime.Now:yyyyMMdd}"
-            );
-        }
-
-        /// <summary>
         /// Başlangıç ve bitiş tarihleri belirtilirse, o tarihler arasındaki bütçeleri getirir.
         /// </summary>
         /// <param name="start">Başlangıç tarihi</param>
@@ -189,21 +162,20 @@ namespace FinTrackWebApi.Controller.Reports
                 ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1)
                 : null;
 
-            var query = _context
-                .BudgetCategories.Include(bc => bc.Budget)
-                .Include(bc => bc.Category)
-                .Where(bc => bc.Budget.UserId == Id);
+            var query = _context.Budgets
+                .Include(b => b.Category)
+                .Where(b => b.UserId == Id);
 
             if (startUtc.HasValue && endUtc.HasValue)
             {
-                query = query.Where(bc =>
-                    bc.Budget.EndDate >= startUtc.Value && bc.Budget.StartDate <= endUtc.Value
+                query = query.Where(b =>
+                    b.EndDate >= startUtc.Value && b.StartDate <= endUtc.Value
                 );
             }
 
             var budgetCategoriesData = await query
-                .OrderBy(bc => bc.Budget.StartDate)
-                .ThenBy(bc => bc.Budget.Name)
+                .OrderBy(bc => bc.StartDate)
+                .ThenBy(bc => bc.Name)
                 .ThenBy(bc => bc.Category.Name)
                 .AsNoTracking()
                 .ToListAsync();
@@ -220,13 +192,13 @@ namespace FinTrackWebApi.Controller.Reports
             report.Items = budgetCategoriesData
                 .Select(bc => new BudgetReportTableItem
                 {
-                    Name = bc.Budget.Name,
-                    Description = bc.Budget.Description ?? "-",
+                    Name = bc.Name,
+                    Description = bc.Description ?? "-",
                     Category = bc.Category.Name,
-                    StartDate = bc.Budget.StartDate,
-                    EndDate = bc.Budget.EndDate,
-                    CreatedAt = bc.Budget.CreatedAtUtc,
-                    UpdatedAt = bc.Budget.UpdatedAtUtc ?? DateTime.MinValue,
+                    StartDate = bc.StartDate,
+                    EndDate = bc.EndDate,
+                    CreatedAt = bc.CreatedAtUtc,
+                    UpdatedAt = bc.UpdatedAtUtc ?? DateTime.MinValue,
                     AllocatedAmount = bc.AllocatedAmount,
                 })
                 .ToList();

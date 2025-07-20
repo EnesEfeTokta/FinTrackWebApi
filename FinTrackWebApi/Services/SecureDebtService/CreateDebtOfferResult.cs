@@ -1,4 +1,4 @@
-﻿using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Models.Debt;
 
 namespace FinTrackWebApi.Services.SecureDebtService
 {

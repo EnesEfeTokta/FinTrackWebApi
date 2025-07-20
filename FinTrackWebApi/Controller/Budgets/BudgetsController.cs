@@ -1,6 +1,7 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.BudgetDtos;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Budget;
+using FinTrackWebApi.Models.Category;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -45,59 +46,40 @@ namespace FinTrackWebApi.Controller.Budgets
             {
                 int userId = GetAuthenticatedUserId();
 
-                var bc = await _context
-                    .BudgetCategories
-                    .Where(b => b.Budget.UserId == userId && b.Category.UserId == userId)
-                    .Select(b => new
+                var budgets = await _context.Budgets
+                    .Where(b => b.UserId == userId)
+                    .Select(b => new BudgetDto
                     {
-                        b.Budget.Id,
-                        b.Budget.Name,
-                        b.Budget.Description,
+                        Id = b.Id,
+                        Name = b.Name,
+                        Description = b.Description,
                         Category = b.Category.Name,
-                        b.AllocatedAmount,
-                        b.Currency,
-                        b.Budget.StartDate,
-                        b.Budget.EndDate,
-                        b.Budget.IsActive,
-                        b.Budget.CreatedAtUtc,
-                        b.Budget.UpdatedAtUtc
+                        AllocatedAmount = b.AllocatedAmount,
+                        Currency = b.Currency,
+                        StartDate = b.StartDate,
+                        EndDate = b.EndDate,
+                        IsActive = b.IsActive,
+                        CreatedAtUtc = b.CreatedAtUtc,
+                        UpdatedAtUtc = b.UpdatedAtUtc
                     })
                     .AsNoTracking()
                     .ToListAsync();
 
-                if (bc == null || !bc.Any())
+                if (!budgets.Any())
                 {
                     _logger.LogWarning(
                         "No budgets found for user ID: {UserId}",
                         userId
                     );
-                    return NotFound("No budgets found.");
+                    return Ok(new List<BudgetDto>());
                 }
+
                 _logger.LogInformation(
                     "Successfully retrieved budgets for user ID: {UserId}",
                     userId
                 );
 
-                var budgetDtos = new List<BudgetDto>();
-                foreach (var budget in bc)
-                {
-                    budgetDtos.Add(new BudgetDto
-                    {
-                        Id = budget.Id,
-                        Name = budget.Name,
-                        Description = budget.Description,
-                        Category = budget.Category,
-                        AllocatedAmount = budget.AllocatedAmount,
-                        Currency = budget.Currency,
-                        StartDate = budget.StartDate,
-                        EndDate = budget.EndDate,
-                        IsActive = budget.IsActive,
-                        CreatedAtUtc = budget.CreatedAtUtc,
-                        UpdatedAtUtc = budget.UpdatedAtUtc
-                    });
-                }
-
-                return Ok(budgetDtos);
+                return Ok(budgets);
             }
             catch (Exception ex)
             {
@@ -117,14 +99,26 @@ namespace FinTrackWebApi.Controller.Budgets
             {
                 int userId = GetAuthenticatedUserId();
 
-                var bc = await _context
-                    .BudgetCategories
-                    .Include(b => b.Budget)
+                var budget = await _context.Budgets.Where(b => b.Id == id && b.UserId == userId)
                     .Include(b => b.Category)
+                    .Select(b => new BudgetDto
+                    {
+                        Id = b.Id,
+                        Name = b.Name,
+                        Description = b.Description,
+                        Category = b.Category.Name,
+                        AllocatedAmount = b.AllocatedAmount,
+                        Currency = b.Currency,
+                        StartDate = b.StartDate,
+                        EndDate = b.EndDate,
+                        IsActive = b.IsActive,
+                        CreatedAtUtc = b.CreatedAtUtc,
+                        UpdatedAtUtc = b.UpdatedAtUtc
+                    })
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Budget.UserId == userId && b.Category.UserId == userId);
+                    .FirstOrDefaultAsync();
 
-                if (bc == null)
+                if (budget == null)
                 {
                     _logger.LogWarning(
                         "Budget with ID {BudgetId} not found for user ID: {UserId}",
@@ -140,22 +134,7 @@ namespace FinTrackWebApi.Controller.Budgets
                     userId
                 );
 
-                var budgetDto = new BudgetDto
-                {
-                    Id = bc.Id,
-                    Name = bc.Budget.Name,
-                    Description = bc.Budget.Description,
-                    Category = bc.Category.Name,
-                    AllocatedAmount = bc.AllocatedAmount,
-                    Currency = bc.Currency,
-                    StartDate = bc.Budget.StartDate,
-                    EndDate = bc.Budget.EndDate,
-                    IsActive = bc.Budget.IsActive,
-                    CreatedAtUtc = bc.CreatedAtUtc,
-                    UpdatedAtUtc = bc.UpdatedAtUtc
-                };
-
-                return Ok(budgetDto);
+                return Ok(budget);
             }
             catch (Exception ex)
             {
@@ -176,11 +155,32 @@ namespace FinTrackWebApi.Controller.Budgets
 
             try
             {
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Name == budgetDto.Category && c.UserId == userId);
+                if (category == null)
+                {
+                    category = new CategoryModel
+                    {
+                        UserId = userId,
+                        Name = budgetDto.Category
+                    };
+                    _context.Categories.Add(category);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation(
+                        "Creating new category '{CategoryName}' for user ID: {UserId}",
+                        budgetDto.Category,
+                        userId
+                    );
+                }
+
                 var newBudget = new BudgetModel
                 {
                     UserId = userId,
+                    CategoryId = category.Id,
                     Name = budgetDto.Name,
                     Description = budgetDto.Description,
+                    AllocatedAmount = budgetDto.AllocatedAmount,
+                    Currency = budgetDto.Currency,
                     StartDate = budgetDto.StartDate,
                     EndDate = budgetDto.EndDate,
                     IsActive = budgetDto.IsActive,
@@ -190,10 +190,14 @@ namespace FinTrackWebApi.Controller.Budgets
                 _context.Budgets.Add(newBudget);
                 await _context.SaveChangesAsync();
 
+                var resultDto = await GetBudget(newBudget.Id) as OkObjectResult;
+
                 _logger.LogInformation(
                     "Successfully created budget for user ID: {UserId}",
                     userId
                 );
+
+                return CreatedAtAction(nameof(GetBudget), new { id = newBudget.Id }, resultDto?.Value);
             }
             catch (Exception ex)
             {
@@ -204,104 +208,6 @@ namespace FinTrackWebApi.Controller.Budgets
                 );
                 return StatusCode(500, "Internal server error while creating budget.");
             }
-
-            try
-            {
-                var category = await _context.Categories.AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.Name == budgetDto.Category && c.UserId == userId);
-                if (category == null)
-                {
-                    _logger.LogWarning(
-                        "Category {CategoryName} not found for user ID: {UserId}",
-                        budgetDto.Category,
-                        userId
-                    );
-
-                    var newCategory = new CategoryModel
-                    {
-                        UserId = userId,
-                        Name = budgetDto.Category,
-                        CreatedAtUtc = DateTime.UtcNow
-                    };
-                    _context.Categories.Add(newCategory);
-                    await _context.SaveChangesAsync();
-
-                    _logger.LogInformation(
-                        "Created new category {CategoryName} for user ID: {UserId}",
-                        budgetDto.Category,
-                        userId
-                    );
-                }
-                else
-                {
-                    _logger.LogInformation(
-                        "Category {CategoryName} already exists for user ID: {UserId}",
-                        budgetDto.Category,
-                        userId
-                    );
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error checking or creating category {CategoryName} for user ID: {UserId}",
-                    budgetDto.Category,
-                    userId
-                );
-                return StatusCode(500, "Internal server error while checking or creating category.");
-            }
-
-            try
-            {
-                var budget = await _context.Budgets
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Name == budgetDto.Name && b.UserId == userId);
-                if (budget == null)
-                {
-                    _logger.LogWarning(
-                        "Budget {BudgetName} not found for user ID: {UserId}",
-                        budgetDto.Name,
-                        userId
-                    );
-                }
-                var category = await _context.Categories
-                    .FirstOrDefaultAsync(c => c.Name == budgetDto.Category && c.UserId == userId);
-                if (category == null)
-                {
-                    _logger.LogWarning(
-                        "Category {CategoryName} not found for user ID: {UserId}",
-                        budgetDto.Category,
-                        userId
-                    );
-                }
-
-                var budgetCategory = new BudgetCategoryModel
-                {
-                    BudgetId = budget.Id,
-                    CategoryId = category.Id,
-                    AllocatedAmount = budgetDto.AllocatedAmount,
-                    Currency = budgetDto.Currency,
-                    CreatedAtUtc = DateTime.UtcNow
-                };
-                _context.BudgetCategories.Add(budgetCategory);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation(
-                    "Successfully created budget category for budget ID: {BudgetId} and category ID: {CategoryId}",
-                    budget.Id,
-                    category.Id
-                );
-                return Ok(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Error creating budget category for user ID: {UserId}",
-                    userId
-                );
-                return StatusCode(500, "Internal server error while creating budget category.");
-            }
         }
 
         [HttpPut("{id}")]
@@ -311,11 +217,9 @@ namespace FinTrackWebApi.Controller.Budgets
             {
                 int userId = GetAuthenticatedUserId();
 
-                var bc = await _context.BudgetCategories
-                    .Include(b => b.Budget)
-                    .Include(b => b.Category)
-                    .FirstOrDefaultAsync(bc => bc.Id == id && bc.Budget.UserId == userId && bc.Category.UserId == userId);
-                if (bc == null)
+                var budgetToUpdate = await _context.Budgets
+                    .FirstOrDefaultAsync(bc => bc.Id == id && bc.UserId == userId);
+                if (budgetToUpdate == null)
                 {
                     _logger.LogWarning(
                         "Budget with ID {BudgetId} not found for user ID: {UserId}",
@@ -325,26 +229,44 @@ namespace FinTrackWebApi.Controller.Budgets
                     return NotFound("Budget not found.");
                 }
 
-                bc.Budget.Name = budgetDto.Name;
-                bc.Budget.Description = budgetDto.Description;
-                bc.Category.Name = budgetDto.Category;
-                bc.AllocatedAmount = budgetDto.AllocatedAmount;
-                bc.Currency = budgetDto.Currency;
-                bc.Budget.IsActive = budgetDto.IsActive;
-                bc.Budget.StartDate = budgetDto.StartDate;
-                bc.Budget.EndDate = budgetDto.EndDate;
-                bc.Budget.IsActive = budgetDto.IsActive;
-                bc.UpdatedAtUtc = DateTime.UtcNow;
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Name == budgetDto.Category && c.UserId == userId);
+                if (category == null)
+                {
+                    category = new CategoryModel
+                    {
+                        UserId = userId,
+                        Name = budgetDto.Category
+                    };
+                    _context.Categories.Add(category);
+                }
 
-                _context.BudgetCategories.Update(bc);
+                budgetToUpdate.Name = budgetDto.Name;
+                budgetToUpdate.Description = budgetDto.Description;
+                budgetToUpdate.AllocatedAmount = budgetDto.AllocatedAmount;
+                budgetToUpdate.Currency = budgetDto.Currency;
+                budgetToUpdate.StartDate = budgetDto.StartDate;
+                budgetToUpdate.EndDate = budgetDto.EndDate;
+                budgetToUpdate.IsActive = budgetDto.IsActive;
+                budgetToUpdate.Category = category;
+                budgetToUpdate.UpdatedAtUtc = DateTime.UtcNow;
+
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation(
-                    "Successfully updated budget with ID {BudgetId} for user ID: {UserId}",
-                    id,
-                    userId
-                );
-                return Ok(bc);
+                return Ok(new BudgetDto
+                {
+                    Id = budgetToUpdate.Id,
+                    Name = budgetToUpdate.Name,
+                    Description = budgetToUpdate.Description,
+                    Category = budgetToUpdate.Category.Name,
+                    AllocatedAmount = budgetToUpdate.AllocatedAmount,
+                    Currency = budgetToUpdate.Currency,
+                    StartDate = budgetToUpdate.StartDate,
+                    EndDate = budgetToUpdate.EndDate,
+                    IsActive = budgetToUpdate.IsActive,
+                    CreatedAtUtc = budgetToUpdate.CreatedAtUtc,
+                    UpdatedAtUtc = budgetToUpdate.UpdatedAtUtc
+                });
             }
             catch (Exception ex)
             {
@@ -365,9 +287,9 @@ namespace FinTrackWebApi.Controller.Budgets
             {
                 int userId = GetAuthenticatedUserId();
 
-                var bc = await _context.BudgetCategories.AsNoTracking()
-                    .FirstOrDefaultAsync(bc => bc.Id == id);
-                if (bc == null)
+                var budgetToDelete = await _context.Budgets
+                    .FirstOrDefaultAsync(bc => bc.Id == id && bc.UserId == userId);
+                if (budgetToDelete == null)
                 {
                     _logger.LogWarning(
                         "Budget with ID {BudgetId} not found for user ID: {UserId}",
@@ -377,10 +299,7 @@ namespace FinTrackWebApi.Controller.Budgets
                     return NotFound("Budget not found.");
                 }
 
-                _context.BudgetCategories.Remove(bc);
-                await _context.SaveChangesAsync();
-
-                _context.Budgets.Remove(bc.Budget);
+                _context.Budgets.Remove(budgetToDelete);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation(

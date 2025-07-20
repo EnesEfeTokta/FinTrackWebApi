@@ -1,4 +1,4 @@
-﻿using FinTrackWebApi.Models;
+﻿using FinTrackWebApi.Models.Otp;
 
 namespace FinTrackWebApi.Services.OtpService
 {

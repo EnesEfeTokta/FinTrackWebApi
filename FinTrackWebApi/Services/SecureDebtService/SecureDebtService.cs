@@ -1,6 +1,7 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Debt;
+using FinTrackWebApi.Models.User;
 using FinTrackWebApi.Services.EmailService;
 using Microsoft.AspNetCore.Identity;
 

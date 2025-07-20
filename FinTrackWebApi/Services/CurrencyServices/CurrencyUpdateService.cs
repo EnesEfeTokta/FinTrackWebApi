@@ -1,5 +1,5 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Currency;
 using FinTrackWebApi.Services.CurrencyServices.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
