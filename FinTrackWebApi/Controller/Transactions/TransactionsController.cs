@@ -50,6 +50,7 @@ namespace FinTrackWebApi.Controller.Transactions
                         Category = t.Category,
                         Account = t.Account,
                         Amount = t.Amount,
+                        Currency = t.Currency,
                         TransactionDateUtc = t.TransactionDateUtc,
                         Description = t.Description,
                         CreatedAtUtc = t.CreatedAtUtc,
@@ -102,6 +103,7 @@ namespace FinTrackWebApi.Controller.Transactions
                         Category = t.Category,
                         Account = t.Account,
                         Amount = t.Amount,
+                        Currency = t.Currency,
                         TransactionDateUtc = t.TransactionDateUtc,
                         Description = t.Description,
                         CreatedAtUtc = t.CreatedAtUtc,
@@ -162,6 +164,7 @@ namespace FinTrackWebApi.Controller.Transactions
                         Category = t.Category,
                         Account = t.Account,
                         Amount = t.Amount,
+                        Currency = t.Currency,
                         TransactionDateUtc = t.TransactionDateUtc,
                         Description = t.Description,
                         CreatedAtUtc = t.CreatedAtUtc,
@@ -214,6 +217,7 @@ namespace FinTrackWebApi.Controller.Transactions
                         Category = t.Category,
                         Account = t.Account,
                         Amount = t.Amount,
+                        Currency = t.Currency,
                         TransactionDateUtc = t.TransactionDateUtc,
                         Description = t.Description,
                         CreatedAtUtc = t.CreatedAtUtc,
@@ -292,6 +296,7 @@ namespace FinTrackWebApi.Controller.Transactions
                     CategoryId = transactionDto.CategoryId,
                     AccountId = transactionDto.AccountId,
                     Amount = transactionDto.Amount,
+                    Currency = transactionDto.Currency,
                     TransactionDateUtc = transactionDto.TransactionDateUtc,
                     Description = transactionDto.Description ?? "No description",
                     CreatedAtUtc = DateTime.UtcNow,
@@ -351,6 +356,7 @@ namespace FinTrackWebApi.Controller.Transactions
             transaction.CategoryId = transactionDto.CategoryId;
             transaction.AccountId = transactionDto.AccountId;
             transaction.Amount = transactionDto.Amount;
+            transaction.Currency = transactionDto.Currency;
             transaction.TransactionDateUtc = DateTime.SpecifyKind(
                 transactionDto.TransactionDateUtc,
                 DateTimeKind.Utc

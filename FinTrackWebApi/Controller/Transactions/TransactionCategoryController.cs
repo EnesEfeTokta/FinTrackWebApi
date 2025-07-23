@@ -102,7 +102,8 @@ namespace FinTrackWebApi.Controller.Transactions
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransactionCategory([FromBody] TransactionCategoriesDto transactionCategoryDto)
+        public async Task<IActionResult> CreateTransactionCategory([FromBody] 
+        TransactionCategoriesCreateDto transactionCategoryDto)
         {
             if (!ModelState.IsValid)
             {
@@ -136,7 +137,8 @@ namespace FinTrackWebApi.Controller.Transactions
         }
 
         [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateTransactionCategory(int Id, [FromBody] TransactionCategoriesDto transactionCategoryDto)
+        public async Task<IActionResult> UpdateTransactionCategory(int Id, 
+            [FromBody] TransactionCategoriesCreateDto transactionCategoryDto)
         {
             if (!ModelState.IsValid)
             {

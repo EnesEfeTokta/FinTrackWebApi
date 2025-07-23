@@ -1,5 +1,6 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Enums;
+using FinTrackWebApi.Models;
 using FinTrackWebApi.Models.Debt;
 using FinTrackWebApi.Models.User;
 using FinTrackWebApi.Services.EmailService;
@@ -15,6 +16,9 @@ namespace FinTrackWebApi.Services.SecureDebtService
         private readonly ILogger<SecureDebtService> _logger;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _webHostEnvironment;
+
+        private const string notificationFilePath = 
+            "C:\\Users\\alfac\\OneDrive\\Belgeler\\GitHub\\FinTrackWebApi\\FinTrackWebApi\\Controller\\Notifications\\MessagesSchemes.json";
 
         public SecureDebtService(
             MyDataContext context,
@@ -237,7 +241,58 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     };
                 }
 
-                // TODO: Eğer borç veren kullanıcıya da bildirim göndermek gerekli. Bunun için Bildirim servisi oluşturulmalı.
+                try
+                {
+                    string messageHead = File.ReadAllText(notificationFilePath);
+                    string messageBody = File.ReadAllText(notificationFilePath);
+                    string messageType = File.ReadAllText(notificationFilePath);
+                    if (!Enum.TryParse(messageType, true, out NotificationType categoryType))
+                    {
+                        _logger.LogInformation("");
+                        return new CreateDebtOfferResult
+                        {
+                            Success = false,
+                            Message = "",
+                        };
+                    }
+                    messageBody = messageBody.Replace("[BORROWER_USERNAME]", borrower.UserName);
+                    messageBody = messageBody.Replace("[LENDER_USERNAME]", lender.UserName);
+                    messageBody = messageBody.Replace("[CREATE_DATE]", debt.CreateAtUtc.ToString("dd:MM:yyyy"));
+                    messageBody = messageBody.Replace("[DUE_DATE]", debt.DueDateUtc.ToString("dd:MM:yyyy"));
+                    messageBody = messageBody.Replace("[AMOUNT]", $"{debt.Amount} {debt.Currency}");
+
+                    var newNotificaiton = new NotificationModel
+                    {
+                        UserId = borrower.Id,
+                        MessageHead = messageHead,
+                        MessageBody = messageBody,
+                        Type = NotificationType.Info,
+                        CreatedAtUtc = DateTime.UtcNow,
+                    };
+
+                    _logger.LogInformation(
+                        "Debt offer (ID: {DebtId}) was successfully created and a notification was sent to {BorrowerEmail}.",
+                        debt.Id,
+                        borrower.Email
+                    );
+
+                    _context.Notifications.Add(newNotificaiton);
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "An error occurred while sending the debt offer app notification. Debt offer ID: {DebtId}",
+                        debt.Id
+                    );
+                    return new CreateDebtOfferResult
+                    {
+                        Success = false,
+                        Message = "The quote has been created, but the app in notification failed.",
+                    };
+                }
+
                 return new CreateDebtOfferResult
                 {
                     Success = true,

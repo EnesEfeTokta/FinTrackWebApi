@@ -1,4 +1,5 @@
-﻿using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Enums;
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.NotificationDtos;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -33,7 +34,7 @@ namespace FinTrackWebApi.Controller.Notifications
         }
 
         [HttpGet]
-        public async Task<ActionResult<NotificationDto>> GetNotifications()
+        public async Task<IActionResult> GetNotifications()
         {
             try
             {
@@ -68,7 +69,7 @@ namespace FinTrackWebApi.Controller.Notifications
         }
 
         [HttpPost]
-        public async Task<ActionResult<NotificationDto>> CreateNotification(
+        public async Task<IActionResult> CreateNotification(
             [FromBody] NotificationCreateDto notificationDto
         )
         {
@@ -102,6 +103,101 @@ namespace FinTrackWebApi.Controller.Notifications
                     GetAuthenticatedUserId()
                 );
                 return StatusCode(500, "Internal server error while creating notification.");
+            }
+        }
+
+        [HttpPut("{Id}")]
+        public async Task<IActionResult> NotificationRead(int Id)
+        {
+            int userId = GetAuthenticatedUserId();
+
+            try
+            {
+                var notification = await _context.Notifications
+                    .FirstOrDefaultAsync(n => n.Id == Id && n.UserId == userId);
+                if (notification == null)
+                {
+                    _logger.LogWarning(
+                        "Notification with ID {NotificationId} not found for user ID: {NotificationId}",
+                        Id,
+                        userId
+                    );
+                    return NotFound("Notification not found.");
+                }
+
+                notification.IsRead = true;
+                notification.UpdatedAtUtc = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Successfully updated notification with ID {NotificationId} for user ID: {UserId}",
+                    Id,
+                    userId
+                );
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error updating notification with ID {NotificationId} for user ID: {UserId}",
+                    Id,
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "Internal server error while updating notification.");
+            }
+        }
+
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteNotification(int Id)
+        {
+            int userId = GetAuthenticatedUserId();
+
+            try
+            {
+                var notification = await _context.Notifications
+                    .FirstOrDefaultAsync(n => n.Id == Id && n.UserId == userId);
+                if (notification == null)
+                {
+                    _logger.LogWarning(
+                        "Notification with ID {NotificationId} not found for user ID: {UserId}",
+                        Id,
+                        userId
+                    );
+                    return NotFound($"Notification with ID {Id} not found.");
+                }
+
+                if (notification.Type == NotificationType.Success || 
+                    notification.Type == NotificationType.Info)
+                {
+                    _context.Notifications.Remove(notification);
+                }
+                if (notification.Type == NotificationType.Error || 
+                    notification.Type == NotificationType.Warning && 
+                    notification.IsRead == true)
+                {
+                    _context.Notifications.Remove(notification);
+                }
+                
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Successfully deleted notification with ID {NotificationId} for user ID: {UserId}",
+                    Id,
+                    userId
+                );
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error deleting notification with ID {NotificationId} for user ID: {UserId}",
+                    Id,
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "Internal server error while deleting the notification.");
             }
         }
     }
