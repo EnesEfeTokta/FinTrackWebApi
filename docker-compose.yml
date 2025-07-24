@@ -28,7 +28,7 @@ services:
     ports:
       - "4040:4040"
     environment:
-       - NGROK_AUTHTOKEN=2wuCJxMriYB0MvVAanMEzZwsVGK_3UfHpEqo3wyQ73BGuRGYX
+        - NGROK_AUTHTOKEN=2wuCJxMriYB0MvVAanMEzZwsVGK_3UfHpEqo3wyQ73BGuRGYX
     command:
       - "http"
       - "fintrack_api:8080"
@@ -90,6 +90,69 @@ services:
               count: 1
               capabilities: [gpu]
 
+  # Grafana yapılandırması
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - fintrac_network
+    depends_on:
+      - prometheus
+
+  # Prometheus yapılandırması
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus-storage:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - fintrac_network
+    depends_on:
+      - cadvisor
+      - postgres_exporter
+
+  # cAdvisor yapılandırması
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - fintrac_network
+    privileged: true
+    environment:
+      - DOCKER_HOST_IP=host.docker.internal
+
+  # PostgreSQL Exporter yapılandırması
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:140xxx-+@db_postgres:5432/myfintrackdb?sslmode=disable
+    networks:
+      - fintrac_network
+    depends_on:
+      - db_postgres
+
 networks:
   fintrac_network:
     driver: bridge
@@ -99,3 +162,5 @@ volumes:
     driver: local
   ollama_data:
     driver: local
+  grafana-storage:
+  prometheus-storage:

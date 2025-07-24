@@ -1,4 +1,5 @@
 using FinTrackWebApi.Extensions;
+using Prometheus;
 using QuestPDF.Infrastructure;
 using Serilog;
 using Serilog.Formatting.Json;
@@ -23,13 +24,16 @@ try
         .AddApplicationServices(builder.Configuration)
         .AddPersistenceServices(builder.Configuration)
         .AddAuthenticationServices(builder.Configuration, builder.Environment)
-        .AddSwaggerServices();
+        .AddSwaggerServices()
+        .AddMetricServer(options => { });
 
     var app = builder.Build();
 
     await app.SeedDatabaseAsync();
 
     app.ConfigurePipeline();
+
+    app.UseMetricServer();
 
     app.Run();
 }

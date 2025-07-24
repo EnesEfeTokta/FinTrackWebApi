@@ -1,6 +1,4 @@
-# -*- coding: windows-1254 -*-
-
-import logging
+ï»¿import logging
 import os
 from typing import List, Dict, Any, Optional
 import requests
@@ -66,7 +64,7 @@ def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "G
 
 GET_USER_ACCOUNTS_TOOL = {
     "name": "get_user_accounts",
-    "description": "Kullanýcýnýn FinTrack sistemindeki tüm finansal hesaplarýný (örneðin banka hesaplarý, cüzdanlar) ve mevcut bakiyelerini listeler.",
+    "description": "Kullanï¿½cï¿½nï¿½n FinTrack sistemindeki tï¿½m finansal hesaplarï¿½nï¿½ (ï¿½rneï¿½in banka hesaplarï¿½, cï¿½zdanlar) ve mevcut bakiyelerini listeler.",
     "parameters": {
         "type": "OBJECT",
         "properties": {},
@@ -76,13 +74,13 @@ GET_USER_ACCOUNTS_TOOL = {
 
 GET_ACCOUNT_DETAILS_TOOL = {
     "name": "get_account_details",
-    "description": "Kullanýcýnýn belirli bir finansal hesabýnýn detaylarýný (ID ile) ve bakiyesini getirir.",
+    "description": "Kullanï¿½cï¿½nï¿½n belirli bir finansal hesabï¿½nï¿½n detaylarï¿½nï¿½ (ID ile) ve bakiyesini getirir.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
             "account_id": {
                 "type": "INTEGER",
-                "description": "Detaylarý görüntülenecek hesabýn ID'si."
+                "description": "Detaylarï¿½ gï¿½rï¿½ntï¿½lenecek hesabï¿½n ID'si."
             }
         },
         "required": ["account_id"]
@@ -91,15 +89,15 @@ GET_ACCOUNT_DETAILS_TOOL = {
 
 CREATE_ACCOUNT_TOOL = {
     "name": "create_account",
-    "description": "Kullanýcý için yeni bir finansal hesap (örneðin banka hesabý, nakit cüzdaný) oluþturur.",
+    "description": "Kullanï¿½cï¿½ iï¿½in yeni bir finansal hesap (ï¿½rneï¿½in banka hesabï¿½, nakit cï¿½zdanï¿½) oluï¿½turur.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
-            "name": {"type": "STRING", "description": "Oluþturulacak hesabýn adý (örneðin 'Maaþ Hesabým', 'Nakit Cüzdaný')."},
-            "type": {"type": "STRING", "description": "Hesabýn türü (örneðin 'Checking', 'Savings', 'CreditCard', 'Cash').  Sadece alabileceði deðerler 'Checking', 'Savings', 'CreditCard', 'Cash', 'Investment', 'Loan', 'Other'."},
-            "balance": {"type": "NUMBER", "description": "Hesabýn baþlangýç bakiyesi."},
-            "is_active": {"type": "BOOLEAN", "description": "Hesabýn aktif olup olmadýðýný belirtir. Varsayýlan olarak True."},
-            "currency": {"type": "STRING", "description": "Hesabýn para birimi (örneðin 'TRY', 'USD', 'EUR'). Sadece alabileceði deðerler 'TRY', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF'."}
+            "name": {"type": "STRING", "description": "Oluï¿½turulacak hesabï¿½n adï¿½ (ï¿½rneï¿½in 'Maaï¿½ Hesabï¿½m', 'Nakit Cï¿½zdanï¿½')."},
+            "type": {"type": "STRING", "description": "Hesabï¿½n tï¿½rï¿½ (ï¿½rneï¿½in 'Checking', 'Savings', 'CreditCard', 'Cash').  Sadece alabileceï¿½i deï¿½erler 'Checking', 'Savings', 'CreditCard', 'Cash', 'Investment', 'Loan', 'Other'."},
+            "balance": {"type": "NUMBER", "description": "Hesabï¿½n baï¿½langï¿½ï¿½ bakiyesi."},
+            "is_active": {"type": "BOOLEAN", "description": "Hesabï¿½n aktif olup olmadï¿½ï¿½ï¿½nï¿½ belirtir. Varsayï¿½lan olarak True."},
+            "currency": {"type": "STRING", "description": "Hesabï¿½n para birimi (ï¿½rneï¿½in 'TRY', 'USD', 'EUR'). Sadece alabileceï¿½i deï¿½erler 'TRY', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF'."}
         },
         "required": ["name", "type", "balance", "currency"]
     }

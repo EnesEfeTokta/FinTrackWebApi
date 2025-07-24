@@ -270,7 +270,7 @@ namespace FinTrackWebApi.Controller.Accounts
         private async Task<decimal> CalculateBalanceAsync(int Id)
         {
             var balance = await _context
-                .Transactions.Where(t => t.Id == Id)
+                .Transactions.Where(t => t.AccountId == Id)
                 .Include(t => t.Category)
                 .SumAsync(t => t.Category.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
 
