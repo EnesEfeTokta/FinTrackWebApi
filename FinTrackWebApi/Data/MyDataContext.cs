@@ -480,7 +480,7 @@ namespace FinTrackWebApi.Data
                 entity.HasMany(a => a.Transactions)
                       .WithOne(t => t.Account)
                       .HasForeignKey(t => t.AccountId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 // -- Index --
                 entity.HasIndex(a => new { a.UserId, a.Name }).IsUnique();

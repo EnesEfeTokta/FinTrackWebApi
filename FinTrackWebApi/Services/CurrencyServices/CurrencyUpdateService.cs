@@ -159,20 +159,11 @@ namespace FinTrackWebApi.Services.CurrencyServices
             CancellationToken cancellationToken
         )
         {
-            // newRatesResponse null ise işlemi erken sonlandır
-            if (newRatesResponse == null)
+            if (newRatesResponse?.Rates == null || !newRatesResponse.Rates.Any())
             {
                 _logger.LogWarning(
-                    "SaveRatesToDatabaseAsync: newRatesResponse is null. No rates will be saved."
-                );
-                return; // Veya uygun bir hata yönetimi
-            }
-            // Ayrıca, Rates koleksiyonunun da null veya boş olup olmadığını kontrol etmek iyi bir pratiktir.
-            if (newRatesResponse.Rates == null || !newRatesResponse.Rates.Any())
-            {
-                _logger.LogWarning(
-                    "SaveRatesToDatabaseAsync: newRatesResponse.Rates is null or empty. No rates will be saved. Base Currency: {Base}",
-                    newRatesResponse.Base
+                    "SaveRatesToDatabaseAsync was called with a response that has no rates. Base Currency: {Base}. No data will be saved.",
+                    newRatesResponse?.Base ?? "N/A"
                 );
                 return;
             }
@@ -184,7 +175,6 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
 
                 var newCurrencyCodesToAdd = new List<string>();
-                // newRatesResponse.Rates null olmayacağı için (yukarıdaki kontrol sayesinde) doğrudan erişebiliriz.
                 foreach (var apiCurrencyCode in newRatesResponse.Rates.Keys)
                 {
                     if (!dbCurrenciesMap.ContainsKey(apiCurrencyCode))
@@ -203,7 +193,6 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
                     foreach (var code in newCurrencyCodesToAdd)
                     {
-                        // Varsayılan olarak Name ve diğer zorunlu alanlar için mantıklı değerler atayın
                         dbContext.Currencies.Add(
                             new CurrencyModel
                             {
@@ -230,14 +219,13 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     _logger.LogDebug("The currency map has been updated with new additions.");
                 }
 
-                // newRatesResponse.Base null olmayacağı için (yukarıdaki ilk null kontrolü sayesinde) doğrudan erişebiliriz.
                 var lastSnapshotRates = await dbContext
                     .ExchangeRates.Where(er =>
                         er.CurrencySnapshot.BaseCurrency == newRatesResponse.Base
                     )
                     .Include(er => er.Currency)
                     .OrderByDescending(er => er.CurrencySnapshot.FetchTimestamp)
-                    .GroupBy(er => er.Currency.Code) // Currency null olabilir mi? Eğer olabiliyorsa, .Where(er => er.Currency != null) ekleyin.
+                    .GroupBy(er => er.Currency.Code)
                     .Select(g => g.First())
                     .ToDictionaryAsync(er => er.Currency.Code, er => er.Rate, cancellationToken);
 
@@ -260,12 +248,11 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
                 bool hasChangesForThisSnapshot = false;
 
-                foreach (var apiRatePair in newRatesResponse.Rates) // Rates null olmayacak
+                foreach (var apiRatePair in newRatesResponse.Rates)
                 {
-                    // ... (kalan kodunuz aynı) ...
                     string currencyCodeFromApi = apiRatePair.Key;
                     decimal rateFromApi = apiRatePair.Value;
-                    // ...
+
                     decimal processedApiRate = Math.Round(
                         rateFromApi,
                         DefaultRatePrecision,

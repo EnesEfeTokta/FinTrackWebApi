@@ -49,6 +49,7 @@ namespace FinTrackWebApi.Controller.Accounts
                         a.Name,
                         a.Type,
                         a.IsActive,
+                        a.Balance,
                         a.Currency,
                         a.CreatedAtUtc,
                         a.UpdatedAtUtc,
@@ -66,7 +67,7 @@ namespace FinTrackWebApi.Controller.Accounts
                             Name = acc.Name,
                             Type = acc.Type ?? AccountType.Error,
                             IsActive = acc.IsActive,
-                            Balance = await CalculateBalanceAsync(acc.Id),
+                            Balance = await CalculateBalanceAsync(acc.Id, acc.Balance),
                             Currency = acc.Currency ?? BaseCurrencyType.Error,
                             CreatedAtUtc = acc.CreatedAtUtc,
                             UpdatedAtUtc = acc.UpdatedAtUtc,
@@ -102,6 +103,7 @@ namespace FinTrackWebApi.Controller.Accounts
                         a.Name,
                         a.Type,
                         a.IsActive,
+                        a.Balance,
                         a.Currency,
                         a.CreatedAtUtc,
                         a.UpdatedAtUtc,
@@ -125,7 +127,7 @@ namespace FinTrackWebApi.Controller.Accounts
                     Name = accountFromDb.Name,
                     Type = accountFromDb.Type ?? AccountType.Error,
                     IsActive = accountFromDb.IsActive,
-                    Balance = await CalculateBalanceAsync(accountFromDb.Id),
+                    Balance = await CalculateBalanceAsync(accountFromDb.Id, accountFromDb.Balance),
                     Currency = accountFromDb.Currency ?? BaseCurrencyType.Error,
                     CreatedAtUtc = accountFromDb.CreatedAtUtc,
                     UpdatedAtUtc = accountFromDb.UpdatedAtUtc,
@@ -163,7 +165,6 @@ namespace FinTrackWebApi.Controller.Accounts
                     Name = accountDto.Name,
                     Type = accountDto.Type,
                     IsActive = accountDto.IsActive,
-                    Balance = accountDto.Balance,
                     Currency = accountDto.Currency,
                     CreatedAtUtc = DateTime.UtcNow,
                 };
@@ -213,7 +214,6 @@ namespace FinTrackWebApi.Controller.Accounts
 
                 account.Name = accountDto.Name;
                 account.Type = accountDto.Type;
-                account.Balance = accountDto.Balance;
                 account.Currency = accountDto.Currency;
                 account.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -267,14 +267,14 @@ namespace FinTrackWebApi.Controller.Accounts
             }
         }
 
-        private async Task<decimal> CalculateBalanceAsync(int Id)
+        private async Task<decimal> CalculateBalanceAsync(int Id, decimal initialBalance)
         {
             var balance = await _context
                 .Transactions.Where(t => t.AccountId == Id)
                 .Include(t => t.Category)
                 .SumAsync(t => t.Category.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
 
-            return balance;
+            return initialBalance + balance;
         }
     }
 }

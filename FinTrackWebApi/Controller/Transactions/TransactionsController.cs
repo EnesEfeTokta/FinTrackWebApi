@@ -257,6 +257,63 @@ namespace FinTrackWebApi.Controller.Transactions
             }
         }
 
+        [HttpGet("account-id/{account}")]
+        public async Task<IActionResult> GetTransactionsByAccountId(int account)
+        {
+            try
+            {
+                int userId = GetAuthenticatedUserId();
+
+                var transactions = await _context.Transactions
+                    .Include(t => t.Category)
+                    .Include(t => t.Account)
+                    .Where(t => t.UserId == userId && t.Account.Id == account)
+                    .Select(t => new TransactionDto
+                    {
+                        Id = t.Id,
+                        Category = t.Category,
+                        Account = t.Account,
+                        Amount = t.Amount,
+                        Currency = t.Currency,
+                        TransactionDateUtc = t.TransactionDateUtc,
+                        Description = t.Description,
+                        CreatedAtUtc = t.CreatedAtUtc,
+                        UpdatedAtUtc = t.UpdatedAtUtc
+                    })
+                    .ToListAsync();
+
+                if (transactions == null || transactions.Count == 0)
+                {
+                    _logger.LogInformation(
+                        "No transactions found for account id '{AccountId}' for user {UserId}",
+                        account,
+                        userId
+                    );
+                    return NotFound(
+                        $"No transactions found for account id '{account}' for user {userId}."
+                    );
+                }
+
+                _logger.LogInformation(
+                    "Retrieved {TransactionCount} transactions for account id '{AccountId}' for user {UserId}",
+                    transactions.Count,
+                    account,
+                    userId
+                );
+                return Ok(transactions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error retrieving transactions for account id '{AccountId}' for user {UserId}",
+                    account,
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "An error occurred while retrieving the transactions.");
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateTransaction(
             [FromBody] TransactionCreateDto transactionDto
@@ -275,7 +332,7 @@ namespace FinTrackWebApi.Controller.Transactions
 
             try
             {
-                var category = await _context.Categories.FirstOrDefaultAsync(c =>
+                var category = await _context.TransactionCategories.FirstOrDefaultAsync(c =>
                     c.Id == transactionDto.CategoryId && c.UserId == userId
                 );
                 if (category == null)
@@ -287,6 +344,34 @@ namespace FinTrackWebApi.Controller.Transactions
                     );
                     return BadRequest(
                         $"Category with ID {transactionDto.CategoryId} not found for this user."
+                    );
+                }
+
+                var account = await _context.Accounts.FirstOrDefaultAsync(a => 
+                    a.Id == transactionDto.AccountId && a.UserId == userId);
+
+                if (account == null)
+                {
+                    _logger.LogWarning(
+                        "Account with ID {AccountId} not found for user {UserId}",
+                        transactionDto.CategoryId,
+                        userId
+                    );
+                    return BadRequest(
+                        $"Account with ID {transactionDto.AccountId} not found for this user."
+                    );
+                }
+
+                if (transactionDto.Currency != account.Currency)
+                {
+                    _logger.LogWarning(
+                        "The account's defined bar unit must be compatible with the transaction currency. " +
+                        "Account Currency: {AccountCurrency}, Transaction Currency: {TransactionCurrency}",
+                        account.Currency, transactionDto.Currency
+                    );
+                    return BadRequest(
+                        "The account's defined bar unit must be compatible with the transaction currency. " +
+                        $"Account Currency: {account.Currency}, Transaction Currency: {transactionDto.Currency}"
                     );
                 }
 

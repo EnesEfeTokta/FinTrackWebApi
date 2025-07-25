@@ -103,7 +103,7 @@ namespace FinTrackWebApi.Controller.Currencies
         public async Task<IActionResult> GetCurrencyByCountryName(string countryName)
         {
             var currency = await _context.Currencies.FirstOrDefaultAsync(c =>
-                c.CountryCode == countryName
+                c.CountryName.ToUpper() == countryName.ToUpper()
             );
             if (currency != null)
             {

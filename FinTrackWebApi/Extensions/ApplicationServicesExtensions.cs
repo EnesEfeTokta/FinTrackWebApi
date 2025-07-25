@@ -26,7 +26,19 @@ namespace FinTrackWebApi.Extensions
 
             services.Configure<CurrencyFreaksSettings>(configuration.GetSection("CurrencyFreaks"));
             services.AddMemoryCache();
-            services.AddHttpClient();
+
+            var currencyFreaksSettings = configuration.GetSection("CurrencyFreaks").Get<CurrencyFreaksSettings>();
+
+            if (currencyFreaksSettings == null || string.IsNullOrWhiteSpace(currencyFreaksSettings.BaseUrl))
+            {
+                throw new InvalidOperationException("CurrencyFreaks BaseUrl is not configured in appsettings.json under the 'CurrencyFreaks' section.");
+            }
+
+            services.AddHttpClient("CurrencyFreaksClient", client =>
+            {
+                client.BaseAddress = new Uri(currencyFreaksSettings.BaseUrl);
+            });
+
 
             services.AddScoped<IEmailSender, EmailSender>();
             services.AddScoped<IOtpService, OtpService>();
