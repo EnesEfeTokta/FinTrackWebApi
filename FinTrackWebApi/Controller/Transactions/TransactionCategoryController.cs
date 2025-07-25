@@ -1,9 +1,9 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos.TransactionDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using FinTrackWebApi.Dtos.TransactionDtos;
+using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Transactions
 {
@@ -102,7 +102,7 @@ namespace FinTrackWebApi.Controller.Transactions
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTransactionCategory([FromBody] 
+        public async Task<IActionResult> CreateTransactionCategory([FromBody]
         TransactionCategoriesCreateDto transactionCategoryDto)
         {
             if (!ModelState.IsValid)
@@ -137,7 +137,7 @@ namespace FinTrackWebApi.Controller.Transactions
         }
 
         [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateTransactionCategory(int Id, 
+        public async Task<IActionResult> UpdateTransactionCategory(int Id,
             [FromBody] TransactionCategoriesCreateDto transactionCategoryDto)
         {
             if (!ModelState.IsValid)

@@ -1,5 +1,4 @@
-﻿using FinTrackWebApi.Dtos.MembershipPlansDtos;
-using FinTrackWebApi.Enums;
+﻿using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models.User;
 
 namespace FinTrackWebApi.Models.Membership

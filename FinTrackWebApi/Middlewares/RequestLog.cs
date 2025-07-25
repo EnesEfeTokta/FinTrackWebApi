@@ -35,7 +35,7 @@ namespace FinTrackWebApi.Middlewares
         public string? ClientIp { get; set; }
 
         [JsonPropertyName("headers")]
-        public Dictionary<string, string> Headers { get; set; } 
+        public Dictionary<string, string> Headers { get; set; }
     }
 
     public class ResponseDetails

@@ -398,7 +398,7 @@ namespace FinTrackWebApi.Data
                 entity.HasIndex(t => t.AccountId);
             });
 
-            modelBuilder.Entity<TransactionCategoryModel>(entity => 
+            modelBuilder.Entity<TransactionCategoryModel>(entity =>
             {
                 // -- Tablo --
                 entity.ToTable("TransactionCategories");

@@ -17,7 +17,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        private const string notificationFilePath = 
+        private const string notificationFilePath =
             "C:\\Users\\alfac\\OneDrive\\Belgeler\\GitHub\\FinTrackWebApi\\FinTrackWebApi\\Controller\\Notifications\\MessagesSchemes.json";
 
         public SecureDebtService(

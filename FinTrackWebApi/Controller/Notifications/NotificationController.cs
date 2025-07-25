@@ -1,6 +1,6 @@
-﻿using FinTrackWebApi.Enums;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.NotificationDtos;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -168,18 +168,18 @@ namespace FinTrackWebApi.Controller.Notifications
                     return NotFound($"Notification with ID {Id} not found.");
                 }
 
-                if (notification.Type == NotificationType.Success || 
+                if (notification.Type == NotificationType.Success ||
                     notification.Type == NotificationType.Info)
                 {
                     _context.Notifications.Remove(notification);
                 }
-                if (notification.Type == NotificationType.Error || 
-                    notification.Type == NotificationType.Warning && 
+                if (notification.Type == NotificationType.Error ||
+                    notification.Type == NotificationType.Warning &&
                     notification.IsRead == true)
                 {
                     _context.Notifications.Remove(notification);
                 }
-                
+
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation(

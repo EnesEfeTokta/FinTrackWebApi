@@ -9,7 +9,6 @@ using FinTrackWebApi.Services.OtpService;
 using FinTrackWebApi.Services.PaymentService;
 using FinTrackWebApi.Services.SecureDebtService;
 using System.Text.Json.Serialization;
-using Stripe;
 
 namespace FinTrackWebApi.Extensions
 {

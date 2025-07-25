@@ -347,7 +347,7 @@ namespace FinTrackWebApi.Controller.Transactions
                     );
                 }
 
-                var account = await _context.Accounts.FirstOrDefaultAsync(a => 
+                var account = await _context.Accounts.FirstOrDefaultAsync(a =>
                     a.Id == transactionDto.AccountId && a.UserId == userId);
 
                 if (account == null)

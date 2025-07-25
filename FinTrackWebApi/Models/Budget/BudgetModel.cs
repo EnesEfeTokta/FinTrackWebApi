@@ -1,7 +1,7 @@
-﻿using FinTrackWebApi.Models.User;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models.Category;
-using FinTrackWebApi.Enums;
+using FinTrackWebApi.Models.User;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinTrackWebApi.Models.Budget
 {

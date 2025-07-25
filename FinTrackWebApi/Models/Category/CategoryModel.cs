@@ -1,5 +1,4 @@
 ﻿using FinTrackWebApi.Models.Budget;
-using FinTrackWebApi.Models.Tranaction;
 using FinTrackWebApi.Models.User;
 
 namespace FinTrackWebApi.Models.Category
