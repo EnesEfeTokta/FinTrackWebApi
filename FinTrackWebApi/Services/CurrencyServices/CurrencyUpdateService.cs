@@ -60,11 +60,19 @@ namespace FinTrackWebApi.Services.CurrencyServices
                         _updateInterval
                     );
                     await Task.Delay(_updateInterval, stoppingToken);
+
+                    if (stoppingToken.IsCancellationRequested) break;
+
                     await DoWorkWithScopeAsync(stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogInformation("The rate update cycle was canceled because the application is shutting down.");
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "An error occurred in the rate update cycle.");
+                    _logger.LogError(ex, "An unexpected error occurred in the rate update cycle.");
                 }
             }
             _logger.LogInformation("Stopping the Currency Update Service ExecuteAsync.");
