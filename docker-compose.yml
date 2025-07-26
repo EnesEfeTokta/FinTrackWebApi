@@ -28,7 +28,7 @@ services:
     ports:
       - "4040:4040"
     environment:
-        - NGROK_AUTHTOKEN=2wuCJxMriYB0MvVAanMEzZwsVGK_3UfHpEqo3wyQ73BGuRGYX
+        - NGROK_AUTHTOKEN=YOUR_KEY
     command:
       - "http"
       - "fintrack_api:8080"
