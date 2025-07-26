@@ -1,5 +1,5 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Otp;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 

@@ -1,5 +1,16 @@
 ﻿using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Account;
+using FinTrackWebApi.Models.Budget;
+using FinTrackWebApi.Models.Category;
+using FinTrackWebApi.Models.Currency;
+using FinTrackWebApi.Models.Debt;
+using FinTrackWebApi.Models.Empoyee;
+using FinTrackWebApi.Models.Feedback;
+using FinTrackWebApi.Models.Membership;
+using FinTrackWebApi.Models.Otp;
+using FinTrackWebApi.Models.Tranaction;
+using FinTrackWebApi.Models.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,9 +26,9 @@ namespace FinTrackWebApi.Data
         public DbSet<UserAppSettingsModel> UserAppSettings { get; set; }
         public DbSet<UserNotificationSettingsModel> UserNotificationSettings { get; set; }
         public DbSet<CategoryModel> Categories { get; set; }
-        public DbSet<BudgetCategoryModel> BudgetCategories { get; set; }
         public DbSet<BudgetModel> Budgets { get; set; }
         public DbSet<TransactionModel> Transactions { get; set; }
+        public DbSet<TransactionCategoryModel> TransactionCategories { get; set; }
         public DbSet<AccountModel> Accounts { get; set; }
         public DbSet<CurrencySnapshotModel> CurrencySnapshots { get; set; }
         public DbSet<ExchangeRateModel> ExchangeRates { get; set; }
@@ -267,13 +278,9 @@ namespace FinTrackWebApi.Data
                         .IsRequired(false);
 
                 // -- İlişkiler --
-                entity.HasMany(c => c.BudgetAllocations)
-                      .WithOne(bc => bc.Category)
-                      .HasForeignKey(bc => bc.CategoryId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                entity.HasMany(c => c.Transactions)
-                      .WithOne(t => t.Category)
-                      .HasForeignKey(t => t.CategoryId)
+                entity.HasMany(category => category.Budgets)
+                      .WithOne(budget => budget.Category)
+                      .HasForeignKey(budget => budget.CategoryId)
                       .OnDelete(DeleteBehavior.Restrict);
 
                 // -- Index --
@@ -295,6 +302,15 @@ namespace FinTrackWebApi.Data
                       .HasColumnName("Description")
                       .HasMaxLength(500)
                       .IsRequired(false);
+                entity.Property(b => b.AllocatedAmount)
+                        .HasColumnName("AllocatedAmount")
+                        .HasColumnType("decimal(18, 2)")
+                        .IsRequired(true);
+                entity.Property(b => b.Currency)
+                      .HasColumnName("Currency")
+                      .HasConversion<string>()
+                      .HasDefaultValue(BaseCurrencyType.TRY)
+                      .IsRequired(true);
                 entity.Property(b => b.StartDate)
                       .HasColumnName("StartDate")
                       .HasColumnType("date")
@@ -322,46 +338,10 @@ namespace FinTrackWebApi.Data
                       .WithMany(u => u.Budgets)
                       .HasForeignKey(b => b.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            modelBuilder.Entity<BudgetCategoryModel>(entity =>
-            {
-                // -- Tablo --
-                entity.ToTable("BudgetCategories");
-                entity.HasKey(bc => bc.Id);
-                entity.Property(bc => bc.Id).ValueGeneratedOnAdd();
-                entity.Property(bc => bc.AllocatedAmount)
-                      .HasColumnName("AllocatedAmount")
-                      .HasColumnType("decimal(18, 2)")
-                      .IsRequired(true);
-                entity.Property(bc => bc.Currency)
-                      .HasColumnName("Currency")
-                      .HasConversion<string>()
-                      .HasDefaultValue(BaseCurrencyType.TRY)
-                      .IsRequired(true);
-                entity.Property(bc => bc.CreatedAtUtc)
-                        .HasColumnName("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()")
-                        .IsRequired(true);
-                entity.Property(bc => bc.UpdatedAtUtc)
-                        .HasColumnName("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .IsRequired(false);
-
-                // -- İlişkiler --
-                entity.HasOne(bc => bc.Budget)
-                      .WithMany(b => b.BudgetCategories)
-                      .HasForeignKey(bc => bc.BudgetId)
-                      .OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(bc => bc.Category)
-                      .WithMany(c => c.BudgetAllocations)
-                      .HasForeignKey(bc => bc.CategoryId)
-                      .OnDelete(DeleteBehavior.Restrict);
-
-                // -- Inkdex --
-                entity.HasIndex(bc => new { bc.BudgetId, bc.CategoryId })
-                      .IsUnique();
+                entity.HasOne(budget => budget.Category)
+                        .WithMany(category => category.Budgets)
+                        .HasForeignKey(budget => budget.CategoryId)
+                        .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<TransactionModel>(entity =>
@@ -379,12 +359,6 @@ namespace FinTrackWebApi.Data
                         .HasConversion<string>()
                         .HasDefaultValue(BaseCurrencyType.TRY)
                         .IsRequired(true);
-                entity.Property(t => t.Type)
-                        .HasColumnName("Type")
-                        .HasConversion<string>()
-                        .IsRequired(true)
-                        .HasDefaultValue(TransactionCategoryType.Expense)
-                        .HasMaxLength(50);
                 entity.Property(t => t.TransactionDateUtc)
                       .HasColumnName("TransactionDateUtc")
                       .HasColumnType("timestamp with time zone")
@@ -422,6 +396,44 @@ namespace FinTrackWebApi.Data
                 entity.HasIndex(t => t.CategoryId);
                 entity.HasIndex(t => t.TransactionDateUtc);
                 entity.HasIndex(t => t.AccountId);
+            });
+
+            modelBuilder.Entity<TransactionCategoryModel>(entity =>
+            {
+                // -- Tablo --
+                entity.ToTable("TransactionCategories");
+                entity.HasKey(tc => tc.Id);
+                entity.Property(tc => tc.Id).ValueGeneratedOnAdd();
+                entity.Property(tc => tc.Name)
+                      .HasColumnName("CategoryName")
+                      .HasMaxLength(100)
+                      .IsRequired(true);
+                entity.Property(tc => tc.Type)
+                      .HasColumnName("CategoryType")
+                      .HasConversion<string>()
+                      .IsRequired(true);
+                entity.Property(tc => tc.CreatedAt)
+                        .HasColumnName("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(tc => tc.UpdatedAt)
+                        .HasColumnName("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .IsRequired(false);
+
+                // -- İlişkiler --
+                entity.HasOne(tc => tc.User)
+                      .WithMany(u => u.TransactionCategories)
+                      .HasForeignKey(tc => tc.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(tc => tc.Transactions)
+                      .WithOne(t => t.Category)
+                      .HasForeignKey(t => t.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // -- Index --
+                entity.HasIndex(tc => new { tc.UserId, tc.Name }).IsUnique();
             });
 
             modelBuilder.Entity<AccountModel>(entity =>
@@ -468,7 +480,7 @@ namespace FinTrackWebApi.Data
                 entity.HasMany(a => a.Transactions)
                       .WithOne(t => t.Account)
                       .HasForeignKey(t => t.AccountId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.Cascade);
 
                 // -- Index --
                 entity.HasIndex(a => new { a.UserId, a.Name }).IsUnique();
@@ -620,13 +632,91 @@ namespace FinTrackWebApi.Data
                 entity.Property(e => e.DurationInDays)
                       .HasColumnName("DurationInDays")
                       .IsRequired(false);
-                entity.Property(e => e.Features)
-                      .HasColumnName("Features")
-                      .IsRequired(false);
                 entity.Property(e => e.IsActive)
                       .HasColumnName("IsActive")
                       .HasDefaultValue(true)
                       .IsRequired(true);
+                entity.Property(e => e.CreatedAt)
+                        .HasColumnName("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(e => e.UpdatedAt)
+                        .HasColumnName("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .IsRequired(false);
+                entity.Property(e => e.PrioritySupport)
+                        .HasColumnName("PrioritySupport")
+                        .HasDefaultValue(false)
+                        .IsRequired(true);
+
+                // -- Ek Özellikler --
+                entity.OwnsOne(e => e.Reporting, reportingBuilder =>
+                {
+                    reportingBuilder.Property(r => r.Level)
+                             .HasColumnName("ReportingLevel")
+                             .HasMaxLength(50)
+                             .IsRequired(true);
+                    reportingBuilder.Property(r => r.CanExportPdf)
+                             .HasColumnName("CanExportPdf")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    reportingBuilder.Property(r => r.CanExportWord)
+                             .HasColumnName("CanExportWord")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    reportingBuilder.Property(r => r.CanExportMarkdown)
+                             .HasColumnName("CanExportMarkdown")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    reportingBuilder.Property(r => r.CanExportXml)
+                             .HasColumnName("CanExportXml")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    reportingBuilder.Property(r => r.CanExportText)
+                             .HasColumnName("CanExportText")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    reportingBuilder.Property(r => r.CanExportXlsx)
+                             .HasColumnName("CanExportXlsx")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                });
+                entity.OwnsOne(e => e.Emailing, emailingBuilder =>
+                {
+                    emailingBuilder.Property(e => e.CanEmailReports)
+                             .HasColumnName("CanEmailReports")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    emailingBuilder.Property(e => e.MaxEmailsPerMonth)
+                             .HasColumnName("MaxEmailsPerMonth")
+                             .HasDefaultValue(0)
+                             .IsRequired(true);
+                });
+                entity.OwnsOne(e => e.Budgeting, budgetingBuilder =>
+                {
+                    budgetingBuilder.Property(b => b.CanCreateBudgets)
+                             .HasColumnName("CanCreateBudgets")
+                             .HasDefaultValue(false)
+                             .IsRequired(true);
+                    budgetingBuilder.Property(b => b.MaxBudgets)
+                             .HasColumnName("MaxBudgets")
+                             .HasDefaultValue(0)
+                             .IsRequired(true);
+                });
+                entity.OwnsOne(e => e.Accounts, accountsBuilder =>
+                {
+                    accountsBuilder.Property(a => a.MaxBankAccounts)
+                             .HasColumnName("MaxBankAccounts")
+                             .HasDefaultValue(0)
+                             .IsRequired(true);
+                });
+
+                // -- Navigation Özellikleri --
+                entity.Navigation(plan => plan.Reporting).IsRequired(false);
+                entity.Navigation(plan => plan.Emailing).IsRequired(false);
+                entity.Navigation(plan => plan.Budgeting).IsRequired(false);
+                entity.Navigation(plan => plan.Accounts).IsRequired(false);
 
                 // -- İlişkiler --
                 entity

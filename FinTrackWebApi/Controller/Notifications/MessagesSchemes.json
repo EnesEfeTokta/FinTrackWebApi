@@ -1,0 +1,44 @@
+{
+	"BorrowerInfo": {
+		"Head": "Yeni bir bor� tekfili ald�n�z.",
+		"Body": "Say�n [BORROWER_USERNAME], kullan�c�m�z olan [LENDER_USERNAME] ki�isinden [CREATE_DATE] tarihinde olu�turulan ve son �deme tarihi [DUE_DATE] olan bor� teklifinin mikar� ise [AMOUNT]. Bor� teklifini kabul/red etmek se�iminize kalm��t�r. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Borrower" ],
+		"Status": "Info"
+	},
+	"BorrowerRejected": {
+		"Head": "Bor� teklifini bor� alan taraf�ndan rededildi.",
+		"Body": "Say�n [LENDER_USERNAME], kullan�c�m�z olan [BORROWER_USERNAME] ki�isi [CREATE_DATE] ile [DUE_DATE] aras�ndaki bor� teklifiniz reddedildi. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Lender" ],
+		"Status": "Warning"
+	},
+	"BorrowerAccepted": {
+		"Head": "Bor� teklifini bor� alan taraf�ndan kabul edildi.",
+		"Body": "Say�n [LENDER_USERNAME], kullan�c�m�z olan [BORROWER_USERNAME] ki�isi [CREATE_DATE] ile [DUE_DATE] aras�ndaki bor� teklifiniz kabul edildi. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Lender" ],
+		"Status": "Success"
+	},
+	"OperatorRejected": {
+		"Head": "Bor� teklifini operat�r taraf�ndan red edildi",
+		"Body": "Say�n [RELATED_USERNAME], kullan�c�m�z olan [RELATED_TO_USERNAME] ki�isi [CREATE_DATE] ile [DUE_DATE] aras�ndaki bor� teklifiniz operat�r�m�z taraf�ndan rededildi. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Borrower", "Lender" ],
+		"Status": "Warning"
+	},
+	"OperatorAccepted": {
+		"Head": "Bor� teklifini operat�r taraf�ndan kabul edildi",
+		"Body": "Say�n [RELATED_USERNAME], kullan�c�m�z olan [RELATED_TO_USERNAME] ki�isi [CREATE_DATE] ile [DUE_DATE] aras�ndaki bor� teklifiniz operat�r�m�z taraf�ndan kabul edildi. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Borrower", "Lender" ],
+		"Status": "Success"
+	},
+	"BorrowerLastPayment": {
+		"Head": " Son �deme tarihli [DUE_DATE] borcunuza son [DAY_COUNT] g�n kald�.",
+		"Body": "Say�n [BORROWER_USERNAME], kullan�c�m�z olan [LENDER_USERNAME] ki�isinden ald���n�z borca son [DAY_COUNT] kald�. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Borrower" ],
+		"Status": "Info"
+	},
+	"BorrowerConsiderLastPayment": {
+		"Head": " Son �deme tarihli [DUE_DATE] borcunuza son [DAY_COUNT] g�n kald�.",
+		"Body": "Say�n [BORROWER_USERNAME], kullan�c�m�z olan [LENDER_USERNAME] ki�isinden ald���n�z borca son [DAY_COUNT] kald�. Son �deme tarihini ka��rman�z durumunda teminat videonuz bor� verene a��lacakt�r. Hukuki s�re� ba�lat�labilir. L�tfen Debt paneline gidiniz.",
+		"Targets": [ "Borrower" ],
+		"Status": "Warning"
+	}
+}

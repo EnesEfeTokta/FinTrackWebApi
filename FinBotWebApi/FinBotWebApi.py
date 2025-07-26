@@ -1,37 +1,82 @@
-# -*- coding: windows-1254 -*-
-
-import os
+ï»¿import os
 import logging
-from typing import List, Dict, Any, Optional
 import json
 import inspect
+from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, HTTPException, Body
+import requests
+from fastapi import FastAPI, HTTPException, Body, Request, Response
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
-
 from dotenv import load_dotenv
+from prometheus_client import generate_latest, Counter, Histogram
+import time
 
 from Tools.FinanceTools import AVAILABLE_TOOLS as FINANCE_TOOLS, FUNCTION_MAPPING as FINANCE_FUNCTION_MAPPING
 from Tools.MembershipTools import MEMBERSHIP_AVAILABLE_TOOLS, MEMBERSHIP_FUNCTION_MAPPING
 from Tools.BudgetTools import BUDGET_AVAILABLE_TOOLS, BUDGET_FUNCTION_MAPPING
 from Tools.AccountTools import ACCOUNT_AVAILABLE_TOOLS, ACCOUNT_FUNCTION_MAPPING
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    logger.error("GOOGLE_API_KEY environment variable not found!")
-    raise ValueError("GOOGLE_API_KEY environment variable must be set.")
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434") 
+OLLAMA_MODEL_NAME = "phi3:mini"
 
-genai.configure(api_key=GOOGLE_API_KEY)
+app = FastAPI(title="FinTrack ChatBot Service (Python with Ollama)")
 
-app = FastAPI(title="FinTrack ChatBot Service (Python)")
+# HTTP isteklerinin toplam sayÄ±sÄ±nÄ± sayar
+REQUEST_COUNT = Counter(
+    'finbot_http_requests_total',
+    'Total HTTP requests to FinBot',
+    ['method', 'endpoint', 'status_code']
+)
 
-chat_histories: Dict[str, List[Dict[str, Any]]] = {}
+# HTTP isteklerinin sÃ¼resini Ã¶lÃ§er
+REQUEST_LATENCY = Histogram(
+    'finbot_http_request_duration_seconds',
+    'HTTP request latency in seconds',
+    ['endpoint']
+)
+
+# Ä°ÅŸlenen mesajlarÄ±n toplam sayÄ±sÄ±nÄ± sayar
+MESSAGES_PROCESSED_TOTAL = Counter(
+    'finbot_messages_processed_total',
+    'Total number of messages processed by FinBot'
+)
+
+# FinBot yanÄ±t sÃ¼resi
+FINBOT_RESPONSE_TIME = Histogram(
+    'finbot_response_duration_seconds',
+    'Duration of FinBot processing a request in seconds'
+)
+
+# Her gelen isteÄŸi izlemek icÄ±n
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+
+    endpoint = request.url.path
+    method = request.method
+    status_code = response.status_code
+
+    REQUEST_COUNT.labels(method=method, endpoint=endpoint, status_code=status_code).inc()
+
+    REQUEST_LATENCY.labels(endpoint=endpoint).observe(process_time)
+
+    return response
+
+# Prometheus metrik endpoint'i
+@app.get("/metrics", response_class=PlainTextResponse)
+async def metrics():
+    """
+    Prometheus metriklerini dÃ¶ndÃ¼rÃ¼r.
+    """
+    return generate_latest()
 
 class ChatRequest(BaseModel):
     userId: str
@@ -44,229 +89,145 @@ class ChatResponse(BaseModel):
 
 ALL_AVAILABLE_TOOLS = FINANCE_TOOLS + MEMBERSHIP_AVAILABLE_TOOLS + BUDGET_AVAILABLE_TOOLS + ACCOUNT_AVAILABLE_TOOLS
 ALL_FUNCTION_MAPPING = {**FINANCE_FUNCTION_MAPPING, **MEMBERSHIP_FUNCTION_MAPPING, **BUDGET_FUNCTION_MAPPING, **ACCOUNT_FUNCTION_MAPPING}
+ALL_TOOLS_JSON_STRING = json.dumps(ALL_AVAILABLE_TOOLS, indent=2)
 
-gemini_tools_config: Optional[List[genai.types.Tool]] = None
-if ALL_AVAILABLE_TOOLS:
-    try:
-        gemini_tools_config = [genai.types.Tool(function_declarations=[
-            genai.types.FunctionDeclaration(**tool_schema) for tool_schema in ALL_AVAILABLE_TOOLS
-        ])]
-    except Exception as e:
-        logger.error(f"Error creating Gemini tools: {e}")
+def get_intent_detection_prompt(user_message: str) -> str:
+    """
+    A much more robust prompt for intent classification, using few-shot examples.
+    This helps the model learn the pattern correctly.
+    """
+    return f"""You are a text classifier. Your only job is to classify the user's intent as either "TOOL" or "CHAT".
+Do not explain your reasoning. Do not use any other words.
 
-def get_system_prompt(user_id: str, tools_config: Optional[List[genai.types.Tool]]) -> str:
-    tool_descriptions = []
-    if tools_config:
-        for tool_wrapper in tools_config:
-            for func_decl in tool_wrapper.function_declarations:
-                tool_descriptions.append(f"- '{func_decl.name}': {func_decl.description}")
-    
-    available_tools_str = "\n".join(tool_descriptions)
-    if not tool_descriptions:
-        available_tools_str = "Þu anda özel bir finansal veya üyelik aracým bulunmuyor."
+Here are some examples:
+User: "Hello there"
+Response: CHAT
 
-    return f"""Sen FinBot'sun. FinTrack kullanýcýsý (UserId: {user_id}) için bir finans, üyelik, bütçe ve hesap yönetimi asistanýsýn.
-    Amacýn, kullanýcýlara finansal konularda, üyelik durumlarýyla, bütçeleriyle ve hesaplarýyla ilgili yardýmcý olmaktýr.
-    Kullanýlabilir Araçlarýn (Fonksiyonlarýn):
-    {available_tools_str} # Bu artýk tüm fonksiyonlarý içerecek
-    Kullanýcý bir istekte bulunduðunda, eðer uygun bir araç varsa, o aracý çaðýrmak için bir 'function_call' isteði döndür.
-    Örneðin:
-    - Kullanýcý 'tüm hesaplarýmý listele' veya 'hangi banka hesaplarým var?' derse, 'get_user_accounts' fonksiyonunu çaðýr.
-    - Kullanýcý 'maaþ hesabýmýn bakiyesi nedir?' veya 'ID'si 3 olan hesabýmýn detaylarýný göster' derse, 'get_account_details' fonksiyonunu uygun 'account_id' ile çaðýr (gerekirse ID'yi kullanýcýdan iste).
-    - Kullanýcý 'yeni bir nakit cüzdaný oluþturmak istiyorum, adý Cep Harçlýðý olsun, baþlangýç bakiyesi 100 TL' derse, 'create_account' fonksiyonunu kullanmak için gerekli bilgileri (isim, tür, bakiye) çýkarým yap veya kullanýcýdan iste.
-    Dönen verileri kullanýcýya anlaþýlýr bir þekilde özetleyerek sun. Eðer fonksiyon bir hata döndürürse veya veri bulamazsa, bunu uygun bir þekilde kullanýcýya bildir.
-    Eðer bir fonksiyonu çaðýrmak için gerekli bilgi eksikse, bu bilgiyi kullanýcýdan ÝSTE.
-    Yanýtlarýnda ASLA '(Bu kýsýmda ... fonksiyonu çaðrýlýr)' gibi parantez içi açýklamalar KULLANMA; fonksiyonu gerçekten çaðýr ve sonucunu doðrudan ilet.
-    Her zaman nazik ol. Finansal tavsiye verme. Karmaþýk durumlar için uzmana yönlendir.
-    Projenin adý FinTrack Finans Takip Uygulamasýdýr."""
+User: "how are you?"
+Response: CHAT
+
+User: "thanks"
+Response: CHAT
+
+User: "list all my accounts"
+Response: TOOL
+
+User: "create a new budget for groceries for 500 dollars"
+Response: TOOL
+
+User: "what was my last transaction?"
+Response: TOOL
+
+---
+Now, classify the following user request.
+
+User: "{user_message}"
+Response:"""
+
+def get_tool_calling_prompt_english(tools_json_string: str, user_message: str) -> str:
+    return f"""<|system|>
+Your only task is to analyze the user's request and generate a JSON command to call the appropriate tool from the provided list. Do nothing else.
+
+User Request: "{user_message}"
+
+Available Tools:
+{tools_json_string}
+
+Your output MUST ONLY be a JSON object in the following format:
+```json
+{{
+  "tool_to_call": "<tool_name>",
+  "parameters": {{
+    "<param_name>": "<value>"
+  }}
+}}
+```<|end|>
+<|user|>
+{user_message}<|end|>
+<|assistant|>
+"""
+
+def get_simple_chat_prompt_english(user_message: str) -> str:
+    return f"""<|system|>
+You are FinBot, a friendly and helpful financial assistant. You are having a simple conversation with a user. Keep your answers short, polite, and helpful.<|end|>
+<|user|>
+{user_message}<|end|>
+<|assistant|>
+"""
+
+def get_summarization_prompt_english(tool_name: str, function_result: dict) -> str:
+    return f"A tool named '{tool_name}' was executed and returned this JSON data: {json.dumps(function_result)}. Summarize this result for the user in a friendly, simple sentence."
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest = Body(...)):
-    logger.info(f"Python: Request received at /chat endpoint: UserId={request.userId}, SessionId={request.clientChatSessionId}, Message='{request.message}', HasAuthToken={request.authToken is not None}")
-
-    session_cache_key = f"history_{request.userId}_{request.clientChatSessionId}"
-    current_history: List[Dict[str, Any]] = chat_histories.get(session_cache_key, [])
-    
-    if not current_history:
-        logger.info(f"Python: Starting new chat history. CacheKey: {session_cache_key}")
-    
-    current_history.append({"role": "user", "parts": [{"text": request.message}]})
-    
-    final_reply_text: str = "Sorry, I encountered a problem while processing your request."
+    logger.info(f"Python (Ollama-EN-v2): Request received: UserId={request.userId}, Message='{request.message}'")
+    final_reply_text = "I'm sorry, I encountered a problem while processing your request."
 
     try:
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash-latest",
-            tools=gemini_tools_config,
-            system_instruction=get_system_prompt(request.userId, gemini_tools_config),
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            }
-        )
+        intent_prompt = get_intent_detection_prompt(request.message)
+        intent_payload = {"model": OLLAMA_MODEL_NAME, "prompt": intent_prompt, "stream": False}
         
-        for i in range(2): 
-            logger.info(f"Python: Request sent to Gemini (Round {i+1}). History Length: {len(current_history)}")
-            
-            response_from_gemini = await model.generate_content_async(
-                contents=current_history,
-                generation_config={"candidate_count": 1}
-            )
+        logger.info("Python (Ollama-EN-v2): Detecting intent...")
+        intent_response = requests.post(f"{OLLAMA_API_URL}/api/generate", json=intent_payload, timeout=30)
+        intent_response.raise_for_status()
+        
+        intent = intent_response.json().get("response", "").strip().upper()
+        logger.info(f"Python (Ollama-EN-v2): Detected intent: '{intent}'")
 
+        if "TOOL" in intent:
+            logger.info("Python (Ollama-EN-v2): Following TOOL path.")
+            tool_prompt = get_tool_calling_prompt_english(ALL_TOOLS_JSON_STRING, request.message)
+            tool_payload = {"model": OLLAMA_MODEL_NAME, "prompt": tool_prompt, "format": "json", "stream": False}
+
+            tool_response = requests.post(f"{OLLAMA_API_URL}/api/generate", json=tool_payload, timeout=120)
+            tool_response.raise_for_status()
+            
+            model_response_str = tool_response.json().get("response", "")
+            
             try:
-                logger.debug(f"Python: Gemini Raw Response Object (Round {i+1}): {response_from_gemini}")
-                if response_from_gemini.prompt_feedback and response_from_gemini.prompt_feedback.block_reason:
-                    logger.warning(f"Python: Response blocked (Round {i+1}). Reason: {response_from_gemini.prompt_feedback.block_reason_message}")
-                    final_reply_text = f"Your request could not be processed due to safety filters: {response_from_gemini.prompt_feedback.block_reason_message}"
-                    current_history.append({"role": "model", "parts": [{"text": final_reply_text}]})
-                    break 
-            except Exception as log_ex:
-                logger.warning(f"Python: Error while logging/checking Gemini response (Round {i+1}): {log_ex}")
-
-            if not response_from_gemini.candidates:
-                logger.warning(f"Python: No candidate response received from Gemini (Round {i+1}).")
-                final_reply_text = "No response received from the Gemini model."
-                current_history.append({"role": "model", "parts": [{"text": final_reply_text}]})
-                break
-
-            ai_candidate = response_from_gemini.candidates[0]
-            ai_message_content = ai_candidate.content
-            
-            ai_message_for_history: Dict[str, Any]
-            if hasattr(ai_message_content, 'to_dict'):
-                ai_message_for_history = ai_message_content.to_dict()
-            else:
-                ai_message_for_history = {"role": ai_message_content.role, "parts": []}
-                for p_val in ai_message_content.parts:
-                    part_dict = {}
-                    if hasattr(p_val, 'text') and p_val.text:
-                        part_dict["text"] = p_val.text
-                    elif hasattr(p_val, 'function_call') and p_val.function_call:
-                        part_dict["function_call"] = {"name": p_val.function_call.name, "args": dict(p_val.function_call.args) if p_val.function_call.args else {}}
-                    if part_dict:
-                         ai_message_for_history["parts"].append(part_dict)
-
-            if not ai_message_content.parts:
-                logger.warning(f"Python: 'parts' not found in Gemini response (Round {i+1}).")
-                final_reply_text = "Received an empty response from the Gemini model."
-                current_history.append({"role": "model", "parts": [{"text": final_reply_text}]})
-                break
-            
-            called_function_in_this_turn = False
-            for part_content in ai_message_content.parts:
-                if hasattr(part_content, 'function_call') and part_content.function_call:
-                    called_function_in_this_turn = True
-                    function_call_data = part_content.function_call 
-                    function_name = function_call_data.name
-                    args = dict(function_call_data.args) if function_call_data.args else {}
+                tool_call_data = json.loads(model_response_str)
+                tool_name = tool_call_data.get("tool_to_call")
+                tool_args = tool_call_data.get("parameters", {})
+                
+                if tool_name in ALL_FUNCTION_MAPPING:
+                    python_function = ALL_FUNCTION_MAPPING[tool_name]
+                    if "auth_token" in inspect.signature(python_function).parameters:
+                        if not request.authToken: raise ValueError("Auth token is required for this operation.")
+                        tool_args["auth_token"] = request.authToken
                     
-                    logger.info(f"Python: Gemini suggested a function call (Round {i+1}): {function_name} with args: {args}")
-                    current_history.append(ai_message_for_history)
+                    function_result = python_function(**tool_args)
+                    
+                    summarization_prompt = get_summarization_prompt_english(tool_name, function_result)
+                    summary_payload = {"model": OLLAMA_MODEL_NAME, "prompt": summarization_prompt, "stream": False}
+                    summary_response = requests.post(f"{OLLAMA_API_URL}/api/generate", json=summary_payload, timeout=60)
+                    summary_response.raise_for_status()
+                    final_reply_text = summary_response.json().get("response", "Your request has been processed.")
+                else:
+                    final_reply_text = "I could not find a suitable tool for your request."
 
-                    if function_name in ALL_FUNCTION_MAPPING:
-                        python_function_to_call = ALL_FUNCTION_MAPPING[function_name]
-                        
-                        func_params = inspect.signature(python_function_to_call).parameters
-                        if "auth_token" in func_params: 
-                            if request.authToken:
-                                args["auth_token"] = request.authToken 
-                                logger.info(f"Auth token added: For function {function_name}.")
-                            else:
-                                logger.error(f"Auth Token missing! Cannot call {function_name}.")
-                                final_reply_text = "Authentication information (authToken) is required and was not provided for this operation."
-                                error_tool_response_for_history = {
-                                    "role": "tool",
-                                    "parts": [{"function_response": {"name": function_name, "response": {"error": "Auth token eksik"}}}]
-                                }
-                                current_history.append(error_tool_response_for_history)
-                                break 
-                        
-                        if "auth_token" not in args and "auth_token" in func_params:
-                             logger.error(f"Auth token still missing, function will not be called: {function_name}")
-                             final_reply_text = "Operation could not be performed due to authentication error."
-                             break
+            except (json.JSONDecodeError, KeyError):
+                logger.error(f"Failed to parse tool call JSON: {model_response_str}")
+                final_reply_text = "There was an issue trying to use a tool."
 
-                        try:
-                            function_response_data = python_function_to_call(**args)
-                            logger.info(f"Python: Function '{function_name}' executed, result type: {type(function_response_data)}")
-                            tool_response_for_history = {
-                                "role": "tool",
-                                "parts": [{"function_response": {"name": function_name, "response": {"result": function_response_data}}}]
-                            }
-                            current_history.append(tool_response_for_history)
-                            final_reply_text = "Function executed, result is being sent to Gemini..." 
-                        except TypeError as te:
-                            logger.error(f"Python: TypeError while calling function '{function_name}': {te}", exc_info=True)
-                            final_reply_text = f"An argument error occurred while calling the '{function_name}' tool: {str(te)}"
-                            error_tool_response_for_history = {
-                                "role": "tool",
-                                "parts": [{"function_response": {"name": function_name, "response": {"error": f"Argüman hatasý: {str(te)}" }}}]
-                            }
-                            current_history.append(error_tool_response_for_history)
-                            break 
-                        except Exception as e:
-                            logger.error(f"Python: Error while executing function '{function_name}': {e}", exc_info=True)
-                            final_reply_text = f"An issue occurred while using the '{function_name}' tool: {str(e)}"
-                            error_tool_response_for_history = {
-                                "role": "tool",
-                                "parts": [{"function_response": {"name": function_name, "response": {"error": str(e)}}}]
-                            }
-                            current_history.append(error_tool_response_for_history)
-                            break 
-                    else:
-                        logger.warning(f"Python: Gemini suggested an unknown function call (Round {i+1}): {function_name}")
-                        final_reply_text = "I understood your request but could not find a suitable tool."
-                    break 
+        else:
+            logger.info("Python (Ollama-EN-v2): Following CHAT path.")
+            chat_prompt = get_simple_chat_prompt_english(request.message)
+            chat_payload = {"model": OLLAMA_MODEL_NAME, "prompt": chat_prompt, "stream": False}
             
-            if called_function_in_this_turn:
-                if i == 0: 
-                    continue 
-                else: 
-                    logger.warning(f"Python: Expected text response in the second round after function call (Round {i+1}).")
-                    text_part_found = False
-                    for part_content_after_func in ai_message_content.parts:
-                        if hasattr(part_content_after_func, 'text') and part_content_after_func.text:
-                            final_reply_text = part_content_after_func.text
-                            text_part_found = True
-                            break
-                    if not text_part_found:
-                        final_reply_text = "Function processed but no final response was received."
-                    break
-
-            text_part_found_direct = False
-            for part_content_direct in ai_message_content.parts:
-                if hasattr(part_content_direct, 'text') and part_content_direct.text:
-                    final_reply_text = part_content_direct.text
-                    text_part_found_direct = True
-                    logger.info(f"Python: Gemini provided a direct text response (Round {i+1}): {final_reply_text}")
-                    break 
-            
-            if text_part_found_direct:
-                break 
-            elif not called_function_in_this_turn : 
-                logger.warning(f"Python: Unexpected response format from Gemini (neither function nor text) (Round {i+1}).")
-                break 
-        
-        chat_histories[session_cache_key] = current_history
-        
-        if not current_history or \
-           not (current_history[-1].get("role") == "model" and \
-                len(current_history[-1].get("parts", [])) > 0 and \
-                current_history[-1]["parts"][0].get("text") == final_reply_text):
-            current_history.append({"role": "model", "parts": [{"text": final_reply_text}]})
-
-        if len(current_history) > 20: 
-            chat_histories[session_cache_key] = current_history[-20:]
+            chat_response = requests.post(f"{OLLAMA_API_URL}/api/generate", json=chat_payload, timeout=60)
+            chat_response.raise_for_status()
+            final_reply_text = chat_response.json().get("response", "Hello! How can I help you today?")
 
         return ChatResponse(reply=final_reply_text)
 
+    except requests.exceptions.RequestException as req_err:
+        logger.error(f"Python (Ollama-EN-v2): Could not connect to Ollama API: {req_err}")
+        raise HTTPException(status_code=503, detail="The AI service is currently unavailable.")
     except Exception as e:
-        logger.error(f"Python: General error occurred in /chat endpoint: {e}", exc_info=True)
+        logger.error(f"Python (Ollama-EN-v2): General error in chat endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"An error occurred in the ChatBot service: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info("Python ChatBot service is starting...")
+    logger.info("Python ChatBot service (Ollama EN version) is starting...")
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,6 +1,6 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Empoyee;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

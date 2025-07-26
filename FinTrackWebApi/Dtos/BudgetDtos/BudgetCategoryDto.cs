@@ -1,5 +1,6 @@
 ﻿using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Budget;
+using FinTrackWebApi.Models.Category;
 
 namespace FinTrackWebApi.Dtos
 {

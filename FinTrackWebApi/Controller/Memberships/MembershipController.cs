@@ -1,7 +1,9 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos.MembershipPlansDtos;
 using FinTrackWebApi.Dtos.UserMembershipDtos;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Membership;
+using FinTrackWebApi.Models.User;
 using FinTrackWebApi.Services.PaymentService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +14,8 @@ namespace FinTrackWebApi.Controller.Memberships
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
+    [Authorize] // TODO: [TEST]
     public class MembershipController : ControllerBase
     {
         private readonly MyDataContext _context;
@@ -78,6 +81,7 @@ namespace FinTrackWebApi.Controller.Memberships
         public async Task<ActionResult<IEnumerable<UserMembershipDto>>> GetUserMembershipHistory()
         {
             var userId = GetAuthenticatedUserId();
+
             var memberships = await _context
                 .UserMemberships.Include(um => um.Plan)
                 .Where(um => um.UserId == userId)
@@ -94,6 +98,224 @@ namespace FinTrackWebApi.Controller.Memberships
                 })
                 .ToListAsync();
             return Ok(memberships);
+        }
+
+        [HttpGet("plans")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<PlanFeatureCreateDto>>> GetAvailablePlans()
+        {
+            try
+            {
+                var plans = await _context.MembershipPlans
+                    .Where(p => p.IsActive)
+                    .Select(p => new PlanFeatureDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Description = p.Description,
+                        Price = p.Price,
+                        Currency = p.Currency ?? BaseCurrencyType.Error,
+                        BillingCycle = p.BillingCycle ?? BillingCycleType.Monthly,
+                        DurationInDays = p.DurationInDays,
+                        Reporting = p.Reporting,
+                        Emailing = p.Emailing,
+                        Budgeting = p.Budgeting,
+                        Accounts = p.Accounts,
+                        PrioritySupport = p.PrioritySupport,
+                    })
+                    .ToListAsync();
+                if (plans == null || !plans.Any())
+                {
+                    _logger.LogInformation("No active membership plans found.");
+                    return NotFound(new { message = "No active membership plans available." });
+                }
+
+                _logger.LogInformation("Retrieved {PlanCount} active membership plans.", plans.Count);
+                return Ok(plans);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving available membership plans.");
+                return StatusCode(500, new { message = "An error occurred while retrieving plans." });
+            }
+        }
+
+        [HttpGet("plan{Id}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<PlanFeatureCreateDto>>> GetAvailablePlans(int Id)
+        {
+            try
+            {
+                var plan = await _context.MembershipPlans
+                    .Where(p => p.IsActive && p.Id == Id)
+                    .Select(p => new PlanFeatureDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Description = p.Description,
+                        Price = p.Price,
+                        Currency = p.Currency ?? BaseCurrencyType.Error,
+                        BillingCycle = p.BillingCycle ?? BillingCycleType.Monthly,
+                        DurationInDays = p.DurationInDays,
+                        Reporting = p.Reporting,
+                        Emailing = p.Emailing,
+                        Budgeting = p.Budgeting,
+                        Accounts = p.Accounts,
+                        PrioritySupport = p.PrioritySupport,
+                    })
+                    .FirstOrDefaultAsync();
+                if (plan == null)
+                {
+                    _logger.LogInformation("No active membership plan found with Id {PlanId}.", Id);
+                    return NotFound(new { message = "No active membership plan available." });
+                }
+
+                _logger.LogInformation(
+                    "Retrieved active membership plan with Id {PlanId}.",
+                    plan.Id
+                );
+                return Ok(plan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving available membership plans.");
+                return StatusCode(500, new { message = "An error occurred while retrieving plans." });
+            }
+        }
+
+        [HttpPost("plan")]
+        public async Task<IActionResult> CreateMembershipPlan(
+            [FromBody] PlanFeatureCreateDto planDto
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning(
+                        "Invalid model state for creating membership plan: {Errors}",
+                        ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
+                    );
+                    return BadRequest(ModelState);
+                }
+
+                var newPlan = new MembershipPlanModel
+                {
+                    Name = planDto.PlanName,
+                    Description = planDto.PlanDescription,
+                    Price = planDto.Price,
+                    Currency = planDto.Currency,
+                    BillingCycle = planDto.BillingCycle,
+                    DurationInDays = planDto.DurationInDays,
+                    Reporting = planDto.Reporting,
+                    Emailing = planDto.Emailing,
+                    Budgeting = planDto.Budgeting,
+                    Accounts = planDto.Accounts,
+                    PrioritySupport = planDto.PrioritySupport,
+                    IsActive = planDto.IsActive,
+                    CreatedAt = DateTime.UtcNow,
+                };
+                _context.MembershipPlans.Add(newPlan);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Created new membership plan with Id {PlanId} for user {UserId}.",
+                    newPlan.Id,
+                    GetAuthenticatedUserId()
+                );
+                return CreatedAtAction(nameof(GetAvailablePlans), new { Id = newPlan.Id }, newPlan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating new membership plan.");
+                return StatusCode(500, new { message = "An error occurred while creating the plan." });
+            }
+        }
+
+        [HttpPut("plan{Id}")]
+        public async Task<IActionResult> UpdateMembershipPlan(
+            int Id,
+            [FromBody] PlanFeatureUpdateDto planDto
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var existingPlan = await _context.MembershipPlans.FindAsync(Id);
+                if (existingPlan == null)
+                {
+                    _logger.LogWarning(
+                        "Attempted to update non-existent membership plan with Id {PlanId}.",
+                        Id
+                    );
+                    return NotFound(new { message = "Membership plan not found." });
+                }
+
+                existingPlan.Name = planDto.PlanName;
+                existingPlan.Description = planDto.PlanDescription;
+                existingPlan.Price = planDto.Price;
+                existingPlan.Currency = planDto.Currency;
+                existingPlan.BillingCycle = planDto.BillingCycle;
+                existingPlan.DurationInDays = planDto.DurationInDays;
+                existingPlan.Reporting = planDto.Reporting;
+                existingPlan.Emailing = planDto.Emailing;
+                existingPlan.Budgeting = planDto.Budgeting;
+                existingPlan.Accounts = planDto.Accounts;
+                existingPlan.PrioritySupport = planDto.PrioritySupport;
+                existingPlan.IsActive = planDto.IsActive;
+                existingPlan.UpdatedAt = DateTime.UtcNow;
+
+                _context.Entry(existingPlan).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Updated membership plan with Id {PlanId} for user {UserId}.",
+                    Id,
+                    GetAuthenticatedUserId()
+                );
+                return Ok(existingPlan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating membership plan with Id {PlanId}.", Id);
+                return StatusCode(500, new { message = "An error occurred while updating the plan." });
+            }
+        }
+
+        [HttpDelete("plan{Id}")]
+        public async Task<IActionResult> DeleteMembershipPlan(int Id)
+        {
+            try
+            {
+                var existingPlan = await _context.MembershipPlans.FindAsync(Id);
+                if (existingPlan == null)
+                {
+                    _logger.LogWarning(
+                        "Attempted to delete non-existent membership plan with Id {PlanId}.",
+                        Id
+                    );
+                    return NotFound(new { message = "Membership plan not found." });
+                }
+
+                _context.MembershipPlans.Remove(existingPlan);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Deactivated membership plan with Id {PlanId} for user {UserId}.",
+                    Id,
+                    GetAuthenticatedUserId()
+                );
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deactivating membership plan with Id {PlanId}.", Id);
+                return StatusCode(500, new { message = "An error occurred while deactivating the plan." });
+            }
         }
 
         [HttpPost("create-checkout-session")]

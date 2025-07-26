@@ -1,9 +1,9 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to FinTrack!</title>
+  <title>FinTrack'e Hoş Geldiniz!</title>
   <style>
     /* Base Reset */
     body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background-color: #f6f8fa; }
@@ -17,33 +17,31 @@
 
     /* Header */
     .header { background-color: #24292e; padding: 20px; text-align: center; }
-    .header img {
-        width: 120px;
-        margin: 0 auto;
-    }
+    .header img { width: 120px; margin: 0 auto; }
 
     /* Hero Section */
     .hero { padding: 30px 20px; text-align: center; }
     .hero h1 { font-size: 24px; color: #24292e; margin-bottom: 10px; }
-    .hero p { font-size: 16px; color: #586069; margin: 0 0 20px; line-height: 1.5; }
+    .hero p { font-size: 16px; color: #586069; margin: 0 auto 20px; line-height: 1.5; max-width: 500px; }
     .hero .btn { display: inline-block; padding: 12px 24px; background-color: #28a745; color: #fff; border-radius: 6px; font-weight: 600; }
 
-    /* Content */
-    .content { padding: 0 20px 20px; font-size: 16px; color: #24292e; line-height: 1.6; }
+    /* Content & Platforms Section */
+    .content { padding: 20px; font-size: 16px; color: #24292e; line-height: 1.6; }
     .content p { margin: 10px 0; }
+    .platforms { text-align: center; padding-top: 10px; }
+    .platforms h3 { font-size: 16px; color: #586069; margin-bottom: 10px; font-weight: 400; }
+    .platform-icons span { display: inline-block; margin: 0 7px; color: #24292e; font-weight: 500; font-size: 14px; }
 
     /* Features Section */
-    .features { background: #f6f8fa; padding: 25px 20px; }
-    .features h2 { font-size: 20px; color: #24292e; text-align: center; margin-bottom: 15px; }
-    .feature-item { display: inline-block; width: 30%; min-width: 160px; text-align: center; margin: 0 1%; vertical-align: top; }
-      .feature-item img {
-          width: 48px;
-          margin: 0 auto 10px auto;
-      }
+    .features { background: #f6f8fa; padding: 25px 20px; border-top: 1px solid #e1e4e8; border-bottom: 1px solid #e1e4e8; }
+    .features h2 { font-size: 20px; color: #24292e; text-align: center; margin-top: 0; margin-bottom: 25px; }
+    .feature-item { display: inline-block; width: 46%; min-width: 250px; text-align: center; margin: 0 1.5% 20px; vertical-align: top; }
+    .feature-item img { width: 48px; margin: 0 auto 10px auto; }
     .feature-item p { font-size: 14px; color: #586069; margin: 0; line-height: 1.4; }
 
     /* Closing */
     .closing { padding: 20px; font-size: 16px; color: #24292e; line-height: 1.6; }
+    .closing p { margin: 10px 0; }
     .closing a { color: #0366d6; font-weight: 600; }
 
     /* Footer */
@@ -68,34 +66,44 @@
           <!-- Hero -->
           <tr>
             <td class="hero">
-              <h1>Your Financial Journey Starts Now, [UserName]!</h1>
-              <p>Welcome to the FinTrack family! We're delighted to have you with us. Prepare to gain clarity and control over your finances with our intuitive tools.</p>
-              <a href="[CTA_LINK]" class="btn">Get Started</a>
+              <h1>Finansal Yolculuğunuz Başlıyor, [UserName]!</h1>
+              <p>FinTrack ailesine hoş geldiniz! Sizi aramızda görmekten mutluluk duyuyoruz. Finansal verilerinize tam hakimiyet kurmanızı sağlayacak güçlü ve sezgisel araçları keşfetmeye hazır olun.</p>
+              <a href="[CTA_LINK]" class="btn">Kontrol Paneline Git</a>
             </td>
           </tr>
 
-          <!-- Welcome Content -->
+          <!-- Content & Platform Info -->
           <tr>
             <td class="content">
-              <p>Feel free to log in via our website or mobile apps whenever you're ready to dive in.</p>
+              <p>Hesabınız başarıyla oluşturuldu. Finansal durumunuzu yönetmeye hemen başlayabilirsiniz.</p>
+              <div class="platforms">
+                <h3>Tüm cihazlarınızdan erişin:</h3>
+                <div class="platform-icons">
+                  <span>Web</span> • <span>Windows</span> • <span>Android</span> • <span>Linux</span>
+                </div>
+              </div>
             </td>
           </tr>
 
           <!-- Features Section -->
           <tr>
             <td class="features">
-              <h2>Here's What FinTrack Offers:</h2>
+              <h2>FinTrack'in Gelişmiş Yetenekleri</h2>
               <div class="feature-item">
-                <img src="https://cdn-icons-png.freepik.com/512/2244/2244462.png" alt="Track Expenses">
-                <p><strong>Track Seamlessly:</strong><br>Record income and expenses quickly and easily.</p>
+                <img src="https://i.ibb.co/3WqPz4w/icon-ai-white.png" alt="Yapay Zeka" style="background-color:#24292e; border-radius:50%;">
+                <p><strong>Yapay Zeka Asistanı:</strong><br>ChatBot'a sorular sorarak harcamalarınız hakkında anında içgörüler edinin.</p>
               </div>
               <div class="feature-item">
-                <img src="https://png.pngtree.com/png-vector/20230225/ourmid/pngtree-budget-line-icon-png-image_6620500.png" alt="Manage Budgets">
-                <p><strong>Budget Wisely:</strong><br>Create custom budgets that work for you and monitor progress.</p>
+                <img src="https://i.ibb.co/8DBV2Wz/icon-shield-white.png" alt="Güvenli Borç" style="background-color:#24292e; border-radius:50%;">
+                <p><strong>Güvenli Borç Sistemi:</strong><br>Video kaydı seçeneği ile alacak ve vereceklerinizi güven altına alın.</p>
               </div>
               <div class="feature-item">
-                <img src="https://cdn-icons-png.flaticon.com/512/3093/3093748.png" alt="Get Reports">
-                <p><strong>Gain Insights:</strong><br>Understand your spending patterns with visual reports.</p>
+                <img src="https://i.ibb.co/1n5bWb7/icon-globe-white.png" alt="Döviz Takibi" style="background-color:#24292e; border-radius:50%;">
+                <p><strong>150+ Döviz Takibi:</strong><br>Uluslararası harcamalarınızı ve varlıklarınızı tek yerden kolayca yönetin.</p>
+              </div>
+              <div class="feature-item">
+                <img src="https://cdn-icons-png.freepik.com/512/2244/2244462.png" alt="Gelir/Gider">
+                <p><strong>Zahmetsiz Takip:</strong><br>Gelir ve giderlerinizi sezgisel arayüzümüzle hızla kaydedin ve bütçeleyin.</p>
               </div>
             </td>
           </tr>
@@ -103,18 +111,18 @@
           <!-- Closing & Support -->
           <tr>
             <td class="closing">
-              <p>Questions? Our <a href="[SUPPORT_LINK]">Support Team</a> and help resources are here for you.</p>
-              <p>We wish you financial success,<br><strong>The FinTrack Team</strong></p>
+              <p>Herhangi bir sorunuz olursa, <a href="[SUPPORT_LINK]">Destek Ekibimiz</a> ve yardım kaynaklarımız size yol göstermek için her zaman burada.</p>
+              <p>Finansal başarılar dileriz,<br><strong>FinTrack Ekibi</strong></p>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
             <td class="footer">
-              This email is sent to you as a new member of FinTrack.<br>
-              © [YEAR] FinTrack. All rights reserved.<br>
-              <a href="[PREFERENCES_LINK]">Email Preferences</a>
-              <p class="disclaimer">FinTrack is a project developed for educational purposes. Please use it with this consideration.</p>
+              Bu e-posta, FinTrack'e yeni üye olduğunuz için gönderilmiştir.<br>
+              © [YEAR] FinTrack. Tüm hakları saklıdır.<br>
+              <a href="[PREFERENCES_LINK]">E-posta Tercihleri</a> | <a href="[UNSUBSCRIBE_LINK]">Üyelikten Ayrıl</a>
+              <p class="disclaimer">FinTrack, eğitim amaçlı geliştirilmiş bir portföy projesidir. Lütfen bu durumu göz önünde bulundurarak kullanınız.</p>
             </td>
           </tr>
 

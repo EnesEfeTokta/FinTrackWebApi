@@ -1,9 +1,8 @@
 version: '3.8'
 
 services:
-
+  # ASP.Net'in yapılandırması
   fintrackwebapi:
-    # fintrackwebapi'nin yapılandırması
     build:
       context: ./FinTrackWebApi
       dockerfile: Dockerfile
@@ -16,10 +15,30 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db_postgres;Port=5432;Database=myfintrackdb;Username=postgres;Password=140xxx-+
     depends_on:
       - finbotwebapi
-      - db_postgres # Bu doğru
+      - db_postgres
+      - ollama
     networks:
       - fintrac_network
 
+  # Ngrok 'un' yapılandırması
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok_tunnel
+    restart: unless-stopped
+    ports:
+      - "4040:4040"
+    environment:
+        - NGROK_AUTHTOKEN=YOUR_KEY
+    command:
+      - "http"
+      - "fintrack_api:8080"
+      - "--log=stdout"
+    depends_on:
+      - fintrackwebapi
+    networks:
+      - fintrac_network
+
+  # FinBot yapılandırması
   finbotwebapi:
     build:
       context: ./FinBotWebApi
@@ -29,12 +48,17 @@ services:
       - "5001:8000"
     env_file:
       - ./FinBotWebApi/.env
+    environment:
+      - OLLAMA_API_URL=http://ollama:11434
+    depends_on:
+      - ollama
     networks:
       - fintrac_network
 
-  db_postgres: # ANAHTAR: "db_postgres" servisi "fintrackwebapi" ve "finbotwebapi" ile AYNI SEVİYEDE OLMALI
+  # Veritabanının yapılandırması
+  db_postgres:
     image: postgres:15
-    container_name: postgres_db_container
+    container_name: postgres_db
     ports:
       - "5433:5432"
     environment:
@@ -47,6 +71,88 @@ services:
       - fintrac_network
     restart: unless-stopped
 
+  # Ollama yapılandırması
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - fintrac_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Grafana yapılandırması
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - fintrac_network
+    depends_on:
+      - prometheus
+
+  # Prometheus yapılandırması
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus-storage:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - fintrac_network
+    depends_on:
+      - cadvisor
+      - postgres_exporter
+
+  # cAdvisor yapılandırması
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - fintrac_network
+    privileged: true
+    environment:
+      - DOCKER_HOST_IP=host.docker.internal
+
+  # PostgreSQL Exporter yapılandırması
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:140xxx-+@db_postgres:5432/myfintrackdb?sslmode=disable
+    networks:
+      - fintrac_network
+    depends_on:
+      - db_postgres
+
 networks:
   fintrac_network:
     driver: bridge
@@ -54,3 +160,7 @@ networks:
 volumes:
   postgres_data:
     driver: local
+  ollama_data:
+    driver: local
+  grafana-storage:
+  prometheus-storage:

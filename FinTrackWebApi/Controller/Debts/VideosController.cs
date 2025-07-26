@@ -1,6 +1,6 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Debt;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.MediaEncryptionService;
 using Microsoft.AspNetCore.Authorization;

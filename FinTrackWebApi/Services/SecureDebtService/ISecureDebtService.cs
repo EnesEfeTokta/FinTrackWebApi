@@ -1,5 +1,5 @@
 ﻿using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.User;
 
 namespace FinTrackWebApi.Services.SecureDebtService
 {

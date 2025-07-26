@@ -22,7 +22,7 @@ namespace FinTrackWebApi.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("FinTrackWebApi.Models.AccountModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Account.AccountModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -81,7 +81,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Accounts", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.BudgetCategoryModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Budget.BudgetModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -92,9 +92,6 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Property<decimal>("AllocatedAmount")
                         .HasColumnType("decimal(18, 2)")
                         .HasColumnName("AllocatedAmount");
-
-                    b.Property<int>("BudgetId")
-                        .HasColumnType("integer");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");
@@ -111,34 +108,6 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnType("text")
                         .HasDefaultValue("TRY")
                         .HasColumnName("Currency");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("BudgetId", "CategoryId")
-                        .IsUnique();
-
-                    b.ToTable("BudgetCategories", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.BudgetModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -174,12 +143,14 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Budgets", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CategoryModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Category.CategoryModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -214,7 +185,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CurrencyModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Currency.CurrencyModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,7 +254,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Currencies", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CurrencySnapshotModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Currency.CurrencySnapshotModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -309,7 +280,34 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("CurrencySnapshots", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.DebtModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Currency.ExchangeRateModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CurrencyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CurrencySnapshotId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Rate")
+                        .HasColumnType("decimal(18, 6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("CurrencySnapshotId", "CurrencyId")
+                        .IsUnique();
+
+                    b.ToTable("ExchangeRates", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.DebtModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -387,7 +385,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("Debts", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.DebtVideoMetadataModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.DebtVideoMetadataModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -428,831 +426,7 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("DebtVideoMetadatas", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.DepartmentModel", b =>
-                {
-                    b.Property<int>("DepartmentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DepartmentId"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("CreatedBy");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("Description");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Name");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("UpdatedBy");
-
-                    b.HasKey("DepartmentId");
-
-                    b.ToTable("Departments", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.EmployeeDepartmentModel", b =>
-                {
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("CreatedBy");
-
-                    b.Property<int>("EmployeeDepartmentId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("Notes");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("UpdatedBy");
-
-                    b.HasKey("EmployeeId", "DepartmentId");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.ToTable("EmployeeDepartments", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.EmployeesModel", b =>
-                {
-                    b.Property<int>("EmployeeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("EmployeeId");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("CreatedBy");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("Email");
-
-                    b.Property<int>("EmployeeStatus")
-                        .HasMaxLength(100)
-                        .HasColumnType("integer")
-                        .HasColumnName("Position");
-
-                    b.Property<DateTime>("HireDate")
-                        .HasMaxLength(255)
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("HireDate");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("IsActive");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Name");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("Notes");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("Password");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("PhoneNumber");
-
-                    b.Property<string>("ProfilePictureUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("ProfilePictureUrl");
-
-                    b.Property<decimal>("Salary")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("Salary");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("UpdatedBy");
-
-                    b.HasKey("EmployeeId");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.ToTable("Employees", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.ExchangeRateModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CurrencyId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CurrencySnapshotId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Rate")
-                        .HasColumnType("decimal(18, 6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
-
-                    b.HasIndex("CurrencySnapshotId", "CurrencyId")
-                        .IsUnique();
-
-                    b.ToTable("ExchangeRates", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.FeedbackModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("Description");
-
-                    b.Property<string>("SavedFilePath")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("SavedFilePath");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("Subject");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("GeneralFeedback")
-                        .HasColumnName("Type");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Feedbacks", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.MembershipPlanModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BillingCycle")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Monthly")
-                        .HasColumnName("BillingCycle");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(5)
-                        .HasColumnType("character varying(5)")
-                        .HasDefaultValue("TRY")
-                        .HasColumnName("Currency");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("Description");
-
-                    b.Property<int?>("DurationInDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("DurationInDays");
-
-                    b.Property<string>("Features")
-                        .HasColumnType("text")
-                        .HasColumnName("Features");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("IsActive");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("PlanName");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("Price");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("MembershipPlans", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.NotificationModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<bool>("IsRead")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("IsRead");
-
-                    b.Property<string>("MessageBody")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("MessageBody");
-
-                    b.Property<string>("MessageHead")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("MessageHead");
-
-                    b.Property<DateTime?>("ReadAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ReadAtUtc");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Info")
-                        .HasColumnName("Type");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notifications", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.OtpVerificationModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreateAt")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("Email");
-
-                    b.Property<DateTime>("ExpireAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("ExpireAt")
-                        .HasDefaultValueSql("NOW() + INTERVAL '5 minutes'");
-
-                    b.Property<string>("OtpCode")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("OtpCode");
-
-                    b.Property<string>("ProfilePicture")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740")
-                        .HasColumnName("ProfilePicture");
-
-                    b.Property<string>("TemporaryPlainPassword")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("TemporaryPlainPassword");
-
-                    b.Property<int?>("UserModelId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Username");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email");
-
-                    b.HasIndex("UserModelId");
-
-                    b.ToTable("OtpVerifications", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.PaymentModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("Amount");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(5)
-                        .HasColumnType("character varying(5)")
-                        .HasDefaultValue("TRY")
-                        .HasColumnName("Currency");
-
-                    b.Property<string>("GatewayResponse")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("GatewayResponse");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("Notes");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("PaymentDate");
-
-                    b.Property<string>("PaymentMethod")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("PaymentMethod");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Pending")
-                        .HasColumnName("Status");
-
-                    b.Property<string>("TransactionId")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("TransactionId");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("UserMembershipId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TransactionId")
-                        .IsUnique()
-                        .HasFilter("\"TransactionId\" IS NOT NULL");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserMembershipId");
-
-                    b.ToTable("Payments", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.TransactionModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("Amount");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("TRY")
-                        .HasColumnName("Currency");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("Description");
-
-                    b.Property<DateTime>("TransactionDateUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("TransactionDateUtc");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("Expense")
-                        .HasColumnName("Type");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("TransactionDateUtc");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Transactions", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserAppSettingsModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Appearance")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("Dark")
-                        .HasColumnName("Appearance");
-
-                    b.Property<string>("BaseCurrency")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("TRY")
-                        .HasColumnName("BaseCurrency");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("UserAppSettings", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserMembershipModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("AutoRenew")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("AutoRenew");
-
-                    b.Property<DateTime?>("CancellationDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CancellationDate");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("EndDate");
-
-                    b.Property<int>("MembershipPlanId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("StartDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("StartDate")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("PendingPayment")
-                        .HasColumnName("Status");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EndDate");
-
-                    b.HasIndex("MembershipPlanId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserMemberships", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ProfilePicture")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740")
-                        .HasColumnName("ProfilePicture");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex");
-
-                    b.ToTable("Users", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.UserNotificationSettingsModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("CreatedAtUtc")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<bool>("EnableDesktopNotifications")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("EnableDesktopNotifications");
-
-                    b.Property<bool>("ExpectedBillReminder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("ExpectedBillReminder");
-
-                    b.Property<bool>("NewFeaturesAndAnnouncements")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("NewFeaturesAndAnnouncements");
-
-                    b.Property<bool>("SpendingLimitWarning")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("SpendingLimitWarning");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UpdatedAtUtc");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("WeeklySpendingSummary")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("WeeklySpendingSummary");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("UserNotificationSettings", (string)null);
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.VideoMetadataModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.VideoMetadataModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1350,6 +524,847 @@ namespace FinTrackWebApi.Data.Migrations
                     b.HasIndex("UploadedByUserId");
 
                     b.ToTable("VideoMetadatas", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Empoyee.DepartmentModel", b =>
+                {
+                    b.Property<int>("DepartmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DepartmentId"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("UpdatedBy");
+
+                    b.HasKey("DepartmentId");
+
+                    b.ToTable("Departments", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Empoyee.EmployeeDepartmentModel", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<int>("EmployeeDepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("Notes");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("UpdatedBy");
+
+                    b.HasKey("EmployeeId", "DepartmentId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("EmployeeDepartments", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Empoyee.EmployeesModel", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("EmployeeId");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("CreatedBy");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Email");
+
+                    b.Property<int>("EmployeeStatus")
+                        .HasMaxLength(100)
+                        .HasColumnType("integer")
+                        .HasColumnName("Position");
+
+                    b.Property<DateTime>("HireDate")
+                        .HasMaxLength(255)
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("HireDate");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("IsActive");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("Notes");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Password");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("PhoneNumber");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("ProfilePictureUrl");
+
+                    b.Property<decimal>("Salary")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("Salary");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<string>("UpdatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("UpdatedBy");
+
+                    b.HasKey("EmployeeId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Employees", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Feedback.FeedbackModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<string>("SavedFilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("SavedFilePath");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Subject");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("GeneralFeedback")
+                        .HasColumnName("Type");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Feedbacks", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Membership.MembershipPlanModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BillingCycle")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Monthly")
+                        .HasColumnName("BillingCycle");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<int?>("DurationInDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("DurationInDays");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IsActive");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("PlanName");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("Price");
+
+                    b.Property<bool>("PrioritySupport")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("PrioritySupport");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("MembershipPlans", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Membership.PaymentModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("Amount");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("GatewayResponse")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("GatewayResponse");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("Notes");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("PaymentDate");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("PaymentMethod");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Pending")
+                        .HasColumnName("Status");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("TransactionId");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserMembershipId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("\"TransactionId\" IS NOT NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserMembershipId");
+
+                    b.ToTable("Payments", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.NotificationModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsRead");
+
+                    b.Property<string>("MessageBody")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("MessageBody");
+
+                    b.Property<string>("MessageHead")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("MessageHead");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ReadAtUtc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Info")
+                        .HasColumnName("Type");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Otp.OtpVerificationModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreateAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreateAt")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("Email");
+
+                    b.Property<DateTime>("ExpireAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ExpireAt")
+                        .HasDefaultValueSql("NOW() + INTERVAL '5 minutes'");
+
+                    b.Property<string>("OtpCode")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("OtpCode");
+
+                    b.Property<string>("ProfilePicture")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740")
+                        .HasColumnName("ProfilePicture");
+
+                    b.Property<string>("TemporaryPlainPassword")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("TemporaryPlainPassword");
+
+                    b.Property<int?>("UserModelId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("Username");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("UserModelId");
+
+                    b.ToTable("OtpVerifications", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Tranaction.TransactionCategoryModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("CategoryName");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("CategoryType");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("TransactionCategories", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Tranaction.TransactionModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("Amount");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("Currency");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("Description");
+
+                    b.Property<DateTime>("TransactionDateUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("TransactionDateUtc");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("TransactionDateUtc");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Transactions", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserAppSettingsModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Appearance")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Dark")
+                        .HasColumnName("Appearance");
+
+                    b.Property<string>("BaseCurrency")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("TRY")
+                        .HasColumnName("BaseCurrency");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserAppSettings", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserMembershipModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AutoRenew")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("AutoRenew");
+
+                    b.Property<DateTime?>("CancellationDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CancellationDate");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("EndDate");
+
+                    b.Property<int>("MembershipPlanId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("StartDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("StartDate")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("PendingPayment")
+                        .HasColumnName("Status");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndDate");
+
+                    b.HasIndex("MembershipPlanId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMemberships", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ProfilePicture")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasDefaultValue("https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740")
+                        .HasColumnName("ProfilePicture");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserNotificationSettingsModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("EnableDesktopNotifications")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("EnableDesktopNotifications");
+
+                    b.Property<bool>("ExpectedBillReminder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("ExpectedBillReminder");
+
+                    b.Property<bool>("NewFeaturesAndAnnouncements")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("NewFeaturesAndAnnouncements");
+
+                    b.Property<bool>("SpendingLimitWarning")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("SpendingLimitWarning");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("WeeklySpendingSummary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("WeeklySpendingSummary");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserNotificationSettings", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -1484,9 +1499,9 @@ namespace FinTrackWebApi.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.AccountModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Account.AccountModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("Accounts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1495,39 +1510,28 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.BudgetCategoryModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Budget.BudgetModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.BudgetModel", "Budget")
-                        .WithMany("BudgetCategories")
-                        .HasForeignKey("BudgetId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FinTrackWebApi.Models.CategoryModel", "Category")
-                        .WithMany("BudgetAllocations")
+                    b.HasOne("FinTrackWebApi.Models.Category.CategoryModel", "Category")
+                        .WithMany("Budgets")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Budget");
-
-                    b.Navigation("Category");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.BudgetModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("Budgets")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Category");
+
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CategoryModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Category.CategoryModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("Categories")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1536,70 +1540,15 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.DebtModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Currency.ExchangeRateModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "Borrower")
-                        .WithMany("DebtsAsBorrower")
-                        .HasForeignKey("BorrowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "Lender")
-                        .WithMany("DebtsAsLender")
-                        .HasForeignKey("LenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Borrower");
-
-                    b.Navigation("Lender");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.DebtVideoMetadataModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.DebtModel", "Debt")
-                        .WithMany("DebtVideoMetadatas")
-                        .HasForeignKey("DebtId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("FinTrackWebApi.Models.VideoMetadataModel", "VideoMetadata")
-                        .WithMany("DebtVideoMetadatas")
-                        .HasForeignKey("VideoMetadataId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Debt");
-
-                    b.Navigation("VideoMetadata");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.EmployeeDepartmentModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.DepartmentModel", "Department")
-                        .WithMany("EmployeeDepartments")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FinTrackWebApi.Models.EmployeesModel", "Employee")
-                        .WithMany("EmployeeDepartments")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.ExchangeRateModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.CurrencyModel", "Currency")
+                    b.HasOne("FinTrackWebApi.Models.Currency.CurrencyModel", "Currency")
                         .WithMany("ExchangeRates")
                         .HasForeignKey("CurrencyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.CurrencySnapshotModel", "CurrencySnapshot")
+                    b.HasOne("FinTrackWebApi.Models.Currency.CurrencySnapshotModel", "CurrencySnapshot")
                         .WithMany("Rates")
                         .HasForeignKey("CurrencySnapshotId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1610,9 +1559,75 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("CurrencySnapshot");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.FeedbackModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.DebtModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "Borrower")
+                        .WithMany("DebtsAsBorrower")
+                        .HasForeignKey("BorrowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "Lender")
+                        .WithMany("DebtsAsLender")
+                        .HasForeignKey("LenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Borrower");
+
+                    b.Navigation("Lender");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.DebtVideoMetadataModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.Debt.DebtModel", "Debt")
+                        .WithMany("DebtVideoMetadatas")
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("FinTrackWebApi.Models.Debt.VideoMetadataModel", "VideoMetadata")
+                        .WithMany("DebtVideoMetadatas")
+                        .HasForeignKey("VideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Debt");
+
+                    b.Navigation("VideoMetadata");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.VideoMetadataModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "UploadedUser")
+                        .WithMany("UploadedVideos")
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UploadedUser");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Empoyee.EmployeeDepartmentModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.Empoyee.DepartmentModel", "Department")
+                        .WithMany("EmployeeDepartments")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinTrackWebApi.Models.Empoyee.EmployeesModel", "Employee")
+                        .WithMany("EmployeeDepartments")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Feedback.FeedbackModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("Feedbacks")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1621,33 +1636,150 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.NotificationModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Membership.MembershipPlanModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.OwnsOne("FinTrackWebApi.Models.Membership.AccountFeatures", "Accounts", b1 =>
+                        {
+                            b1.Property<int>("MembershipPlanModelId")
+                                .HasColumnType("integer");
 
-                    b.Navigation("User");
+                            b1.Property<int>("MaxBankAccounts")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0)
+                                .HasColumnName("MaxBankAccounts");
+
+                            b1.HasKey("MembershipPlanModelId");
+
+                            b1.ToTable("MembershipPlans");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MembershipPlanModelId");
+                        });
+
+                    b.OwnsOne("FinTrackWebApi.Models.Membership.BudgetingFeatures", "Budgeting", b1 =>
+                        {
+                            b1.Property<int>("MembershipPlanModelId")
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("CanCreateBudgets")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanCreateBudgets");
+
+                            b1.Property<int>("MaxBudgets")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0)
+                                .HasColumnName("MaxBudgets");
+
+                            b1.HasKey("MembershipPlanModelId");
+
+                            b1.ToTable("MembershipPlans");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MembershipPlanModelId");
+                        });
+
+                    b.OwnsOne("FinTrackWebApi.Models.Membership.EmailingFeatures", "Emailing", b1 =>
+                        {
+                            b1.Property<int>("MembershipPlanModelId")
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("CanEmailReports")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanEmailReports");
+
+                            b1.Property<int>("MaxEmailsPerMonth")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0)
+                                .HasColumnName("MaxEmailsPerMonth");
+
+                            b1.HasKey("MembershipPlanModelId");
+
+                            b1.ToTable("MembershipPlans");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MembershipPlanModelId");
+                        });
+
+                    b.OwnsOne("FinTrackWebApi.Models.Membership.ReportingFeatures", "Reporting", b1 =>
+                        {
+                            b1.Property<int>("MembershipPlanModelId")
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("CanExportMarkdown")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanExportMarkdown");
+
+                            b1.Property<bool>("CanExportPdf")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanExportPdf");
+
+                            b1.Property<bool>("CanExportText")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanExportText");
+
+                            b1.Property<bool>("CanExportWord")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanExportWord");
+
+                            b1.Property<bool>("CanExportXlsx")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanExportXlsx");
+
+                            b1.Property<bool>("CanExportXml")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("CanExportXml");
+
+                            b1.Property<string>("Level")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("ReportingLevel");
+
+                            b1.HasKey("MembershipPlanModelId");
+
+                            b1.ToTable("MembershipPlans");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MembershipPlanModelId");
+                        });
+
+                    b.Navigation("Accounts");
+
+                    b.Navigation("Budgeting");
+
+                    b.Navigation("Emailing");
+
+                    b.Navigation("Reporting");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.OtpVerificationModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Membership.PaymentModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", null)
-                        .WithMany("OtpVerifications")
-                        .HasForeignKey("UserModelId");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.PaymentModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("Payments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.UserMembershipModel", "UserMembership")
+                    b.HasOne("FinTrackWebApi.Models.User.UserMembershipModel", "UserMembership")
                         .WithMany("Payments")
                         .HasForeignKey("UserMembershipId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1657,21 +1789,50 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("UserMembership");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.TransactionModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.NotificationModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.AccountModel", "Account")
-                        .WithMany("Transactions")
-                        .HasForeignKey("AccountId")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.CategoryModel", "Category")
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Otp.OtpVerificationModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", null)
+                        .WithMany("OtpVerifications")
+                        .HasForeignKey("UserModelId");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Tranaction.TransactionCategoryModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
+                        .WithMany("TransactionCategories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Tranaction.TransactionModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.Account.AccountModel", "Account")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FinTrackWebApi.Models.Tranaction.TransactionCategoryModel", "Category")
                         .WithMany("Transactions")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("Transactions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1684,26 +1845,26 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserAppSettingsModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserAppSettingsModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithOne("AppSettings")
-                        .HasForeignKey("FinTrackWebApi.Models.UserAppSettingsModel", "UserId")
+                        .HasForeignKey("FinTrackWebApi.Models.User.UserAppSettingsModel", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserMembershipModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserMembershipModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.MembershipPlanModel", "Plan")
+                    b.HasOne("FinTrackWebApi.Models.Membership.MembershipPlanModel", "Plan")
                         .WithMany("UserMemberships")
                         .HasForeignKey("MembershipPlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithMany("UserMemberships")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1714,26 +1875,15 @@ namespace FinTrackWebApi.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserNotificationSettingsModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserNotificationSettingsModel", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "User")
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
                         .WithOne("NotificationSettings")
-                        .HasForeignKey("FinTrackWebApi.Models.UserNotificationSettingsModel", "UserId")
+                        .HasForeignKey("FinTrackWebApi.Models.User.UserNotificationSettingsModel", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.VideoMetadataModel", b =>
-                {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", "UploadedUser")
-                        .WithMany("UploadedVideos")
-                        .HasForeignKey("UploadedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("UploadedUser");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -1747,7 +1897,7 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", null)
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1756,7 +1906,7 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", null)
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1771,7 +1921,7 @@ namespace FinTrackWebApi.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FinTrackWebApi.Models.UserModel", null)
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1780,66 +1930,69 @@ namespace FinTrackWebApi.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("FinTrackWebApi.Models.UserModel", null)
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.AccountModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Account.AccountModel", b =>
                 {
                     b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.BudgetModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Category.CategoryModel", b =>
                 {
-                    b.Navigation("BudgetCategories");
+                    b.Navigation("Budgets");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CategoryModel", b =>
-                {
-                    b.Navigation("BudgetAllocations");
-
-                    b.Navigation("Transactions");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.CurrencyModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Currency.CurrencyModel", b =>
                 {
                     b.Navigation("ExchangeRates");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.CurrencySnapshotModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Currency.CurrencySnapshotModel", b =>
                 {
                     b.Navigation("Rates");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.DebtModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.DebtModel", b =>
                 {
                     b.Navigation("DebtVideoMetadatas");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.DepartmentModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Debt.VideoMetadataModel", b =>
+                {
+                    b.Navigation("DebtVideoMetadatas");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.Empoyee.DepartmentModel", b =>
                 {
                     b.Navigation("EmployeeDepartments");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.EmployeesModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Empoyee.EmployeesModel", b =>
                 {
                     b.Navigation("EmployeeDepartments");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.MembershipPlanModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Membership.MembershipPlanModel", b =>
                 {
                     b.Navigation("UserMemberships");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserMembershipModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.Tranaction.TransactionCategoryModel", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserMembershipModel", b =>
                 {
                     b.Navigation("Payments");
                 });
 
-            modelBuilder.Entity("FinTrackWebApi.Models.UserModel", b =>
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserModel", b =>
                 {
                     b.Navigation("Accounts");
 
@@ -1863,16 +2016,13 @@ namespace FinTrackWebApi.Data.Migrations
 
                     b.Navigation("Payments");
 
+                    b.Navigation("TransactionCategories");
+
                     b.Navigation("Transactions");
 
                     b.Navigation("UploadedVideos");
 
                     b.Navigation("UserMemberships");
-                });
-
-            modelBuilder.Entity("FinTrackWebApi.Models.VideoMetadataModel", b =>
-                {
-                    b.Navigation("DebtVideoMetadatas");
                 });
 #pragma warning restore 612, 618
         }

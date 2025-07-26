@@ -1,6 +1,6 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.CategoriesDtos;
-using FinTrackWebApi.Models;
+using FinTrackWebApi.Models.Category;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
