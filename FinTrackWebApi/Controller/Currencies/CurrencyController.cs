@@ -130,13 +130,11 @@ namespace FinTrackWebApi.Controller.Currencies
             return Ok(dto);
         }
 
+        private record SnapshotRate(DateTime FetchTimestamp, string CurrencyCode, decimal Rate);
+
         /// <summary>
         /// Belirtilen iki para birimi arasındaki geçmiş kur verilerini ve değişim analizini getirir.
         /// </summary>
-        /// <param name="baseCode">Değeri izlenecek ana para birimi (örn: TRY).</param>
-        /// <param name="targetCode">Karşılaştırma yapılacak hedef para birimi (örn: USD).</param>
-        /// <param name="period">Veri aralığı ('1W', '1M', '3M', '1Y', 'YTD'). Varsayılan: '1M'.</param>
-        /// <returns>Geçmiş kur verileri ve değişim özeti.</returns>
         [HttpGet("{baseCode}/history/{targetCode}")]
         public async Task<ActionResult<CurrencyHistoryDto>> GetCurrencyHistory(
             string baseCode,
@@ -146,9 +144,12 @@ namespace FinTrackWebApi.Controller.Currencies
             baseCode = baseCode.ToUpper();
             targetCode = targetCode.ToUpper();
 
+            if (baseCode == targetCode) return BadRequest("Base and target currencies cannot be the same.");
+
             var endDate = DateTime.UtcNow;
             var startDate = period.ToUpper() switch
             {
+                "1D" => endDate.AddDays(-1),
                 "1W" => endDate.AddDays(-7),
                 "3M" => endDate.AddMonths(-3),
                 "1Y" => endDate.AddYears(-1),
@@ -156,41 +157,54 @@ namespace FinTrackWebApi.Controller.Currencies
                 _ => endDate.AddMonths(-1),
             };
 
-            var snapshotsInPeriod = await _context.CurrencySnapshots
+            var allRatesFromHistory = await _context.ExchangeRates
                 .AsNoTracking()
-                .Where(s => s.BaseCurrency == "USD" && s.FetchTimestamp >= startDate && s.FetchTimestamp <= endDate)
-                .Include(s => s.Rates)
-                    .ThenInclude(r => r.Currency)
-                .OrderBy(s => s.FetchTimestamp)
+                .Where(r => r.CurrencySnapshot.BaseCurrency == "USD" && r.CurrencySnapshot.HasChanges)
+                .Include(r => r.CurrencySnapshot)
+                .Include(r => r.Currency)
+                .OrderBy(r => r.CurrencySnapshot.FetchTimestamp)
+                .Select(r => new { r.CurrencySnapshot.FetchTimestamp, r.Currency.Code, r.Rate })
                 .ToListAsync();
 
-            // Her gün için tek bir snapshot'a indirgiyorum. Ki performanslı olsun.
-            var dailySnapshots = snapshotsInPeriod
-                .GroupBy(s => s.FetchTimestamp.Date)
-                .Select(g => g.OrderByDescending(s => s.FetchTimestamp).First())
-                .ToList();
-
-            if (!dailySnapshots.Any())
+            if (!allRatesFromHistory.Any())
             {
-                _logger.LogWarning("No historical data found for the period {StartDate} to {EndDate}.", startDate, endDate);
-                return NotFound($"No historical data found for the period.");
+                return NotFound("No historical rate changes found in the database.");
             }
 
-            // Çapraz Kur Hesaplaması ve Tarihsel Veri Noktalarını Oluşturma yapıyorum.
-            var historicalRates = new List<HistoricalRatePointDto>();
-            foreach (var snapshot in dailySnapshots)
-            {
-                var rateForBase = snapshot.Rates.FirstOrDefault(r => r.Currency?.Code == baseCode)?.Rate;
-                var rateForTarget = snapshot.Rates.FirstOrDefault(r => r.Currency?.Code == targetCode)?.Rate;
+            var dailyRateChanges = allRatesFromHistory
+                .GroupBy(r => r.FetchTimestamp.Date)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(r => r.Code)
+                          .ToDictionary(gr => gr.Key, gr => gr.Last().Rate)
+                );
 
-                if (rateForBase.HasValue && rateForTarget.HasValue && rateForBase.Value != 0)
+            var historicalRates = new List<HistoricalRatePointDto>();
+            Dictionary<string, decimal> lastKnownRates = new Dictionary<string, decimal>();
+
+            for (var day = startDate.Date; day <= endDate.Date; day = day.AddDays(1))
+            {
+                var relevantDay = dailyRateChanges.Keys
+                    .Where(d => d <= day)
+                    .DefaultIfEmpty()
+                    .Max();
+
+                if (relevantDay != default && dailyRateChanges.TryGetValue(relevantDay, out var ratesForDay))
                 {
-                    // Çapraz Kur: 1 Base Doviz = X Target Doviz
-                    // Örn: 1 TRY = (USD->USD rate) / (USD->TRY rate) = 1.0 / 40.0 = 0.025 USD
+                    lastKnownRates = ratesForDay;
+                }
+
+                if (!lastKnownRates.Any()) continue;
+
+                decimal? rateForBase = baseCode == "USD" ? 1.0m : lastKnownRates.GetValueOrDefault(baseCode);
+                decimal? rateForTarget = targetCode == "USD" ? 1.0m : lastKnownRates.GetValueOrDefault(targetCode);
+
+                if (rateForBase.GetValueOrDefault() != 0 && rateForTarget.HasValue)
+                {
                     var crossRate = rateForTarget.Value / rateForBase.Value;
                     historicalRates.Add(new HistoricalRatePointDto
                     {
-                        Date = snapshot.FetchTimestamp.Date,
+                        Date = day,
                         Rate = crossRate
                     });
                 }
@@ -198,13 +212,12 @@ namespace FinTrackWebApi.Controller.Currencies
 
             if (!historicalRates.Any())
             {
-                _logger.LogWarning("Could not calculate cross-rates for {BaseCode}/{TargetCode}.", baseCode, targetCode);
-                return NotFound($"Could not calculate cross-rates for {baseCode}/{targetCode}.");
+                return NotFound($"Could not calculate cross-rates for {baseCode}/{targetCode} in the given period.");
             }
 
             var changeSummary = CalculateChangeSummary(historicalRates);
 
-            var resultDto = new CurrencyHistoryDto
+            return Ok(new CurrencyHistoryDto
             {
                 BaseCurrency = baseCode,
                 TargetCurrency = targetCode,
@@ -212,35 +225,111 @@ namespace FinTrackWebApi.Controller.Currencies
                 EndDate = historicalRates.Last().Date,
                 HistoricalRates = historicalRates,
                 ChangeSummary = changeSummary
-            };
-
-            return Ok(resultDto);
+            });
         }
 
         private ChangeSummaryDto CalculateChangeSummary(List<HistoricalRatePointDto> rates)
         {
-            if (rates.Count < 2) return new ChangeSummaryDto();
+            if (rates == null || rates.Count < 2)
+            {
+                return new ChangeSummaryDto();
+            }
 
             var sortedRates = rates.OrderBy(r => r.Date).ToList();
-            var latestRate = sortedRates.Last();
-
-            var rate1DayAgo = sortedRates.FirstOrDefault(r => r.Date <= latestRate.Date.AddDays(-1));
-            var rate7DaysAgo = sortedRates.FirstOrDefault(r => r.Date <= latestRate.Date.AddDays(-7));
-            var rate30DaysAgo = sortedRates.FirstOrDefault(r => r.Date <= latestRate.Date.AddMonths(-1));
+            var latestRatePoint = sortedRates.Last();
 
             var summary = new ChangeSummaryDto();
 
-            summary.DailyChangeValue = rate1DayAgo != null ? latestRate.Rate - rate1DayAgo.Rate : (decimal?)null;
-            summary.DailyChangePercentage = rate1DayAgo != null && rate1DayAgo.Rate != 0 ? (summary.DailyChangeValue / rate1DayAgo.Rate) * 100 : (decimal?)null;
+            var dayBeforeLast = sortedRates[^2];
+            if (dayBeforeLast.Rate != 0)
+            {
+                summary.DailyChangeValue = latestRatePoint.Rate - dayBeforeLast.Rate;
+                summary.DailyChangePercentage = summary.DailyChangeValue / dayBeforeLast.Rate;
+            }
 
-            summary.WeeklyChangeValue = rate7DaysAgo != null ? latestRate.Rate - rate7DaysAgo.Rate : (decimal?)null;
-            summary.WeeklyChangePercentage = rate7DaysAgo != null && rate7DaysAgo.Rate != 0 ? (summary.WeeklyChangeValue / rate7DaysAgo.Rate) * 100 : (decimal?)null;
+            var date7DaysAgo = latestRatePoint.Date.AddDays(-7);
+            var rate7DaysAgoPoint = sortedRates.LastOrDefault(r => r.Date <= date7DaysAgo);
+            if (rate7DaysAgoPoint != null && rate7DaysAgoPoint.Rate != 0)
+            {
+                summary.WeeklyChangeValue = latestRatePoint.Rate - rate7DaysAgoPoint.Rate;
+                summary.WeeklyChangePercentage = summary.WeeklyChangeValue / rate7DaysAgoPoint.Rate;
+            }
 
-            summary.MonthlyChangeValue = rate30DaysAgo != null ? latestRate.Rate - rate30DaysAgo.Rate : (decimal?)null;
-            summary.MonthlyChangePercentage = rate30DaysAgo != null && rate30DaysAgo.Rate != 0 ? (summary.MonthlyChangeValue / rate30DaysAgo.Rate) * 100 : (decimal?)null;
+            var date30DaysAgo = latestRatePoint.Date.AddMonths(-1);
+            var rate30DaysAgoPoint = sortedRates.LastOrDefault(r => r.Date <= date30DaysAgo);
+            if (rate30DaysAgoPoint != null && rate30DaysAgoPoint.Rate != 0)
+            {
+                summary.MonthlyChangeValue = latestRatePoint.Rate - rate30DaysAgoPoint.Rate;
+                summary.MonthlyChangePercentage = summary.MonthlyChangeValue / rate30DaysAgoPoint.Rate;
+            }
 
             return summary;
         }
+
+        /// <summary>
+        /// Belirtilen bir baz para birimine göre tüm diğer para birimlerinin en güncel kur bilgilerini listeler.
+        /// </summary>
+        /// <param name="baseCurrencyCode">Baz alınacak para biriminin 3 harfli kodu (örn: USD, TRY). Varsayılan: USD.</param>
+        [HttpGet("latest/{baseCurrencyCode?}")]
+        public async Task<ActionResult<LatestRatesResponseDto>> GetLatestRates(string baseCurrencyCode = "USD")
+        {
+            baseCurrencyCode = baseCurrencyCode.ToUpper();
+
+            var latestUsdSnapshot = await _context.CurrencySnapshots
+                .AsNoTracking()
+                .Where(s => s.BaseCurrency == "USD")
+                .OrderByDescending(s => s.FetchTimestamp)
+                .Include(s => s.Rates)
+                    .ThenInclude(r => r.Currency)
+                .FirstOrDefaultAsync();
+
+            if (latestUsdSnapshot == null || !latestUsdSnapshot.Rates.Any())
+            {
+                return NotFound("No exchange rate data found in the database.");
+            }
+
+            var baseRateInUsd = latestUsdSnapshot.Rates
+                .FirstOrDefault(r => r.Currency?.Code == baseCurrencyCode)?.Rate;
+
+            if (baseRateInUsd == null || baseRateInUsd.Value == 0)
+            {
+                if (baseCurrencyCode == "USD") baseRateInUsd = 1.0m;
+                else return NotFound($"The specified base currency '{baseCurrencyCode}' is not found in the latest rate data.");
+            }
+
+            var rateDetails = new List<RateDetailDto>();
+            foreach (var rate in latestUsdSnapshot.Rates)
+            {
+                if (rate.Currency?.Code == baseCurrencyCode) continue;
+
+                if (rate.Currency != null)
+                {
+                    // Çapraz Kur Hesaplaması: (Hedefin USD Değeri) / (Bazın USD Değeri)
+                    var calculatedRate = rate.Rate / baseRateInUsd.Value;
+
+                    rateDetails.Add(new RateDetailDto
+                    {
+                        Id = rate.Currency.Id,
+                        Code = rate.Currency.Code,
+                        Name = rate.Currency.Name,
+                        CountryName = rate.Currency.CountryName,
+                        CountryCode = rate.Currency.CountryCode,
+                        IconUrl = rate.Currency.IconUrl,
+                        Rate = calculatedRate
+                    });
+                }
+            }
+
+            var responseDto = new LatestRatesResponseDto
+            {
+                BaseCurrency = baseCurrencyCode,
+                SnapshotTimestamp = latestUsdSnapshot.FetchTimestamp,
+                Rates = rateDetails.OrderBy(r => r.Code).ToList()
+            };
+
+            return Ok(responseDto);
+        }
+
 
         [HttpGet("currency-by-code/{code}")]
         public async Task<IActionResult> GetCurrencyByCode(string code)

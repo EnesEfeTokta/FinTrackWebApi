@@ -519,6 +519,10 @@ namespace FinTrackWebApi.Data
                 entity.Property(cs => cs.BaseCurrency)
                       .IsRequired(true)
                       .HasMaxLength(20);
+                entity.Property(cs => cs.HasChanges)
+                      .HasColumnName("HasChanges")
+                      .IsRequired(true)
+                      .HasDefaultValue(false);
                 entity.Property(cs => cs.FetchTimestamp)
                         .HasColumnName("FetchTimestamp")
                         .HasColumnType("timestamp with time zone")
