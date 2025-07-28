@@ -61,6 +61,8 @@ namespace FinTrackWebApi.Extensions
             services.AddScoped<IMediaEncryptionService, MediaEncryptionService>();
             services.AddScoped<IChatBotService, ChatBotService>();
 
+            services.AddHostedService<DebtOverdueCheckerService>();
+
             services.AddHostedService<CurrencyUpdateService>();
 
             //services.Configure<StripeSettings>(services.Configuration.GetSection("StripeSettings"));

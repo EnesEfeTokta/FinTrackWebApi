@@ -65,30 +65,7 @@ namespace FinTrackWebApi.Services.SecureDebtService
 
             try
             {
-                _logger.LogInformation(
-                    "STAGE 1: Before AddAsync - debt.LenderId: {LenderId}, debt.BorrowerId: {BorrowerId}, debt.CurrencyId: {CurrencyId}",
-                    debt.LenderId,
-                    debt.BorrowerId,
-                    debt.Currency
-                );
-                _logger.LogInformation(
-                    "STAGE 1: Before AddAsync - lender object from UserManager - Id: {LenderId}, UserName: {LenderUserName}",
-                    lender.Id,
-                    lender.UserName
-                );
-                _logger.LogInformation(
-                    "STAGE 1: Before AddAsync - borrower object from UserManager - Id: {BorrowerId}, UserName: {BorrowerUserName}",
-                    borrower.Id,
-                    borrower.UserName
-                );
-
                 await _context.Debts.AddAsync(debt);
-
-                _logger.LogInformation(
-                    "STAGE 2: After AddAsync, Before SaveChanges - debt.LenderId: {LenderId}, debt.BorrowerId: {BorrowerId}",
-                    debt.LenderId,
-                    debt.BorrowerId
-                );
 
                 var debtEntry = _context
                     .ChangeTracker.Entries<DebtModel>()
@@ -298,7 +275,9 @@ namespace FinTrackWebApi.Services.SecureDebtService
                     Success = true,
                     Message =
                         "The debt offer was successfully created and communicated to the debtor.",
-                    CreatedDebt = debt,
+                    //CreatedDebt = debt,
+                    CreatedDebt = null, // TODO: Şİmdi debt nesnesini DTO'ya dönüştürüp burada kullanabilirim.
+                    DebtId = debt.Id
                 };
             }
             catch (Exception ex)
