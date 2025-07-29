@@ -75,6 +75,11 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 sb.AppendLine("No transaction details found.");
             }
 
+            sb.AppendLine("\n--- Summary ---");
+            sb.AppendFormat("Total Transaction Count: {0}\n", reportData.TransactionCount);
+            sb.AppendFormat("Total Amount: {0:N2}\n", reportData.TotalAmount);
+            sb.AppendLine("\n--- End of Report ---");
+
             sb.AppendLine("\n--- End of Report ---");
 
             return Task.FromResult(Encoding.UTF8.GetBytes(sb.ToString()));

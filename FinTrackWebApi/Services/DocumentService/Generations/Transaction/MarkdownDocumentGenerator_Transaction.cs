@@ -44,7 +44,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
             }
 
             sb.AppendLine("---");
-            sb.AppendLine($"**TotalCount:** {reportData.TotalCount}");
+            sb.AppendLine($"**TotalCount:** {reportData.TransactionCount}");
 
             return Task.FromResult(Encoding.UTF8.GetBytes(sb.ToString()));
         }

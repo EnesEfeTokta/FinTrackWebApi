@@ -1,5 +1,7 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Enums;
 using FinTrackWebApi.Services.DocumentService;
+using FinTrackWebApi.Services.DocumentService.Generations;
 using FinTrackWebApi.Services.DocumentService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,341 +25,86 @@ namespace FinTrackWebApi.Controller.Reports
             ILogger<ReportsController> logger
         )
         {
-            _documentService =
-                documentService ?? throw new ArgumentNullException(nameof(documentService));
+            _documentService = documentService ?? throw new ArgumentNullException(nameof(documentService));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// JWT token ile kimlik doğrulaması yapılmış kullanıcının ID'sini alır.
-        /// </summary>
         private int GetAuthenticatedId()
         {
-            var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(IdClaim) || !int.TryParse(IdClaim, out int Id))
+            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out int id))
             {
-                _logger.LogError(
-                    "Authenticated user ID claim (NameIdentifier) not found or invalid."
-                );
-                throw new UnauthorizedAccessException(
-                    "User ID cannot be determined from the token."
-                );
+                _logger.LogError("Authenticated user ID claim (NameIdentifier) not found or invalid.");
+                throw new UnauthorizedAccessException("User ID cannot be determined from the token.");
             }
-            return Id;
+            return id;
         }
 
-        #region Budget Endpoints
-        /// <summary>
-        /// Kullanıcının bütçe raporunu belirtilen formatta döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <returns></returns>
-        [HttpGet("budget-report/{format}")]
-        public async Task<IActionResult> GetBudgetReport(string format)
+        [HttpGet("account")]
+        public async Task<IActionResult> GetAccountReport(
+            [FromQuery] string format,
+            [FromQuery] AccountType? type = null,
+            [FromQuery] decimal? minBalance = null,
+            [FromQuery] decimal? maxBalance = null)
         {
-            var reportData = await BuildBudgetReportDataAsync();
+            var reportData = await BuildAccountReportDataAsync(type, minBalance, maxBalance);
             return await GenerateAndReturnReport(
                 format,
-                DocumentType.Budget.ToString(),
+                DocumentType.Account,
+                reportData,
+                $"Financial_Account_Report_{DateTime.Now:yyyyMMdd}"
+            );
+        }
+
+        [HttpGet("budget")]
+        public async Task<IActionResult> GetBudgetReport(
+            [FromQuery] string format,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
+        {
+            var reportData = await BuildBudgetReportDataAsync(startDate, endDate);
+            return await GenerateAndReturnReport(
+                format,
+                DocumentType.Budget,
                 reportData,
                 $"Financial_Budget_Report_{DateTime.Now:yyyyMMdd}"
             );
         }
 
-        /// <summary>
-        /// Kullanıcının bütçe raporunu belirtilen tarih aralığında döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="startDateTime">Başlangıç tarihi</param>
-        /// <param name="endDateTime">Bitiş tarihi</param>
-        /// <returns></returns>
-        [HttpGet("budget-report-by-date/{format}")]
-        public async Task<IActionResult> GetBudgetReportByDate(
+        [HttpGet("transaction")]
+        public async Task<IActionResult> GetTransactionReport(
             [FromQuery] string format,
-            DateTime startDateTime,
-            DateTime endDateTime
-        )
+            [FromQuery] int? accountId = null,
+            [FromQuery] int? categoryId = null,
+            [FromQuery] DateTime? date = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
         {
-            if (startDateTime >= endDateTime)
-            {
-                return BadRequest("Start date must be before end date.");
-            }
-
-            var reportData = await BuildBudgetReportDataAsync(startDateTime, endDateTime);
-
+            var reportData = await BuildTransactionReportDataAsync(date, startDate, endDate, accountId, categoryId);
             return await GenerateAndReturnReport(
                 format,
-                DocumentType.Budget.ToString(),
-                reportData,
-                $"Financial_Budget_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}"
-            );
-        }
-
-        /// <summary>
-        /// Kullanıcının bütçe raporunu belirtilen kategoriye göre döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="category">İstenilen kategori</param>
-        /// <returns></returns>
-        [HttpGet("budget-report-by-category/{category}")]
-        public async Task<IActionResult> GetBudgetReportByCategory(
-            [FromQuery] string format,
-            string category
-        )
-        {
-            if (string.IsNullOrWhiteSpace(category))
-            {
-                return BadRequest("Category cannot be null or empty.");
-            }
-
-            var reportData = await BuildBudgetReportDataAsync();
-            reportData.Items = reportData
-                .Items.Where(item =>
-                    item.Category.Equals(category, StringComparison.OrdinalIgnoreCase)
-                )
-                .ToList();
-
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Budget.ToString(),
-                reportData,
-                $"Financial_Budget_Report_By_Category_{category}_{DateTime.Now:yyyyMMdd}"
-            );
-        }
-
-        /// <summary>
-        /// Başlangıç ve bitiş tarihleri belirtilirse, o tarihler arasındaki bütçeleri getirir.
-        /// </summary>
-        /// <param name="start">Başlangıç tarihi</param>
-        /// <param name="end">Biriş tarihi</param>
-        /// <returns></returns>
-        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(
-            DateTime? start = null,
-            DateTime? end = null
-        )
-        {
-            int Id = GetAuthenticatedId();
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == Id);
-
-            if (user == null)
-            {
-                _logger.LogError("User not found for ID: {Id} while building report.", Id);
-                return null;
-            }
-
-            var report = new BudgetReportModel
-            {
-                ReportTitle =
-                    start.HasValue && end.HasValue
-                        ? $"Financial Budget Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
-                        : "Financial Budget Report (All Time)",
-                Description = $"Budget details for user {user.UserName}.",
-            };
-
-            DateTime? startUtc = start.HasValue
-                ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc)
-                : null;
-            DateTime? endUtc = end.HasValue
-                ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1)
-                : null;
-
-            var query = _context.Budgets
-                .Include(b => b.Category)
-                .Where(b => b.UserId == Id);
-
-            if (startUtc.HasValue && endUtc.HasValue)
-            {
-                query = query.Where(b =>
-                    b.EndDate >= startUtc.Value && b.StartDate <= endUtc.Value
-                );
-            }
-
-            var budgetCategoriesData = await query
-                .OrderBy(bc => bc.StartDate)
-                .ThenBy(bc => bc.Name)
-                .ThenBy(bc => bc.Category.Name)
-                .AsNoTracking()
-                .ToListAsync();
-
-            if (!budgetCategoriesData.Any())
-            {
-                _logger.LogInformation(
-                    "No budget categories found for user {UserName} for the given criteria.",
-                    user.UserName
-                );
-                return report;
-            }
-
-            report.Items = budgetCategoriesData
-                .Select(bc => new BudgetReportTableItem
-                {
-                    Name = bc.Name,
-                    Description = bc.Description ?? "-",
-                    Category = bc.Category.Name,
-                    StartDate = bc.StartDate,
-                    EndDate = bc.EndDate,
-                    CreatedAt = bc.CreatedAtUtc,
-                    UpdatedAt = bc.UpdatedAtUtc ?? DateTime.MinValue,
-                    AllocatedAmount = bc.AllocatedAmount,
-                })
-                .ToList();
-
-            return report;
-        }
-
-        /// <summary>
-        /// Belirtilen formatta raporu oluşturur ve döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="reportData">Raporun detayları</param>
-        /// <param name="baseFileName">Dosyanın ismi</param>
-        /// <returns></returns>
-        private async Task<IActionResult> GenerateAndReturnReport(
-            string format,
-            string type,
-            BudgetReportModel? reportData,
-            string baseFileName
-        )
-        {
-            if (reportData == null || !reportData.Items.Any())
-            {
-                return NotFound("No report data found for the specified criteria.");
-            }
-
-            if (
-                !Enum.TryParse(
-                    format,
-                    true,
-                    out Services.DocumentService.DocumentFormat requestedFormat
-                )
-            )
-            {
-                return BadRequest(
-                    "Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown"
-                );
-            }
-
-            if (!Enum.TryParse(type, true, out DocumentType requestedType))
-            {
-                return BadRequest(
-                    "Invalid or unsupported type requested. Supported types: Budget, Transaction, Account"
-                );
-            }
-
-            try
-            {
-                var (content, mimeType, fileName) = await _documentService.GenerateDocumentAsync(
-                    reportData,
-                    requestedFormat,
-                    requestedType,
-                    baseFileName
-                );
-
-                return File(content, mimeType, fileName);
-            }
-            catch (NotSupportedException ex)
-            {
-                _logger.LogWarning("Format generation not supported: {Message}", ex.Message);
-                return BadRequest(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning("Invalid data for report generation: {Message}", ex.Message);
-                return BadRequest($"Invalid data for {format} report generation: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
-                return StatusCode(500, $"An error occurred while generating the {format} report.");
-            }
-        }
-        #endregion
-
-        #region Transaction Endpoints
-        /// <summary>
-        /// Kullanıcının gelir giderlerin raporunu belirtilen formatta döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <returns></returns>
-        [HttpGet("transaction-report/{format}")]
-        public async Task<IActionResult> GetTransactionReport(string format)
-        {
-            var reportData = await BuildTransactionReportDataAsync();
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Transaction.ToString(),
+                DocumentType.Transaction,
                 reportData,
                 $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}"
             );
         }
 
-        /// <summary>
-        /// Kullanıcının  gelir giderlerin raporunu belirtilen tarih aralığında döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="startDateTime">Başlangıç tarihi</param>
-        /// <param name="endDateTime">Bitiş tarihi</param>
-        /// <returns></returns>
-        [HttpGet("transaction-report-by-date/{format}")]
-        public async Task<IActionResult> GetTransactionReportByDate(
-            [FromQuery] string format,
-            DateTime startDateTime,
-            DateTime endDateTime
-        )
-        {
-            if (startDateTime >= endDateTime)
-            {
-                return BadRequest("Start date must be before end date.");
-            }
-
-            var reportData = await BuildTransactionReportDataAsync(startDateTime, endDateTime);
-
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Transaction.ToString(),
-                reportData,
-                $"Financial_Transaction_Report_{startDateTime:yyyyMMdd}_{endDateTime:yyyyMMdd}"
-            );
-        }
-
-        /// <summary>
-        /// Belirtilen formatta raporu oluşturur ve döndürür.
-        /// </summary>
-        /// <param name="format">Çıktı formatı</param>
-        /// <param name="reportData">Raporun detayları</param>
-        /// <param name="baseFileName">Dosyanın ismi</param>
-        /// <returns></returns>
         private async Task<IActionResult> GenerateAndReturnReport(
             string format,
-            string type,
-            TransactionsRaportModel? reportData,
+            DocumentType documentType,
+            IReportModel? reportData,
             string baseFileName
         )
         {
-            if (reportData == null || !reportData.Items.Any())
-            {
-                return NotFound("No report data found for the specified criteria.");
-            }
+            //if (reportData == null || !reportData.GetType().GetProperty("Items").GetValue(reportData).As<System.CollectionsIList>().Count > 0)
+            //{
+            //    return NotFound("No report data found for the specified criteria.");
+            //}
 
-            if (
-                !Enum.TryParse(
-                    format,
-                    true,
-                    out Services.DocumentService.DocumentFormat requestedFormat
-                )
-            )
+            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
             {
-                return BadRequest(
-                    "Invalid or unsupported format requested. Supported formats: Pdf, Word, Text, Markdown"
-                );
-            }
-
-            if (!Enum.TryParse(type, true, out DocumentType requestedType))
-            {
-                return BadRequest(
-                    "Invalid or unsupported type requested. Supported types: Budget, Transaction, Account"
-                );
+                return BadRequest("Invalid format. Supported: Pdf, Word, Xlsx, Xml, Text, Markdown");
             }
 
             try
@@ -365,7 +112,7 @@ namespace FinTrackWebApi.Controller.Reports
                 var (content, mimeType, fileName) = await _documentService.GenerateDocumentAsync(
                     reportData,
                     requestedFormat,
-                    requestedType,
+                    documentType,
                     baseFileName
                 );
 
@@ -376,11 +123,6 @@ namespace FinTrackWebApi.Controller.Reports
                 _logger.LogWarning("Format generation not supported: {Message}", ex.Message);
                 return BadRequest(ex.Message);
             }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning("Invalid data for report generation: {Message}", ex.Message);
-                return BadRequest($"Invalid data for {format} report generation: {ex.Message}");
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
@@ -388,83 +130,139 @@ namespace FinTrackWebApi.Controller.Reports
             }
         }
 
-        /// <summary>
-        /// Başlangıç ve bitiş tarihleri belirtilirse, o tarihler arasındaki gelir ve giderleri getirir.
-        /// </summary>
-        /// <param name="start">Başlangıç tarihi</param>
-        /// <param name="end">Biriş tarihi</param>
-        /// <returns></returns>
-        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(
-            DateTime? start = null,
-            DateTime? end = null
-        )
+        private async Task<AccountReportModel?> BuildAccountReportDataAsync(AccountType? type, decimal? minBalance, decimal? maxBalance)
         {
-            int Id = GetAuthenticatedId();
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == Id);
+            int userId = GetAuthenticatedId();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return null;
 
-            if (user == null)
+            var query = _context.Accounts.Where(a => a.User.Id == userId);
+
+            if (type.HasValue)
             {
-                _logger.LogError("User not found for ID: {Id} while building report.", Id);
-                return null;
+                query = query.Where(a => a.Type == type.Value);
+            }
+            if (minBalance.HasValue)
+            {
+                query = query.Where(a => a.Balance >= minBalance.Value);
+            }
+            if (maxBalance.HasValue)
+            {
+                query = query.Where(a => a.Balance <= maxBalance.Value);
             }
 
-            var report = new TransactionsRaportModel
+            var accounts = await query.OrderBy(a => a.Name).AsNoTracking().ToListAsync();
+
+            return new AccountReportModel
             {
-                ReportTitle =
-                    start.HasValue && end.HasValue
-                        ? $"Financial Transaction Report ({start.Value:yyyy-MM-dd} - {end.Value:yyyy-MM-dd})"
-                        : "Financial Transaction Report (All Time)",
-                Description = $"Transaction details for user {user.UserName}.",
-            };
-
-            DateTime? startUtc = start.HasValue
-                ? DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Utc)
-                : null;
-            DateTime? endUtc = end.HasValue
-                ? DateTime.SpecifyKind(end.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1)
-                : null;
-
-            var query = _context
-                .Transactions.Include(bc => bc.Account)
-                .Include(bc => bc.Category)
-                .Where(bc => bc.User.Id == Id);
-
-            if (startUtc.HasValue && endUtc.HasValue)
-            {
-                query = query.Where(bc =>
-                    bc.TransactionDateUtc >= startUtc.Value && bc.TransactionDateUtc <= endUtc.Value
-                );
-            }
-
-            var transactionCategoriesData = await query
-                .OrderBy(bc => bc.TransactionDateUtc)
-                .ThenBy(bc => bc.Account.Name)
-                .ThenBy(bc => bc.Category.Name)
-                .AsNoTracking()
-                .ToListAsync();
-
-            if (!transactionCategoriesData.Any())
-            {
-                _logger.LogInformation(
-                    "No transaction categories found for user {UserName} for the given criteria.",
-                    user.UserName
-                );
-                return report;
-            }
-
-            report.Items = transactionCategoriesData
-                .Select(bc => new TransactionRaportTableItem
+                ReportTitle = "Financial Account Report",
+                Description = $"A detailed report of financial accounts for user {user.UserName}.",
+                Items = accounts.Select(a => new AccountReportTableItem
                 {
-                    AccountName = bc.Account.Name,
-                    Description = bc.Description ?? "-",
-                    CategoryName = bc.Category.Name,
-                    Amount = bc.Amount,
-                    TransactionDateUtc = bc.TransactionDateUtc,
-                })
-                .ToList();
-
-            return report;
+                    Name = a.Name,
+                    Type = a.Type,
+                    Balance = a.Balance,
+                    CreatedAt = a.CreatedAtUtc,
+                    UpdatedAt = a.UpdatedAtUtc ?? DateTime.MinValue,
+                }).ToList(),
+                AccountCount = accounts.Count,
+                TotalBalance = accounts.Sum(a => a.Balance)
+            };
         }
-        #endregion
+
+        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(DateTime? startDate, DateTime? endDate)
+        {
+            int userId = GetAuthenticatedId();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return null;
+
+            var query = _context.Budgets.Include(b => b.Category).Where(b => b.UserId == userId);
+
+            if (startDate.HasValue)
+            {
+                var startUtc = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+                query = query.Where(b => b.EndDate >= startUtc);
+            }
+            if (endDate.HasValue)
+            {
+                var endUtc = DateTime.SpecifyKind(endDate.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+                query = query.Where(b => b.StartDate <= endUtc);
+            }
+
+            var budgets = await query.OrderBy(b => b.StartDate).ThenBy(b => b.Name).AsNoTracking().ToListAsync();
+
+            return new BudgetReportModel
+            {
+                ReportTitle = "Financial Budget Report",
+                Description = $"Budget details for user {user.UserName}.",
+                Items = budgets.Select(b => new BudgetReportTableItem
+                {
+                    Name = b.Name,
+                    Description = b.Description ?? "-",
+                    Category = b.Category.Name,
+                    StartDate = b.StartDate,
+                    EndDate = b.EndDate,
+                    CreatedAt = b.CreatedAtUtc,
+                    UpdatedAt = b.UpdatedAtUtc ?? DateTime.MinValue,
+                    AllocatedAmount = b.AllocatedAmount,
+                }).ToList(),
+                BudgetCount = budgets.Count,
+                TotalAllocatedAmount = budgets.Sum(b => b.AllocatedAmount)
+            };
+        }
+
+        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(DateTime? date, DateTime? startDate, DateTime? endDate, int? accountId, int? categoryId)
+        {
+            int userId = GetAuthenticatedId();
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return null;
+
+            var query = _context.Transactions
+                .Include(t => t.Account)
+                .Include(t => t.Category)
+                .Where(t => t.User.Id == userId);
+
+            if (date.HasValue)
+            {
+                var startUtc = DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Utc);
+                query = query.Where(t => t.TransactionDateUtc == startUtc);
+            }
+            if (startDate.HasValue)
+            {
+                var startUtc = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+                query = query.Where(t => t.TransactionDateUtc >= startUtc);
+            }
+            if (endDate.HasValue)
+            {
+                var endUtc = DateTime.SpecifyKind(endDate.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+                query = query.Where(t => t.TransactionDateUtc <= endUtc);
+            }
+            if (accountId.HasValue)
+            {
+                query = query.Where(t => t.AccountId == accountId.Value);
+            }
+            if (categoryId.HasValue)
+            {
+                query = query.Where(t => t.CategoryId == categoryId.Value);
+            }
+
+            var transactions = await query.OrderByDescending(t => t.TransactionDateUtc).AsNoTracking().ToListAsync();
+
+            return new TransactionsRaportModel
+            {
+                ReportTitle = "Financial Transaction Report",
+                Description = $"Transaction details for user {user.UserName}.",
+                Items = transactions.Select(t => new TransactionRaportTableItem
+                {
+                    AccountName = t.Account.Name,
+                    Description = t.Description ?? "-",
+                    CategoryName = t.Category.Name,
+                    Amount = t.Amount,
+                    TransactionDateUtc = t.TransactionDateUtc,
+                }).ToList(),
+                TransactionCount = transactions.Count,
+                TotalAmount = transactions.Sum(t => t.Amount)
+            };
+        }
     }
 }

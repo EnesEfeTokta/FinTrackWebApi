@@ -3,9 +3,9 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using FinTrackWebApi.Services.DocumentService.Models;
 
-namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
+namespace FinTrackWebApi.Services.DocumentService.Generations.Account
 {
-    public class WordDocumentGenerator_Transaction : IDocumentGenerator
+    public class WordDocumentGenerator_Account : IDocumentGenerator
     {
         public string FileExtension => ".docx";
         public string MimeType =>
@@ -14,10 +14,10 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
         public Task<byte[]> GenerateAsync<TData>(TData data)
             where TData : class
         {
-            if (!(data is TransactionsRaportModel reportData))
+            if (!(data is AccountReportModel accountReport))
             {
                 throw new ArgumentException(
-                    $"Unsupported data type '{typeof(TData).FullName}' for Word generation. Expected TransactionsRaportModel.",
+                    $"Unsupported data type '{typeof(TData).FullName}' for Word generation. Expected AccountReportModel.",
                     nameof(data)
                 );
             }
@@ -27,16 +27,15 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 using (
                     WordprocessingDocument wordDocument = WordprocessingDocument.Create(
                         mem,
-                        WordprocessingDocumentType.Document,
-                        true
+                        WordprocessingDocumentType.Document
                     )
-                ) // autoSave true
+                )
                 {
                     MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
                     mainPart.Document = new Document();
                     Body body = mainPart.Document.AppendChild(new Body());
 
-                    SectionProperties sectionProps = new SectionProperties();
+                    SectionProperties sectionProps = body.AppendChild(new SectionProperties());
                     PageMargin pageMargin = new PageMargin()
                     {
                         Top = 1080,
@@ -51,7 +50,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
                     AddParagraph(
                         body,
-                        reportData.ReportTitle,
+                        accountReport.ReportTitle,
                         justification: JustificationValues.Center,
                         isBold: true,
                         fontSize: "36"
@@ -62,20 +61,17 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                         justification: JustificationValues.Center,
                         fontSize: "18"
                     );
-                    if (!string.IsNullOrWhiteSpace(reportData.Description))
-                    {
-                        AddParagraph(
-                            body,
-                            "Description:",
-                            isBold: true,
-                            fontSize: "22",
-                            spaceAfter: "0"
-                        );
-                        AddParagraph(body, reportData.Description, fontSize: "22");
-                    }
+                    AddParagraph(
+                        body,
+                        "Description:",
+                        isBold: true,
+                        fontSize: "20",
+                        spaceAfter: "0"
+                    );
+                    AddParagraph(body, accountReport.Description, fontSize: "20");
                     AddParagraph(body, "");
 
-                    AddParagraph(body, "Transaction Details", isBold: true, fontSize: "28");
+                    AddParagraph(body, "Account Details", isBold: true, fontSize: "28");
                     AddParagraph(body, "");
 
                     Table table = new Table();
@@ -122,78 +118,52 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                             }
                         )
                     );
+
                     table.AppendChild(tblProps);
 
                     TableRow headerRow = new TableRow();
-                    AddHeaderCell(headerRow, "#", fontSize: "20");
-                    AddHeaderCell(headerRow, "Account Name", fontSize: "20");
-                    AddHeaderCell(headerRow, "Category", fontSize: "20");
-                    AddHeaderCell(headerRow, "Amount", JustificationValues.Right, fontSize: "20");
-                    AddHeaderCell(headerRow, "Description", fontSize: "20");
-                    AddHeaderCell(
-                        headerRow,
-                        "Transaction Date",
-                        JustificationValues.Center,
-                        fontSize: "20"
-                    );
+                    AddHeaderCell(headerRow, "#");
+                    AddHeaderCell(headerRow, "Name");
+                    AddHeaderCell(headerRow, "Type");
+                    AddHeaderCell(headerRow, "Created");
+                    AddHeaderCell(headerRow, "Updated");
+                    AddHeaderCell(headerRow, "Balance", JustificationValues.Right);
                     table.Append(headerRow);
 
-                    if (reportData.Items != null && reportData.Items.Any())
+                    int index = 1;
+                    foreach (var item in accountReport.Items)
                     {
-                        int index = 1;
-                        foreach (var item in reportData.Items)
-                        {
-                            TableRow dataRow = new TableRow();
-                            AddTableCell(dataRow, index++.ToString(), fontSize: "18");
-                            AddTableCell(dataRow, item.AccountName, fontSize: "18");
-                            AddTableCell(dataRow, item.CategoryName, fontSize: "18");
-                            AddTableCell(
-                                dataRow,
-                                item.Amount.ToString("N2"),
-                                JustificationValues.Right,
-                                fontSize: "18"
-                            );
-                            AddTableCell(dataRow, item.Description, fontSize: "18");
-                            AddTableCell(
-                                dataRow,
-                                item.TransactionDateUtc.ToString("yyyy-MM-dd"),
-                                JustificationValues.Center,
-                                fontSize: "18"
-                            );
-                            table.Append(dataRow);
-                        }
-                    }
-                    else
-                    {
-                        TableRow emptyRow = new TableRow();
-                        TableCell emptyCell = AddTableCell(
-                            emptyRow,
-                            "No transaction details found.",
-                            fontSize: "18"
+                        TableRow dataRow = new TableRow();
+                        AddTableCell(dataRow, index++.ToString());
+                        AddTableCell(dataRow, item.Name);
+                        AddTableCell(dataRow, item.Type?.ToString() ?? "N/A");
+                        AddTableCell(dataRow, item.CreatedAt.ToString("yyyy-MM-dd"));
+                        AddTableCell(
+                            dataRow,
+                            item.UpdatedAt == DateTime.MinValue || item.UpdatedAt == default
+                                ? "-"
+                                : item.UpdatedAt.ToString("yyyy-MM-dd")
                         );
-                        emptyCell.Append(new TableCellProperties(new GridSpan() { Val = 6 }));
-                        emptyRow.Append(emptyCell);
-                        table.Append(emptyRow);
+                        AddTableCell(
+                            dataRow,
+                            item.Balance.ToString(),
+                            JustificationValues.Right
+                        );
+                        table.Append(dataRow);
                     }
 
                     body.AppendChild(table);
-                    AddParagraph(body, "");
-
-                    if (reportData.Items != null && reportData.Items.Any())
-                    {
-                        AddParagraph(
-                            body,
-                            $"Total Transactions Count: {reportData.TransactionCount}",
-                            justification: JustificationValues.Right,
-                            fontSize: "20"
-                        );
-                    }
 
                     AddParagraph(body, "");
 
-                    mainPart.Document.Body?.Append(sectionProps);
-                    mainPart.Document.Save();
+                    AddParagraph(
+                        body,
+                        $"Page 1 of X",
+                        justification: JustificationValues.Center,
+                        fontSize: "16"
+                    );
                 }
+
                 return Task.FromResult(mem.ToArray());
             }
         }
@@ -201,38 +171,13 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
         private static Paragraph AddParagraph(
             Body body,
             string text,
-            string? fontSize = "22",
+            string? fontSize = "20",
             bool isBold = false,
             JustificationValues? justification = null,
-            string? spaceAfter = null,
-            string? spaceBefore = null
+            string? spaceAfter = null
         )
         {
             Paragraph para = new Paragraph();
-            ParagraphProperties paraProps = new ParagraphProperties();
-
-            if (justification.HasValue)
-                paraProps.Append(new Justification { Val = justification.Value });
-
-            SpacingBetweenLines spacing = new SpacingBetweenLines();
-            bool hasSpacing = false;
-
-            if (!string.IsNullOrEmpty(spaceAfter))
-            {
-                spacing.After = spaceAfter;
-                hasSpacing = true;
-            }
-            if (!string.IsNullOrEmpty(spaceBefore))
-            {
-                spacing.Before = spaceBefore;
-                hasSpacing = true;
-            }
-            if (hasSpacing)
-                paraProps.Append(spacing);
-
-            if (paraProps.HasChildren)
-                para.PrependChild(paraProps);
-
             Run run = para.AppendChild(new Run());
             RunProperties runProps = run.AppendChild(new RunProperties());
 
@@ -243,6 +188,14 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
             run.AppendChild(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
 
+            ParagraphProperties paraProps = new ParagraphProperties();
+            if (justification.HasValue)
+                paraProps.Append(new Justification { Val = justification.Value });
+            if (!string.IsNullOrEmpty(spaceAfter))
+                paraProps.Append(new SpacingBetweenLines { After = spaceAfter });
+            if (paraProps.HasChildren)
+                para.PrependChild(paraProps);
+
             body.AppendChild(para);
             return para;
         }
@@ -250,16 +203,12 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
         private static void AddHeaderCell(
             TableRow row,
             string text,
-            JustificationValues? justification = null,
-            string? fontSize = "20"
+            JustificationValues? justification = null
         )
         {
             TableCell tc = new TableCell();
 
-            TableCellProperties tcp = new TableCellProperties(
-                new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
-            );
-
+            TableCellProperties tcp = new TableCellProperties();
             tc.Append(tcp);
 
             Paragraph p = new Paragraph();
@@ -269,74 +218,46 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                 pPr.Append(new Justification() { Val = justification.Value });
             }
 
-            pPr.Append(
-                new SpacingBetweenLines
-                {
-                    LineRule = LineSpacingRuleValues.Auto,
-                    Line = "240",
-                    Before = "0",
-                    After = "0",
-                }
-            );
+            pPr.Append(new SpacingBetweenLines { After = "0" });
             p.Append(pPr);
 
             Run run = p.AppendChild(new Run());
             RunProperties runProps = run.AppendChild(new RunProperties());
             runProps.Append(new Bold());
-            if (!string.IsNullOrEmpty(fontSize))
-                runProps.Append(new FontSize { Val = fontSize });
-
+            runProps.Append(new FontSize { Val = "18" });
             run.AppendChild(new Text(text));
 
             tc.Append(p);
             row.Append(tc);
         }
 
-        private static TableCell AddTableCell(
+        private static void AddTableCell(
             TableRow row,
             string text,
-            JustificationValues? justification = null,
-            string? fontSize = "18"
+            JustificationValues? justification = null
         )
         {
             TableCell tc = new TableCell();
-            TableCellProperties tcp = new TableCellProperties(
-                new TableCellVerticalAlignment { Val = TableVerticalAlignmentValues.Center }
-            );
 
+            TableCellProperties tcp = new TableCellProperties();
             tc.Append(tcp);
 
             Paragraph p = new Paragraph();
             ParagraphProperties pPr = new ParagraphProperties();
-
             if (justification.HasValue)
             {
                 pPr.Append(new Justification() { Val = justification.Value });
             }
-
-            pPr.Append(
-                new SpacingBetweenLines
-                {
-                    LineRule = LineSpacingRuleValues.Auto,
-                    Line = "240",
-                    Before = "0",
-                    After = "0",
-                }
-            );
+            pPr.Append(new SpacingBetweenLines { After = "0" });
             p.Append(pPr);
 
             Run run = p.AppendChild(new Run());
             RunProperties runProps = run.AppendChild(new RunProperties());
-
-            if (!string.IsNullOrEmpty(fontSize))
-                runProps.Append(new FontSize { Val = fontSize });
-
+            runProps.Append(new FontSize { Val = "18" });
             run.AppendChild(new Text(text) { Space = SpaceProcessingModeValues.Preserve });
 
             tc.Append(p);
             row.Append(tc);
-
-            return tc;
         }
     }
 }
