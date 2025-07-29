@@ -224,10 +224,19 @@ namespace FinTrackWebApi.Controller.Debts
         }
 
         // Borç teklifini kabul etme metodu.
-        [HttpPost("accept-debt-offer/debt-{debtId}/decision-{decision}")]
-        public async Task<IActionResult> AcceptDebtOfferAsync(int debtId, bool decision)
+        [HttpPost("respond-to-offer/{debtId}")]
+        public async Task<IActionResult> RespondToOfferAsync(int debtId, [FromBody] RespondToOfferRequestDto request)
         {
+            if (request == null)
+            {
+                _logger.LogWarning("RespondToOfferRequestDto is null.");
+                return BadRequest("Invalid request data.");
+            }
+
+            bool decision = request.Accepted;
+
             int userId = GetAuthenticatedId();
+
             try
             {
                 var debt = await _context
@@ -277,7 +286,7 @@ namespace FinTrackWebApi.Controller.Debts
                 _context.Debts.Update(debt);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { Success = true, Message = decision ? "Offer accepted. Please upload the confirmation video." : "Offer rejected." });
+                return Ok(true);
             }
             catch (Exception ex)
             {
