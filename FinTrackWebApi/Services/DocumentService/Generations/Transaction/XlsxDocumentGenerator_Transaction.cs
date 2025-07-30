@@ -151,7 +151,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     .Style.Font.SetBold(true)
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Right);
 
-                worksheet.Cell(currentRow, NumberOfColumns).Value = reportData.TotalCount;
+                worksheet.Cell(currentRow, NumberOfColumns).Value = reportData.TransactionCount;
                 worksheet
                     .Cell(currentRow, NumberOfColumns)
                     .Style.Font.SetBold(true)
@@ -161,8 +161,8 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     .Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
 
                 worksheet.Columns(1, NumberOfColumns).AdjustToContents();
-                worksheet.Column(2).Width = Math.Max(worksheet.Column(2).Width, 20); // Account Name min genişlik
-                worksheet.Column(5).Width = Math.Max(worksheet.Column(5).Width, 30); // Description min genişlik
+                worksheet.Column(2).Width = Math.Max(worksheet.Column(2).Width, 20);
+                worksheet.Column(5).Width = Math.Max(worksheet.Column(5).Width, 30);
                 worksheet.Column(5).Style.Alignment.SetWrapText(true);
 
                 using (var stream = new MemoryStream())

@@ -183,7 +183,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                     {
                         AddParagraph(
                             body,
-                            $"Total Transactions Count: {reportData.TotalCount}",
+                            $"Total Transactions Count: {reportData.TransactionCount}",
                             justification: JustificationValues.Right,
                             fontSize: "20"
                         );
@@ -191,7 +191,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
 
                     AddParagraph(body, "");
 
-                    mainPart.Document.Body.Append(sectionProps);
+                    mainPart.Document.Body?.Append(sectionProps);
                     mainPart.Document.Save();
                 }
                 return Task.FromResult(mem.ToArray());

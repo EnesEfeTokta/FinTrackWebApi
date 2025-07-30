@@ -170,7 +170,7 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Transaction
                                 .Text(txt =>
                                 {
                                     txt.Span("Total Transactions Count: ").SemiBold().FontSize(10);
-                                    txt.Span(_data.TotalCount.ToString()).FontSize(10);
+                                    txt.Span(_data.TransactionCount.ToString()).FontSize(10);
                                 });
                         }
                     });

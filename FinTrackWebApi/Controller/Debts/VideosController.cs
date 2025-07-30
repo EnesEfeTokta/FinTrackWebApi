@@ -60,16 +60,33 @@ namespace FinTrackWebApi.Controller.Debts
             return Id;
         }
 
+        // Video yükleme endpointi
         [HttpPost("user-upload-video")]
         [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> UploadVideo(IFormFile file, int debtId)
         {
             if (file == null || file.Length == 0)
             {
-                return BadRequest("Dosya boş veya geçersiz.");
+                return BadRequest("Video file is required.");
             }
 
             int userId = GetAuthenticatedId();
+
+            var debt = await _context.Debts.FindAsync(debtId);
+            if (debt == null)
+            {
+                return NotFound("Debt not found.");
+            }
+
+            if (debt.BorrowerId != userId)
+            {
+                return Forbid("You are not the borrower for this debt and cannot upload a video.");
+            }
+
+            if (debt.Status != DebtStatusType.AcceptedPendingVideoUpload)
+            {
+                return BadRequest($"You can only upload a video for debts pending video upload. Current status: {debt.Status}");
+            }
 
             var videoId = Guid.NewGuid();
             var orginalFileName = Path.GetFileName(file.FileName);
@@ -93,11 +110,6 @@ namespace FinTrackWebApi.Controller.Debts
                     ContentType = file.ContentType,
                     UploadDateUtc = DateTime.UtcNow,
                     Status = VideoStatusType.PendingApproval,
-                    EncryptionKeyHash = _mediaEncryptionService.HashKey(
-                        _mediaEncryptionService.GenerateRandomKey(20)
-                    ),
-                    EncryptionSalt = _mediaEncryptionService.GenerateSalt(),
-                    EncryptionIV = _mediaEncryptionService.GenerateIV(),
                 };
 
                 await _context.VideoMetadatas.AddAsync(videoMetadata);
@@ -113,6 +125,11 @@ namespace FinTrackWebApi.Controller.Debts
                 };
 
                 await _context.DebtVideoMetadatas.AddAsync(debtVideoMetadata);
+
+                debt.Status = DebtStatusType.PendingOperatorApproval;
+                debt.UpdatedAtUtc = DateTime.UtcNow;
+                _context.Debts.Update(debt);
+
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation(
@@ -134,185 +151,195 @@ namespace FinTrackWebApi.Controller.Debts
             }
         }
 
+        // Video onaylama ve şifreleme endpointi
         [HttpPost("video-approve/{videoId}")]
-        [Authorize]
+        [Authorize(Roles = "Admin,User")] // TODO: Test için User rolü ile erişim verildi, gerçek senaryoda sadece VideoApproval rolü olacak.
         public async Task<IActionResult> ApproveAndEncryptVideo([FromRoute] int videoId)
         {
-            var videoMetadata = await _context
-                .DebtVideoMetadatas.Include(v => v.Debt)
-                .ThenInclude(vu => vu.Lender)
-                .Include(v => v.Debt)
-                .ThenInclude(vu => vu.Borrower)
-                .Include(v => v.VideoMetadata)
-                .ThenInclude(v => v.UploadedUser)
-                .Include(dvm => dvm.Debt)
-                .ThenInclude(d => d.Currency)
-                .FirstOrDefaultAsync(v => v.VideoMetadataId == videoId);
+            var debtVideoMetadata = await _context
+                .DebtVideoMetadatas
+                .Include(dvm => dvm.Debt).ThenInclude(d => d.Lender)
+                .Include(dvm => dvm.Debt).ThenInclude(d => d.Borrower)
+                .Include(dvm => dvm.VideoMetadata).ThenInclude(vm => vm.UploadedUser)
+                .FirstOrDefaultAsync(dvm => dvm.VideoMetadataId == videoId);
 
-            if (videoMetadata == null)
+            if (debtVideoMetadata?.VideoMetadata == null || debtVideoMetadata.Debt == null)
             {
-                return NotFound("Video metadata bulunamadı.");
+                return NotFound("Video metadata or associated debt not found.");
             }
-            if (videoMetadata.Status != VideoStatusType.PendingApproval)
+            if (debtVideoMetadata.Status != VideoStatusType.PendingApproval)
             {
-                return BadRequest("Video zaten onaylanmış veya reddedilmiş.");
+                return BadRequest("This video has already been processed (approved or rejected).");
             }
+
+            var videoMeta = debtVideoMetadata.VideoMetadata;
+            var debt = debtVideoMetadata.Debt;
 
             try
             {
-                if (
-                    string.IsNullOrEmpty(videoMetadata.VideoMetadata?.UnencryptedFilePath)
-                    || !System.IO.File.Exists(videoMetadata.VideoMetadata?.UnencryptedFilePath)
-                )
+                if (string.IsNullOrEmpty(videoMeta.UnencryptedFilePath) || !System.IO.File.Exists(videoMeta.UnencryptedFilePath))
                 {
-                    videoMetadata.Status = VideoStatusType.ProcessingError;
+                    videoMeta.Status = VideoStatusType.ProcessingError;
                     await _context.SaveChangesAsync();
-                    return NotFound("Şifrelenmemiş video dosyası bulunamadı.");
+                    return NotFound("Unencrypted video file not found.");
                 }
 
-                videoMetadata.Status = VideoStatusType.ProcessingEncryption;
+                debtVideoMetadata.Status = VideoStatusType.ProcessingEncryption;
+                videoMeta.Status = VideoStatusType.ProcessingEncryption;
                 await _context.SaveChangesAsync();
 
                 string userPasswordKey = _mediaEncryptionService.GenerateRandomKey(20);
                 string salt = _mediaEncryptionService.GenerateSalt();
                 string iv = _mediaEncryptionService.GenerateIV();
 
-                var encryptedFileName = $"enc_{videoMetadata.VideoMetadata.StoredFileName}";
+                var encryptedFileName = $"enc_{videoMeta.StoredFileName}";
                 var encryptedFilePath = Path.Combine(_encryptedVideosPath, encryptedFileName);
 
                 await _mediaEncryptionService.EncryptFileAsync(
-                    videoMetadata.VideoMetadata.UnencryptedFilePath,
+                    videoMeta.UnencryptedFilePath,
                     encryptedFilePath,
                     userPasswordKey,
                     salt,
                     iv
                 );
 
-                videoMetadata.VideoMetadata.EncryptedFilePath = encryptedFilePath;
-                videoMetadata.VideoMetadata.EncryptionKeyHash = _mediaEncryptionService.HashKey(
-                    userPasswordKey
-                );
-                videoMetadata.VideoMetadata.EncryptionSalt = salt;
-                videoMetadata.VideoMetadata.EncryptionIV = iv;
-                videoMetadata.VideoMetadata.Status = VideoStatusType.Encrypted;
-                videoMetadata.VideoMetadata.StorageType = VideoStorageType.EncryptedFileSystem;
+                videoMeta.EncryptedFilePath = encryptedFilePath;
+                videoMeta.EncryptionKeyHash = _mediaEncryptionService.HashKey(userPasswordKey);
+                videoMeta.EncryptionSalt = salt;
+                videoMeta.EncryptionIV = iv;
+                videoMeta.Status = VideoStatusType.Encrypted;
+                videoMeta.StorageType = VideoStorageType.EncryptedFileSystem;
 
-                System.IO.File.Delete(videoMetadata.VideoMetadata.UnencryptedFilePath);
-                videoMetadata.VideoMetadata.UnencryptedFilePath = "This file is now encrypted.";
+                System.IO.File.Delete(videoMeta.UnencryptedFilePath);
+                videoMeta.UnencryptedFilePath = "This file is now encrypted.";
+
+                debt.Status = DebtStatusType.Active;
+                debt.OperatorApprovalAtUtc = DateTime.UtcNow;
+                debt.UpdatedAtUtc = DateTime.UtcNow;
+
+                debtVideoMetadata.Status = VideoStatusType.Encrypted;
+                debtVideoMetadata.UpdatedAtUtc = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
 
                 try
                 {
-                    string emailSubject = "Debt Video Approved and Encrypted";
-                    string emailBody = string.Empty;
-
-                    string emailTemplatePath = Path.Combine(
-                        _webHostEnvironment.ContentRootPath,
-                        "Services",
-                        "EmailService",
-                        "EmailHtmlSchemes",
-                        "OperatorDebtApprovalScheme.html"
-                    );
-                    if (!System.IO.File.Exists(emailTemplatePath))
-                    {
-                        _logger.LogError("Email template not found at {Path}", emailTemplatePath);
-                        return StatusCode(500, "Email template not found.");
-                    }
-
-                    using (StreamReader reader = new StreamReader(emailTemplatePath))
-                    {
-                        emailBody = await reader.ReadToEndAsync();
-                    }
-
-                    emailBody = emailBody.Replace(
-                        "[VIDEO_FILE_NAME]",
-                        videoMetadata.VideoMetadata.OriginalFileName
-                    );
-                    emailBody = emailBody.Replace(
-                        "[VIDEO_FILE_SIZE]",
-                        videoMetadata.VideoMetadata.FileSize.ToString() ?? "N/A"
-                    );
-                    emailBody = emailBody.Replace(
-                        "[USER_NAME]",
-                        videoMetadata.VideoMetadata.UploadedUser?.UserName
-                    );
-                    emailBody = emailBody.Replace(
-                        "[LENDER_NAME]",
-                        videoMetadata.Debt?.Lender?.UserName
-                    );
-                    emailBody = emailBody.Replace(
-                        "[DETAIL_LENDER_NAME]",
-                        videoMetadata.Debt?.Lender?.UserName ?? "N/A"
-                    );
-                    emailBody = emailBody.Replace(
-                        "[DETAIL_BORROWER_NAME]",
-                        videoMetadata.Debt?.Borrower?.UserName ?? "N/A"
-                    );
-                    emailBody = emailBody.Replace(
-                        "[DETAIL_DEBT_AMOUNT]",
-                        videoMetadata.Debt?.Amount.ToString()
-                    );
-                    emailBody = emailBody.Replace(
-                        "[DETAIL_DEBT_CURRENCY]",
-                        videoMetadata?.Debt?.Currency.ToString()
-                    );
-                    emailBody = emailBody.Replace(
-                        "[DETAIL_DEBT_DUE_DATE]",
-                        videoMetadata?.Debt?.DueDateUtc.ToString() ?? "N/A"
-                    );
-                    emailBody = emailBody.Replace(
-                        "[DETAIL_DEBT_DESCRIPTION]",
-                        videoMetadata?.Debt?.Description
-                    );
-                    emailBody = emailBody.Replace("[APPROVAL_DATE]", DateTime.UtcNow.ToString());
-                    emailBody = emailBody.Replace(
-                        "[AGREEMENT_ID]",
-                        videoMetadata?.Debt?.Id.ToString()
-                    );
-
-                    emailBody = emailBody.Replace(
-                        "[VIDEO_FILE_NAME]",
-                        videoMetadata?.VideoMetadata.OriginalFileName ?? "N/A"
-                    );
-                    emailBody = emailBody.Replace("[ENCRYPTION_KEY]", userPasswordKey ?? "N/A");
-
-                    emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
-
-                    await _emailSender.SendEmailAsync(
-                        videoMetadata?.Debt?.Lender?.Email ?? "N/A",
-                        emailSubject,
-                        emailBody
-                    );
-
-                    _logger.LogInformation(
-                        "Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}",
-                        videoMetadata?.VideoMetadata.UploadedUser?.Email
-                    );
+                    await SendApprovalEmail(debt, videoMeta, userPasswordKey);
                 }
                 catch (Exception emailEx)
                 {
-                    _logger.LogError(emailEx, "E-posta gönderilirken hata oluştu.");
-                    return StatusCode(500, "E-posta gönderilirken hata oluştu.");
+                    _logger.LogError(emailEx, "Video was encrypted, but failed to send the email notification for debt ID {DebtId}.", debt.Id);
+                    return StatusCode(500, "Video encrypted, but email notification failed.");
                 }
 
                 _logger.LogInformation(
                     "Video başarıyla onaylandı ve şifrelendi: {VideoMetadata}",
-                    videoMetadata
+                    videoMeta
                 );
                 return Ok(
-                    new { Message = "Video başarıyla onaylandı ve şifrelendi.", videoMetadata }
+                    new { Message = "Video başarıyla onaylandı ve şifrelendi.", videoMeta }
                 );
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Video şifrelenirken hata oluştu.");
-                videoMetadata.Status = VideoStatusType.ProcessingError;
+                debtVideoMetadata.Status = VideoStatusType.EncryptionFailed;
+                videoMeta.Status = VideoStatusType.EncryptionFailed;
                 await _context.SaveChangesAsync();
                 return StatusCode(500, "Video şifrelenirken hata oluştu.");
             }
         }
 
+        private async Task SendApprovalEmail(DebtModel debt, VideoMetadataModel videoMeta, string encryptionKey)
+        {
+            string emailSubject = "Debt Video Approved and Encrypted";
+            string emailBody = string.Empty;
+
+            string emailTemplatePath = Path.Combine(
+                _webHostEnvironment.ContentRootPath,
+                "Services",
+                "EmailService",
+                "EmailHtmlSchemes",
+                "OperatorDebtApprovalScheme.html"
+            );
+            if (!System.IO.File.Exists(emailTemplatePath))
+            {
+                _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                return;
+            }
+
+            using (StreamReader reader = new StreamReader(emailTemplatePath))
+            {
+                emailBody = await reader.ReadToEndAsync();
+            }
+
+            emailBody = emailBody.Replace(
+                "[VIDEO_FILE_NAME]",
+                videoMeta.OriginalFileName
+            );
+            emailBody = emailBody.Replace(
+                "[VIDEO_FILE_SIZE]",
+                videoMeta.FileSize.ToString() ?? "N/A"
+            );
+            emailBody = emailBody.Replace(
+                "[USER_NAME]",
+                videoMeta.UploadedUser?.UserName
+            );
+            emailBody = emailBody.Replace(
+                "[LENDER_NAME]",
+                debt?.Lender?.UserName
+            );
+            emailBody = emailBody.Replace(
+                "[DETAIL_LENDER_NAME]",
+                debt?.Lender?.UserName ?? "N/A"
+            );
+            emailBody = emailBody.Replace(
+                "[DETAIL_BORROWER_NAME]",
+                debt?.Borrower?.UserName ?? "N/A"
+            );
+            emailBody = emailBody.Replace(
+                "[DETAIL_DEBT_AMOUNT]",
+                debt?.Amount.ToString()
+            );
+            emailBody = emailBody.Replace(
+                "[DETAIL_DEBT_CURRENCY]",
+                debt?.Currency.ToString()
+            );
+            emailBody = emailBody.Replace(
+                "[DETAIL_DEBT_DUE_DATE]",
+                debt?.DueDateUtc.ToString() ?? "N/A"
+            );
+            emailBody = emailBody.Replace(
+                "[DETAIL_DEBT_DESCRIPTION]",
+                debt?.Description
+            );
+            emailBody = emailBody.Replace("[APPROVAL_DATE]", DateTime.UtcNow.ToString());
+            emailBody = emailBody.Replace(
+                "[AGREEMENT_ID]",
+                debt?.Id.ToString()
+            );
+
+            emailBody = emailBody.Replace(
+                "[VIDEO_FILE_NAME]",
+                videoMeta?.OriginalFileName ?? "N/A"
+            );
+            emailBody = emailBody.Replace("[ENCRYPTION_KEY]", encryptionKey ?? "N/A");
+
+            emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+            await _emailSender.SendEmailAsync(
+                debt?.Lender?.Email ?? "N/A",
+                emailSubject,
+                emailBody
+            );
+
+            _logger.LogInformation(
+                "Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}",
+                videoMeta?.UploadedUser?.Email
+            );
+        }
+
+        // Video akış endpointi
         [HttpGet("video-metadata-stream/{videoId}")]
         [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> StreamVideo(
@@ -323,51 +350,57 @@ namespace FinTrackWebApi.Controller.Debts
             if (string.IsNullOrEmpty(key))
                 return BadRequest("Şifreleme anahtarı (key) gereklidir.");
 
-            var video = await _context.VideoMetadatas.FindAsync(videoId);
-            if (video == null)
-                return NotFound("Video bulunamadı.");
+            int userId = GetAuthenticatedId();
 
-            if (
-                video.Status != VideoStatusType.Encrypted
-                || string.IsNullOrEmpty(video.EncryptedFilePath)
-                || string.IsNullOrEmpty(video.EncryptionKeyHash)
-                || string.IsNullOrEmpty(video.EncryptionSalt)
-                || string.IsNullOrEmpty(video.EncryptionIV)
-            )
+            var debtVideo = await _context.DebtVideoMetadatas
+                .Include(dvm => dvm.VideoMetadata)
+                .Include(dvm => dvm.Debt)
+                .FirstOrDefaultAsync(dvm => dvm.VideoMetadataId == videoId);
+
+            if (debtVideo?.VideoMetadata == null || debtVideo.Debt == null)
             {
-                return BadRequest(
-                    "Video izlenmeye uygun değil veya gerekli şifreleme bilgileri eksik."
-                );
+                return NotFound("Video or associated debt not found.");
+            }
+
+            if (debtVideo.Debt.LenderId != userId && !User.IsInRole("Admin"))
+            {
+                return Forbid("You are not the lender for this debt and cannot view the video.");
+            }
+
+            if (debtVideo.Debt.Status != DebtStatusType.Defaulted && !User.IsInRole("Admin"))
+            {
+                return BadRequest("You can only view the video for defaulted debts.");
+            }
+
+            var video = debtVideo.VideoMetadata;
+            if (video.Status != VideoStatusType.Encrypted || string.IsNullOrEmpty(video.EncryptedFilePath) || string.IsNullOrEmpty(video.EncryptionKeyHash))
+            {
+                return BadRequest("Video is not available for streaming or encryption details are missing.");
             }
 
             var providedKeyHash = _mediaEncryptionService.HashKey(key);
             if (providedKeyHash != video.EncryptionKeyHash)
             {
-                return Unauthorized("Geçersiz şifreleme anahtarı.");
+                return Unauthorized("Invalid encryption key.");
             }
 
             try
             {
                 var decryptedStream = _mediaEncryptionService.GetDecryptedVideoStream(
-                    video.EncryptedFilePath,
-                    key,
-                    video.EncryptionSalt,
-                    video.EncryptionIV
-                );
+                    video.EncryptedFilePath, key, video.EncryptionSalt, video.EncryptionIV);
+
                 if (decryptedStream == null)
                 {
-                    return NotFound("Şifrelenmiş video dosyası bulunamadı veya şifre çözülemedi.");
+                    return NotFound("Encrypted video file not found or could not be decrypted.");
                 }
-                return File(
-                    decryptedStream,
-                    video.ContentType,
-                    video.OriginalFileName ?? "video.mp4"
-                );
+
+                _logger.LogInformation("User {UserId} started streaming video for debt {DebtId}", userId, debtVideo.DebtId);
+                return File(decryptedStream, video.ContentType ?? "application/octet-stream", video.OriginalFileName ?? "video.mp4");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Video akışı sırasında hata oluştu.");
-                return StatusCode(500, "Video akışı sırasında hata oluştu.");
+                _logger.LogError(ex, "Error during video streaming for video ID {VideoId}.", videoId);
+                return StatusCode(500, "An error occurred during video streaming.");
             }
         }
     }
