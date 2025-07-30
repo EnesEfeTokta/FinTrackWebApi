@@ -118,6 +118,18 @@ namespace FinTrackWebApi.Services.CurrencyServices
 
             try
             {
+                DateTime fetchTimestampUtc = DateTime.SpecifyKind(newRatesResponse.Date, DateTimeKind.Utc);
+
+                var existingSnapshot = await dbContext.CurrencySnapshots
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(cs => cs.FetchTimestamp == fetchTimestampUtc, cancellationToken);
+
+                if (existingSnapshot != null)
+                {
+                    _logger.LogInformation("A snapshot for this timestamp ({Timestamp}) already exists. The operation is skipped.", fetchTimestampUtc);
+                    return;
+                }
+
                 var dbCurrenciesMap = await dbContext
                     .Currencies.AsNoTracking()
                     .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
@@ -130,8 +142,6 @@ namespace FinTrackWebApi.Services.CurrencyServices
                     .GroupBy(er => er.Currency.Code)
                     .Select(g => g.First())
                     .ToDictionaryAsync(er => er.Currency.Code, er => er.Rate, cancellationToken);
-
-                DateTime fetchTimestampUtc = DateTime.SpecifyKind(newRatesResponse.Date, DateTimeKind.Utc);
 
                 var newDbSnapshot = new CurrencySnapshotModel
                 {

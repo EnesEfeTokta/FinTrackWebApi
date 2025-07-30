@@ -1,7 +1,10 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos.UserSettingsDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller.Users
 {
@@ -16,7 +19,7 @@ namespace FinTrackWebApi.Controller.Users
 
         public UserSettingsController(
             MyDataContext context,
-            ILogger<UserSettingsController> logger = null
+            ILogger<UserSettingsController> logger
         )
         {
             _context = context;
@@ -39,107 +42,339 @@ namespace FinTrackWebApi.Controller.Users
             return userId;
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> GetUserSettings()
-        //{
-        //    int authenticatedUserId = GetAuthenticatedUserId();
+        [HttpGet("AppSettings")]
+        public async Task<IActionResult> GetAppSettings()
+        {
+            var userId = GetAuthenticatedUserId();
+            try
+            {
+                var settings = await _context.UserAppSettings.AsNoTracking().Where(s => s.UserId == userId)
+                    .Select(s => new UserAppSettingsDto
+                    {
+                        Id = s.Id,
+                        Appearance = s.Appearance ?? AppearanceType.Dark,
+                        Currency = s.BaseCurrency ?? BaseCurrencyType.Error,
+                        CreatedAtUtc = s.CreatedAtUtc,
+                        UpdatedAtUtc = s.UpdatedAtUtc
 
-        //    var userSettings = await _context
-        //        .UserSettings.AsNoTracking()
-        //        .FirstOrDefaultAsync(s => s.UserId == authenticatedUserId);
-        //    if (userSettings == null)
+                    }).FirstOrDefaultAsync();
+                if (settings == null)
+                {
+                    _logger.LogWarning(
+                        "Application settings for user ID {UserId} could not be found.",
+                        userId
+                    );
+                    return NotFound($"Application settings for user ID {userId} could not be found.");
+                }
+
+                _logger.LogInformation("Application settings found for user ID {userId}.", userId);
+                return Ok(settings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Application settings for user ID {userId} could not be found.",
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "Application settings for user ID not found.");
+            }
+        }
+
+        [HttpPost("AppSettings")]
+        public async Task<IActionResult> SetAppSettings([FromBody] UserAppSettingsUpdateDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest("UserAppSettings data is required.");
+            }
+
+            try
+            {
+                int userId = GetAuthenticatedUserId();
+                var settings = await _context.UserAppSettings.FirstOrDefaultAsync(s => s.UserId == userId);
+                if (settings == null)
+                {
+                    _logger.LogWarning(
+                        "Application settings for user ID {UserId} could not be found.",
+                        userId
+                    );
+                    return NotFound($"Application settings for user ID {userId} could not be found.");
+                }
+
+                settings.Appearance = updateDto.Appearance;
+                settings.BaseCurrency = updateDto.Currency;
+                settings.UpdatedAtUtc = DateTime.UtcNow;
+
+                _context.UserAppSettings.Update(settings);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"The application settings for user ID {userId} have been updated.");
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating the application settings for user ID {UserId}.",
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "An error occurred while updating the application settings for the user ID.");
+            }
+        }
+
+        [HttpGet("ProfileSettings")]
+        public async Task<IActionResult> GetProfileSettings()
+        {
+            var userId = GetAuthenticatedUserId();
+            try
+            {
+                var settings = await _context.Users.AsNoTracking().Where(s => s.Id == userId)
+                    .Select(s => new ProfileSettingsDto
+                    {
+                        Id = s.Id,
+                        FullName = s.UserName ?? "N/A",
+                        Email = s.Email ?? "N/A",
+                        ProfilePictureUrl = s.ProfilePicture,
+                        CreatedAtUtc = s.CreatedAtUtc
+
+                    }).FirstOrDefaultAsync();
+                if (settings == null)
+                {
+                    _logger.LogWarning(
+                        "User ID {userId} could not be found.",
+                        userId
+                    );
+                    return NotFound($"User ID {userId} could not be found.");
+                }
+
+                _logger.LogInformation("Profile settings found for user ID {userId}.", userId);
+                return Ok(settings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while retrieving profile settings for user ID {UserId}.",
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "An error occurred while retrieving profile settings for user ID.");
+            }
+        }
+
+        [HttpPost("ProfileSettings")]
+        public async Task<IActionResult> SetProfileSettings([FromBody] ProfileSettingsUpdateDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest("ProfileSettings data is required.");
+            }
+
+            try
+            {
+                int userId = GetAuthenticatedUserId();
+                var settings = await _context.Users.FirstOrDefaultAsync(s => s.Id == userId);
+                if (settings == null)
+                {
+                    _logger.LogWarning(
+                        "User ID {userId} could not be found.",
+                        userId
+                    );
+                    return NotFound($"User ID {userId} could not be found.");
+                }
+
+                if (updateDto.FullName != null)
+                {
+                    string UserName = updateDto.FullName.Replace(" ", "").Trim();
+                    settings.UserName = updateDto.FullName;
+                    settings.NormalizedUserName = UserName.ToUpper();
+                }
+
+                if (updateDto.Email != null)
+                {
+                    if (!string.IsNullOrEmpty(updateDto.Email) && updateDto.Email.Contains("@") && updateDto.Email.Contains("."))
+                    {
+                        string Email = updateDto.Email.Replace(" ", "").Trim();
+                        settings.Email = updateDto.Email;
+                        settings.NormalizedEmail = Email.ToUpper();
+                    }
+                    else
+                    {
+                        return BadRequest("You did not enter your email address correctly.");
+                    }
+                }
+
+                if (updateDto.ProfilePictureUrl != null)
+                {
+                    settings.ProfilePicture = updateDto.ProfilePictureUrl;
+                }
+
+                _context.Users.Update(settings);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Profile settings have been updated for user ID {userId}.");
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating the profile settings for user ID {UserId}.",
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "An error occurred while updating the profile settings for user ID.");
+            }
+        }
+
+        //[HttpPost("UserPasswordSettings")]
+        //public async Task<IActionResult> SetUserPasswordSettings([FromBody] UserPasswordSettingsUpdateDto updateDto)
+        //{
+        //    if (updateDto == null)
         //    {
-        //        _logger.LogWarning(
-        //            "User settings not found for user ID: {UserId}",
-        //            authenticatedUserId
+        //        return BadRequest("UserPasswordSettings data is required.");
+        //    }
+
+        //    try
+        //    {
+        //        int userId = GetAuthenticatedUserId();
+        //        var settings = await _context.Users.FirstOrDefaultAsync(s => s.Id == userId);
+        //        if (settings == null)
+        //        {
+        //            _logger.LogWarning(
+        //                "User ID {userId} could not be found.",
+        //                userId
+        //            );
+        //            return NotFound($"User ID {userId} could not be found.");
+        //        }
+
+        //        if (updateDto.FullName != null)
+        //        {
+        //            string UserName = updateDto.FullName.Replace(" ", "").Trim();
+        //            settings.UserName = updateDto.FullName;
+        //            settings.NormalizedUserName = UserName.ToUpper();
+        //        }
+
+        //        if (updateDto.Email != null)
+        //        {
+        //            if (!string.IsNullOrEmpty(updateDto.Email) && updateDto.Email.Contains("@") && updateDto.Email.Contains("."))
+        //            {
+        //                string Email = updateDto.Email.Replace(" ", "").Trim();
+        //                settings.Email = updateDto.Email;
+        //                settings.NormalizedEmail = Email.ToUpper();
+        //            }
+        //            else
+        //            {
+        //                return BadRequest("You did not enter your email address correctly.");
+        //            }
+        //        }
+
+        //        if (updateDto.ProfilePictureUrl != null)
+        //        {
+        //            settings.ProfilePicture = updateDto.ProfilePictureUrl;
+        //        }
+
+        //        _context.Users.Update(settings);
+        //        await _context.SaveChangesAsync();
+
+        //        _logger.LogInformation($"Profile settings have been updated for user ID {userId}.");
+        //        return Ok(true);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(
+        //            ex,
+        //            "An error occurred while updating the profile settings for user ID {UserId}.",
+        //            GetAuthenticatedUserId()
         //        );
-        //        return NotFound("User settings not found.");
+        //        return StatusCode(500, "An error occurred while updating the profile settings for user ID.");
         //    }
-
-        //    _logger.LogInformation(
-        //        "Successfully retrieved settings for user ID: {UserId}",
-        //        authenticatedUserId
-        //    );
-        //    return Ok(userSettings);
         //}
 
-        //[HttpPost]
-        //public async Task<IActionResult> CreateUserSettings(
-        //    [FromBody] UserSettingsDto userSettingsDto
-        //)
-        //{
-        //    int authenticatedUserId = GetAuthenticatedUserId();
+        [HttpGet("UserNotificationSettings")]
+        public async Task<IActionResult> GetUserNotificationSettings()
+        {
+            var userId = GetAuthenticatedUserId();
+            try
+            {
+                var settings = await _context.UserNotificationSettings.AsNoTracking().Where(s => s.UserId == userId)
+                    .Select(s => new UserNotificationSettingsDto
+                    {
+                        Id = s.Id,
+                        SpendingLimitWarning = s.SpendingLimitWarning,
+                        ExpectedBillReminder = s.ExpectedBillReminder,
+                        WeeklySpendingSummary = s.WeeklySpendingSummary,
+                        NewFeaturesAndAnnouncements = s.NewFeaturesAndAnnouncements,
+                        EnableDesktopNotifications = s.EnableDesktopNotifications,
+                        CreatedAtUtc = s.CreatedAtUtc,
+                        UpdatedAtUtc = s.UpdatedAtUtc
 
-        //    var userSettings = new UserSettingsModel
-        //    {
-        //        UserId = authenticatedUserId,
-        //        Theme = userSettingsDto.Theme,
-        //        Language = userSettingsDto.Language,
-        //        Notification = userSettingsDto.Notification,
-        //    };
-        //    _context.UserSettings.Add(userSettings);
-        //    await _context.SaveChangesAsync();
-        //    _logger.LogInformation(
-        //        "Successfully created settings for user ID: {UserId}",
-        //        authenticatedUserId
-        //    );
-        //    return CreatedAtAction(
-        //        nameof(GetUserSettings),
-        //        new { userId = userSettings.UserId },
-        //        userSettings
-        //    );
-        //}
+                    }).FirstOrDefaultAsync();
+                if (settings == null)
+                {
+                    _logger.LogWarning(
+                        "Notification settings for user ID {UserId} could not be found.",
+                        userId
+                    );
+                    return NotFound($"Notification settings for user ID {userId} could not be found.");
+                }
 
-        //[HttpPut]
-        //public async Task<IActionResult> UpdateUserSettings(
-        //    [FromBody] UserSettingsDto userSettingsDto
-        //)
-        //{
-        //    int authenticatedUserId = GetAuthenticatedUserId();
+                _logger.LogInformation("Notification settings found for user ID {userId}.", userId);
+                return Ok(settings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Notification settings for user ID {userId} could not be found.",
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "Notification settings for user ID not found.");
+            }
+        }
 
-        //    var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
-        //        s.UserId == authenticatedUserId
-        //    );
-        //    if (userSettings == null)
-        //    {
-        //        return NotFound("User settings not found.");
-        //    }
-        //    userSettings.Theme = userSettingsDto.Theme;
-        //    userSettings.Language = userSettingsDto.Language;
-        //    userSettings.Notification = userSettingsDto.Notification;
-        //    await _context.SaveChangesAsync();
+        [HttpPost("UserNotificationSettings")]
+        public async Task<IActionResult> SetUserNotificationSettings([FromBody] UserNotificationSettingsUpdateDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                return BadRequest("UserAppSettings data is required.");
+            }
 
-        //    _logger.LogInformation(
-        //        "Successfully updated settings for user ID: {UserId}",
-        //        authenticatedUserId
-        //    );
-        //    return NoContent();
-        //}
+            try
+            {
+                int userId = GetAuthenticatedUserId();
+                var settings = await _context.UserNotificationSettings.FirstOrDefaultAsync(s => s.UserId == userId);
+                if (settings == null)
+                {
+                    _logger.LogWarning(
+                        "Notification settings for user ID {UserId} could not be found.",
+                        userId
+                    );
+                    return NotFound($"Notification settings for user ID {userId} could not be found.");
+                }
 
-        //[HttpDelete]
-        //public async Task<IActionResult> DeleteUserSettings()
-        //{
-        //    int authenticatedUserId = GetAuthenticatedUserId();
+                settings.SpendingLimitWarning = updateDto.SpendingLimitWarning;
+                settings.ExpectedBillReminder = updateDto.ExpectedBillReminder;
+                settings.WeeklySpendingSummary = updateDto.WeeklySpendingSummary;
+                settings.NewFeaturesAndAnnouncements = updateDto.NewFeaturesAndAnnouncements;
+                settings.EnableDesktopNotifications = updateDto.EnableDesktopNotifications;
+                settings.UpdatedAtUtc = DateTime.UtcNow;
 
-        //    var userSettings = await _context.UserSettings.FirstOrDefaultAsync(s =>
-        //        s.UserId == authenticatedUserId
-        //    );
-        //    if (userSettings == null)
-        //    {
-        //        _logger.LogWarning(
-        //            "User settings not found for user ID: {UserId}",
-        //            authenticatedUserId
-        //        );
-        //        return NotFound("User settings not found.");
-        //    }
-        //    _context.UserSettings.Remove(userSettings);
-        //    await _context.SaveChangesAsync();
+                _context.UserNotificationSettings.Update(settings);
+                await _context.SaveChangesAsync();
 
-        //    _logger.LogInformation(
-        //        "Successfully deleted settings for user ID: {UserId}",
-        //        authenticatedUserId
-        //    );
-        //    return NoContent();
-        //}
+                _logger.LogInformation($"The Notification settings for user ID {userId} have been updated.");
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "An error occurred while updating the notification settings for user ID {UserId}.",
+                    GetAuthenticatedUserId()
+                );
+                return StatusCode(500, "An error occurred while updating the notification settings for the user ID.");
+            }
+        }
     }
 }
