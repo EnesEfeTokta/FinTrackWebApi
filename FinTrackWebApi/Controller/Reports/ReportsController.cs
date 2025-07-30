@@ -1,4 +1,5 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos.ReportDtos;
 using FinTrackWebApi.Enums;
 using FinTrackWebApi.Services.DocumentService;
 using FinTrackWebApi.Services.DocumentService.Generations;
@@ -41,72 +42,55 @@ namespace FinTrackWebApi.Controller.Reports
             return id;
         }
 
-        [HttpGet("account")]
-        public async Task<IActionResult> GetAccountReport(
-            [FromQuery] string format,
-            [FromQuery] AccountType? type = null,
-            [FromQuery] decimal? minBalance = null,
-            [FromQuery] decimal? maxBalance = null)
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateReport([FromBody] ReportRequestDto request)
         {
-            var reportData = await BuildAccountReportDataAsync(type, minBalance, maxBalance);
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Account,
-                reportData,
-                $"Financial_Account_Report_{DateTime.Now:yyyyMMdd}"
-            );
-        }
+            if (request == null)
+            {
+                return BadRequest("Report request cannot be null.");
+            }
 
-        [HttpGet("budget")]
-        public async Task<IActionResult> GetBudgetReport(
-            [FromQuery] string format,
-            [FromQuery] DateTime? startDate = null,
-            [FromQuery] DateTime? endDate = null)
-        {
-            var reportData = await BuildBudgetReportDataAsync(startDate, endDate);
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Budget,
-                reportData,
-                $"Financial_Budget_Report_{DateTime.Now:yyyyMMdd}"
-            );
-        }
+            IReportModel? reportData = null;
+            DocumentType documentType;
 
-        [HttpGet("transaction")]
-        public async Task<IActionResult> GetTransactionReport(
-            [FromQuery] string format,
-            [FromQuery] int? accountId = null,
-            [FromQuery] int? categoryId = null,
-            [FromQuery] DateTime? date = null,
-            [FromQuery] DateTime? startDate = null,
-            [FromQuery] DateTime? endDate = null)
-        {
-            var reportData = await BuildTransactionReportDataAsync(date, startDate, endDate, accountId, categoryId);
-            return await GenerateAndReturnReport(
-                format,
-                DocumentType.Transaction,
-                reportData,
-                $"Financial_Transaction_Report_{DateTime.Now:yyyyMMdd}"
-            );
+            switch (request.ReportType)
+            {
+                case ReportType.Transaction:
+                    reportData = await BuildTransactionReportDataAsync(request);
+                    documentType = DocumentType.Transaction;
+                    break;
+
+                case ReportType.Account:
+                    reportData = await BuildAccountReportDataAsync(request);
+                    documentType = DocumentType.Account;
+                    break;
+
+                case ReportType.Budget:
+                    reportData = await BuildBudgetReportDataAsync(request);
+                    documentType = DocumentType.Budget;
+                    break;
+
+                default:
+                    return BadRequest("Unsupported report type.");
+            }
+
+            if (reportData == null || reportData.Items.Count == 0)
+            {
+                return NotFound("No report data found for the specified criteria.");
+            }
+
+            string fileName = $"Financial_{request.ReportType}_Report_{DateTime.Now:yyyyMMdd}";
+
+            return await GenerateAndReturnReport(request.ExportFormat, documentType, reportData, fileName);
         }
 
         private async Task<IActionResult> GenerateAndReturnReport(
-            string format,
+            Enums.DocumentFormat requestedFormat,
             DocumentType documentType,
-            IReportModel? reportData,
+            IReportModel reportData,
             string baseFileName
         )
         {
-            //if (reportData == null || !reportData.GetType().GetProperty("Items").GetValue(reportData).As<System.CollectionsIList>().Count > 0)
-            //{
-            //    return NotFound("No report data found for the specified criteria.");
-            //}
-
-            if (!Enum.TryParse(format, true, out Services.DocumentService.DocumentFormat requestedFormat))
-            {
-                return BadRequest("Invalid format. Supported: Pdf, Word, Xlsx, Xml, Text, Markdown");
-            }
-
             try
             {
                 var (content, mimeType, fileName) = await _documentService.GenerateDocumentAsync(
@@ -126,11 +110,11 @@ namespace FinTrackWebApi.Controller.Reports
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating report in format {Format}", requestedFormat);
-                return StatusCode(500, $"An error occurred while generating the {format} report.");
+                return StatusCode(500, $"An error occurred while generating the {requestedFormat} report.");
             }
         }
 
-        private async Task<AccountReportModel?> BuildAccountReportDataAsync(AccountType? type, decimal? minBalance, decimal? maxBalance)
+        private async Task<AccountReportModel?> BuildAccountReportDataAsync(ReportRequestDto request)
         {
             int userId = GetAuthenticatedId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
@@ -138,17 +122,19 @@ namespace FinTrackWebApi.Controller.Reports
 
             var query = _context.Accounts.Where(a => a.User.Id == userId);
 
-            if (type.HasValue)
+            if (request.SelectedAccountIds != null && request.SelectedAccountIds.Any())
             {
-                query = query.Where(a => a.Type == type.Value);
+                query = query.Where(a => request.SelectedAccountIds.Contains(a.Id));
             }
-            if (minBalance.HasValue)
+
+            if (request.MinBalance.HasValue)
             {
-                query = query.Where(a => a.Balance >= minBalance.Value);
+                query = query.Where(a => a.Balance >= request.MinBalance.Value);
             }
-            if (maxBalance.HasValue)
+
+            if (request.MaxBalance.HasValue)
             {
-                query = query.Where(a => a.Balance <= maxBalance.Value);
+                query = query.Where(a => a.Balance <= request.MaxBalance.Value);
             }
 
             var accounts = await query.OrderBy(a => a.Name).AsNoTracking().ToListAsync();
@@ -170,7 +156,7 @@ namespace FinTrackWebApi.Controller.Reports
             };
         }
 
-        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(DateTime? startDate, DateTime? endDate)
+        private async Task<BudgetReportModel?> BuildBudgetReportDataAsync(ReportRequestDto request)
         {
             int userId = GetAuthenticatedId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
@@ -178,15 +164,25 @@ namespace FinTrackWebApi.Controller.Reports
 
             var query = _context.Budgets.Include(b => b.Category).Where(b => b.UserId == userId);
 
-            if (startDate.HasValue)
+            if (request.SelectedBudgetIds != null && request.SelectedBudgetIds.Any())
             {
-                var startUtc = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+                query = query.Where(b => request.SelectedBudgetIds.Contains(b.Id));
+            }
+
+            if (request.StartDate.HasValue)
+            {
+                var startUtc = DateTime.SpecifyKind(request.StartDate.Value.Date, DateTimeKind.Utc);
                 query = query.Where(b => b.EndDate >= startUtc);
             }
-            if (endDate.HasValue)
+            if (request.EndDate.HasValue)
             {
-                var endUtc = DateTime.SpecifyKind(endDate.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+                var endUtc = DateTime.SpecifyKind(request.EndDate.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
                 query = query.Where(b => b.StartDate <= endUtc);
+            }
+
+            if (request.SelectedCategoryIds != null && request.SelectedCategoryIds.Any())
+            {
+                query = query.Where(b => request.SelectedCategoryIds.Contains(b.CategoryId));
             }
 
             var budgets = await query.OrderBy(b => b.StartDate).ThenBy(b => b.Name).AsNoTracking().ToListAsync();
@@ -211,7 +207,7 @@ namespace FinTrackWebApi.Controller.Reports
             };
         }
 
-        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(DateTime? date, DateTime? startDate, DateTime? endDate, int? accountId, int? categoryId)
+        private async Task<TransactionsRaportModel?> BuildTransactionReportDataAsync(ReportRequestDto request)
         {
             int userId = GetAuthenticatedId();
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
@@ -222,28 +218,43 @@ namespace FinTrackWebApi.Controller.Reports
                 .Include(t => t.Category)
                 .Where(t => t.User.Id == userId);
 
-            if (date.HasValue)
+            if (request.Date.HasValue)
             {
-                var startUtc = DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Utc);
-                query = query.Where(t => t.TransactionDateUtc == startUtc);
+                var dayStartUtc = DateTime.SpecifyKind(request.Date.Value.Date, DateTimeKind.Utc);
+                var dayEndUtc = dayStartUtc.AddDays(1).AddTicks(-1);
+                query = query.Where(t => t.TransactionDateUtc >= dayStartUtc && t.TransactionDateUtc <= dayEndUtc);
             }
-            if (startDate.HasValue)
+            else
             {
-                var startUtc = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
-                query = query.Where(t => t.TransactionDateUtc >= startUtc);
+                if (request.StartDate.HasValue)
+                {
+                    var startUtc = DateTime.SpecifyKind(request.StartDate.Value.Date, DateTimeKind.Utc);
+                    query = query.Where(t => t.TransactionDateUtc >= startUtc);
+                }
+                if (request.EndDate.HasValue)
+                {
+                    var endUtc = DateTime.SpecifyKind(request.EndDate.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
+                    query = query.Where(t => t.TransactionDateUtc <= endUtc);
+                }
             }
-            if (endDate.HasValue)
+
+            if (request.SelectedAccountIds != null && request.SelectedAccountIds.Any())
             {
-                var endUtc = DateTime.SpecifyKind(endDate.Value.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
-                query = query.Where(t => t.TransactionDateUtc <= endUtc);
+                query = query.Where(t => request.SelectedAccountIds.Contains(t.AccountId));
             }
-            if (accountId.HasValue)
+
+            if (request.SelectedCategoryIds != null && request.SelectedCategoryIds.Any())
             {
-                query = query.Where(t => t.AccountId == accountId.Value);
+                query = query.Where(t => request.SelectedCategoryIds.Contains(t.CategoryId));
             }
-            if (categoryId.HasValue)
+
+            if (request.IsIncomeSelected && !request.IsExpenseSelected)
             {
-                query = query.Where(t => t.CategoryId == categoryId.Value);
+                query = query.Where(t => t.Amount > 0);
+            }
+            else if (!request.IsIncomeSelected && request.IsExpenseSelected)
+            {
+                query = query.Where(t => t.Amount < 0);
             }
 
             var transactions = await query.OrderByDescending(t => t.TransactionDateUtc).AsNoTracking().ToListAsync();

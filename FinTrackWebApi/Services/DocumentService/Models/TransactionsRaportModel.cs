@@ -1,4 +1,5 @@
 ﻿using FinTrackWebApi.Services.DocumentService.Generations;
+using System.Collections;
 
 namespace FinTrackWebApi.Services.DocumentService.Models
 {
@@ -8,6 +9,8 @@ namespace FinTrackWebApi.Services.DocumentService.Models
         public string Description { get; set; } = string.Empty;
         public List<TransactionRaportTableItem> Items { get; set; } =
             new List<TransactionRaportTableItem>();
+
+        IList IReportModel.Items => this.Items;
 
         public int TransactionCount { get; set; }
         public decimal TotalAmount { get; set; }

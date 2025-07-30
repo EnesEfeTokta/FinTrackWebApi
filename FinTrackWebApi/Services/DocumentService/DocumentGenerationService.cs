@@ -2,6 +2,7 @@
 using FinTrackWebApi.Services.DocumentService.Generations.Account;
 using FinTrackWebApi.Services.DocumentService.Generations.Budget;
 using FinTrackWebApi.Services.DocumentService.Generations.Transaction;
+using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Services.DocumentService
 {
@@ -22,7 +23,7 @@ namespace FinTrackWebApi.Services.DocumentService
             string FileName
         )> GenerateDocumentAsync<TData>(
             TData data,
-            DocumentFormat format,
+            Enums.DocumentFormat format,
             DocumentType type,
             string baseFileName
         )
@@ -36,7 +37,7 @@ namespace FinTrackWebApi.Services.DocumentService
             return (content, generator.MimeType, fileName);
         }
 
-        private IDocumentGenerator GetGenerator(DocumentFormat format, DocumentType type)
+        private IDocumentGenerator GetGenerator(Enums.DocumentFormat format, DocumentType type)
         {
             switch (type)
             {
@@ -51,21 +52,21 @@ namespace FinTrackWebApi.Services.DocumentService
             }
         }
 
-        private IDocumentGenerator GetAccountGenerator(DocumentFormat format)
+        private IDocumentGenerator GetAccountGenerator(Enums.DocumentFormat format)
         {
             return format switch
             {
-                DocumentFormat.Pdf =>
+                Enums.DocumentFormat.Pdf =>
                     _serviceProvider.GetRequiredService<PdfDocumentGenerator_Account>(),
-                DocumentFormat.Word =>
+                Enums.DocumentFormat.Word =>
                     _serviceProvider.GetRequiredService<WordDocumentGenerator_Account>(),
-                DocumentFormat.Text =>
+                Enums.DocumentFormat.Text =>
                     _serviceProvider.GetRequiredService<TextDocumentGenerator_Account>(),
-                DocumentFormat.Markdown =>
+                Enums.DocumentFormat.Markdown =>
                     _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Account>(),
-                DocumentFormat.Xml =>
+                Enums.DocumentFormat.Xml =>
                     _serviceProvider.GetRequiredService<XmlDocumentGenerator_Account>(),
-                DocumentFormat.Xlsx =>
+                Enums.DocumentFormat.Xlsx =>
                     _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Account>(),
                 _ => throw new NotSupportedException(
                     $"Document format '{format}' is not supported."
@@ -73,21 +74,21 @@ namespace FinTrackWebApi.Services.DocumentService
             };
         }
 
-        private IDocumentGenerator GetBudgetGenerator(DocumentFormat format)
+        private IDocumentGenerator GetBudgetGenerator(Enums.DocumentFormat format)
         {
             return format switch
             {
-                DocumentFormat.Pdf =>
+                Enums.DocumentFormat.Pdf =>
                     _serviceProvider.GetRequiredService<PdfDocumentGenerator_Budget>(),
-                DocumentFormat.Word =>
+                Enums.DocumentFormat.Word =>
                     _serviceProvider.GetRequiredService<WordDocumentGenerator_Budget>(),
-                DocumentFormat.Text =>
+                Enums.DocumentFormat.Text =>
                     _serviceProvider.GetRequiredService<TextDocumentGenerator_Budget>(),
-                DocumentFormat.Markdown =>
+                Enums.DocumentFormat.Markdown =>
                     _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Budget>(),
-                DocumentFormat.Xml =>
+                Enums.DocumentFormat.Xml =>
                     _serviceProvider.GetRequiredService<XmlDocumentGenerator_Budget>(),
-                DocumentFormat.Xlsx =>
+                Enums.DocumentFormat.Xlsx =>
                     _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Budget>(),
 
                 _ => throw new NotSupportedException(
@@ -96,21 +97,21 @@ namespace FinTrackWebApi.Services.DocumentService
             };
         }
 
-        private IDocumentGenerator GetTransactionGenerator(DocumentFormat format)
+        private IDocumentGenerator GetTransactionGenerator(Enums.DocumentFormat format)
         {
             return format switch
             {
-                DocumentFormat.Pdf =>
+                Enums.DocumentFormat.Pdf =>
                     _serviceProvider.GetRequiredService<PdfDocumentGenerator_Transaction>(),
-                DocumentFormat.Word =>
+                Enums.DocumentFormat.Word =>
                     _serviceProvider.GetRequiredService<WordDocumentGenerator_Transaction>(),
-                DocumentFormat.Text =>
+                Enums.DocumentFormat.Text =>
                     _serviceProvider.GetRequiredService<TextDocumentGenerator_Transaction>(),
-                DocumentFormat.Markdown =>
+                Enums.DocumentFormat.Markdown =>
                     _serviceProvider.GetRequiredService<MarkdownDocumentGenerator_Transaction>(),
-                DocumentFormat.Xml =>
+                Enums.DocumentFormat.Xml =>
                     _serviceProvider.GetRequiredService<XmlDocumentGenerator_Transaction>(),
-                DocumentFormat.Xlsx =>
+                Enums.DocumentFormat.Xlsx =>
                     _serviceProvider.GetRequiredService<XlsxDocumentGenerator_Transaction>(),
 
                 _ => throw new NotSupportedException(

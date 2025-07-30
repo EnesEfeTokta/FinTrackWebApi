@@ -1,5 +1,6 @@
 ﻿using FinTrackWebApi.Services.DocumentService.Generations;
 using FinTrackWebApi.Enums;
+using System.Collections;
 
 namespace FinTrackWebApi.Services.DocumentService.Models
 {
@@ -8,6 +9,8 @@ namespace FinTrackWebApi.Services.DocumentService.Models
         public string ReportTitle { get; set; } = "Default Report";
         public string Description { get; set; } = string.Empty;
         public List<AccountReportTableItem> Items { get; set; } = new List<AccountReportTableItem>();
+
+        IList IReportModel.Items => this.Items;
 
         public int AccountCount { get; set; }
         public decimal TotalBalance { get; set; }
