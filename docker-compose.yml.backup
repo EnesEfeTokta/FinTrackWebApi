@@ -28,7 +28,7 @@ services:
     ports:
       - "4040:4040"
     environment:
-        - NGROK_AUTHTOKEN=YOUR_KEY
+      - NGROK_AUTHTOKEN=2wuCJxMriYB0MvVAanMEzZwsVGK_3UfHpEqo3wyQ73BGuRGYX
     command:
       - "http"
       - "fintrack_api:8080"
@@ -73,7 +73,7 @@ services:
     command: >
       postgres
       -c archive_mode=on
-      -c archive_command='test ! -f /backup/archive/%f && pgbackrest --stanza=myfintrackstanza archive-push %p'
+      -c archive_command='test ! -f /pgbackrest/archive/%f && pgbackrest --stanza=myfintrackstanza archive-push %p'
       -c wal_level=replica
       -c max_wal_senders=3
       -c listen_addresses='*'
@@ -82,91 +82,90 @@ services:
       -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
       -c logging_collector=on
 
-  # pgBackRest
-  pgbackrest_all_in_one:
-    image: postgres:15
-    container_name: pgbackrest_manager
+  # pgBackRest Ana Servis
+  pgbackrest:
+    build:
+      context: ./pgbackrest
+      dockerfile: Dockerfile
+    container_name: pgbackrest_repo
     environment:
       - PGPASSWORD=140xxx-+
       - TZ=Europe/Istanbul
     volumes:
-      - pgbackrest_repo:/backup
-      - ./scripts:/scripts
+      - pgbackrest_repo:/pgbackrest
+      - ./pgbackrest/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf
       - backup_logs:/var/log/pgbackrest
     networks:
       - fintrac_network
     depends_on:
       - db_postgres
     restart: unless-stopped
+
+  # Gelişmiş Otomatik Yedekleme Sistemi
+  pgbackrest_scheduler:
+    build:
+      context: ./pgbackrest
+      dockerfile: Dockerfile
+    container_name: pgbackrest_scheduler
+    volumes:
+      - pgbackrest_repo:/pgbackrest
+      - ./pgbackrest/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf
+      - backup_logs:/var/log/pgbackrest
+      - ./scripts:/scripts
+    networks:
+      - fintrac_network
+    depends_on:
+      - db_postgres
+      - pgbackrest
+    environment:
+      - PGPASSWORD=140xxx-+
+      - TZ=Europe/Istanbul
+    restart: unless-stopped
     command: >
-      bash -c "
-        apt update && 
-        apt install -y pgbackrest cron dos2unix curl &&
+      sh -c "
+        apt update && apt install -y pgbackrest cron curl postgresql-client &&
         
-        # Script'leri düzelt
-        dos2unix /scripts/*.sh &&
-        chmod +x /scripts/*.sh &&
-        
-        # pgBackRest config oluştur
-        mkdir -p /etc/pgbackrest &&
-        cat > /etc/pgbackrest/pgbackrest.conf << 'EOF'
-      [global]
-      repo1-path=/backup
-      repo1-retention-full=7
-      repo1-retention-diff=4
-      repo1-retention-archive=7
-      compress-type=lz4
-      compress-level=3
-      log-level-console=info
-      log-level-file=detail
-      log-path=/var/log/pgbackrest
-      process-max=2
-      start-fast=y
-      archive-async=y
-      backup-standby=n
-      delta=y
-      buffer-size=16MiB
-      
-      [myfintrackstanza]
-      pg1-path=/var/lib/postgresql/data
-      pg1-host=db_postgres
-      pg1-port=5432
-      pg1-user=postgres
-      EOF
-        
-        # Log dizinini oluştur
-        mkdir -p /var/log/pgbackrest &&
-        
-        # Stanza oluştur (hata göz ardı et)
+        # İlk stanza oluştur
         pgbackrest --stanza=myfintrackstanza stanza-create || true &&
         
-        # İlk backup (hata göz ardı et)
+        # İlk full backup
         pgbackrest --stanza=myfintrackstanza --type=full backup || true &&
         
         # Cron job'ları ayarla
-        echo '0 2 * * * root /scripts/backup_incremental.sh' > /etc/cron.d/pgbackrest &&
-        echo '0 3 * * 0 root /scripts/backup_full.sh' >> /etc/cron.d/pgbackrest &&
-        echo '0 */6 * * * root /scripts/health_check.sh' >> /etc/cron.d/pgbackrest &&
-        chmod 0644 /etc/cron.d/pgbackrest &&
-        crontab /etc/cron.d/pgbackrest &&
+        echo '# pgBackRest Yedekleme Planı' > /etc/cron.d/pgbackrest_schedule &&
+        echo '# Her gün 02:00 - Incremental backup' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '0 2 * * * root /scripts/backup_incremental.sh >> /var/log/pgbackrest/incremental.log 2>&1' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '# Her Pazar 03:00 - Full backup' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '0 3 * * 0 root /scripts/backup_full.sh >> /var/log/pgbackrest/full.log 2>&1' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '# Her 6 saatte - Health check' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '0 */6 * * * root /scripts/health_check.sh >> /var/log/pgbackrest/health.log 2>&1' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '# Her ay 1. gün 04:00 - Backup verify' >> /etc/cron.d/pgbackrest_schedule &&
+        echo '0 4 1 * * root /scripts/verify_backup.sh >> /var/log/pgbackrest/verify.log 2>&1' >> /etc/cron.d/pgbackrest_schedule &&
         
-        # Cron'u başlat ve bekle
-        cron &&
-        tail -f /dev/null
+        chmod 0644 /etc/cron.d/pgbackrest_schedule &&
+        crontab /etc/cron.d/pgbackrest_schedule &&
+        
+        # Log dizinlerini oluştur
+        mkdir -p /var/log/pgbackrest &&
+        
+        # Cron servisini başlat
+        cron -f
       "
 
-  # BASİT Backup Monitor
-  backup_monitor_simple:
+  # Yedekleme İzleme Dashboard'u
+  backup_monitor:
     image: nginx:alpine
-    container_name: backup_dashboard
+    container_name: backup_monitor
     ports:
       - "8081:80"
     volumes:
-      - ./monitoring/html:/usr/share/nginx/html:ro
+      - ./monitoring/nginx.conf:/etc/nginx/nginx.conf
+      - ./monitoring/html:/usr/share/nginx/html
       - backup_logs:/var/log/pgbackrest:ro
     networks:
       - fintrac_network
-    restart: unless-stopped
+    depends_on:
+      - pgbackrest_scheduler
 
   # Ollama
   ollama:
@@ -195,6 +194,8 @@ services:
       - "3000:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - fintrac_network
     depends_on:
