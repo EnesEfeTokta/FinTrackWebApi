@@ -1,10 +1,10 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.UserSettingsDtos;
+using FinTrackWebApi.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Controller.Users
 {

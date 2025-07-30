@@ -1,8 +1,8 @@
-﻿using FinTrackWebApi.Services.DocumentService.Generations;
+﻿using FinTrackWebApi.Enums;
+using FinTrackWebApi.Services.DocumentService.Generations;
 using FinTrackWebApi.Services.DocumentService.Generations.Account;
 using FinTrackWebApi.Services.DocumentService.Generations.Budget;
 using FinTrackWebApi.Services.DocumentService.Generations.Transaction;
-using FinTrackWebApi.Enums;
 
 namespace FinTrackWebApi.Services.DocumentService
 {

@@ -1,5 +1,5 @@
-﻿using FinTrackWebApi.Services.DocumentService.Generations;
-using FinTrackWebApi.Enums;
+﻿using FinTrackWebApi.Enums;
+using FinTrackWebApi.Services.DocumentService.Generations;
 using System.Collections;
 
 namespace FinTrackWebApi.Services.DocumentService.Models

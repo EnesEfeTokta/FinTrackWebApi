@@ -159,13 +159,13 @@ namespace FinTrackWebApi.Services.DocumentService.Generations.Account
                                 txt.Span("Total Accounts: ").SemiBold();
                                 txt.Span(_data.AccountCount.ToString());
                             });
-                        summaryCol.Item().Text(txt =>
-                        {
-                            txt.Span("Total Balance: ").SemiBold();
-                            txt.Span($"{_data.TotalBalance:N2}");
+                            summaryCol.Item().Text(txt =>
+                            {
+                                txt.Span("Total Balance: ").SemiBold();
+                                txt.Span($"{_data.TotalBalance:N2}");
+                            });
                         });
                     });
-                });
             });
         }
     }

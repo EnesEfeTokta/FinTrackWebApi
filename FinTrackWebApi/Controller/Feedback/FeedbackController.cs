@@ -1,5 +1,4 @@
 ﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos.DebtDtos;
 using FinTrackWebApi.Dtos.FeedbackDtos;
 using FinTrackWebApi.Models.Feedback;
 using Microsoft.AspNetCore.Authorization;
@@ -83,7 +82,7 @@ namespace FinTrackWebApi.Controller.Feedback
             {
                 var feedback = await _context.Feedbacks
                     .AsNoTracking().Where(f => f.UserId == userId)
-                    .Select(f => new FeedbackDto 
+                    .Select(f => new FeedbackDto
                     {
                         Id = f.Id,
                         Subject = f.Subject,
