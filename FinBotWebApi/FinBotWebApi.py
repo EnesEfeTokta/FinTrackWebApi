@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from prometheus_client import generate_latest, Counter, Histogram
 import time
+from datetime import datetime, timezone
 
 from Tools.FinanceTools import AVAILABLE_TOOLS as FINANCE_TOOLS, FUNCTION_MAPPING as FINANCE_FUNCTION_MAPPING
 from Tools.MembershipTools import MEMBERSHIP_AVAILABLE_TOOLS, MEMBERSHIP_FUNCTION_MAPPING
@@ -86,6 +87,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    responseTime: datetime 
 
 ALL_AVAILABLE_TOOLS = FINANCE_TOOLS + MEMBERSHIP_AVAILABLE_TOOLS + BUDGET_AVAILABLE_TOOLS + ACCOUNT_AVAILABLE_TOOLS
 ALL_FUNCTION_MAPPING = {**FINANCE_FUNCTION_MAPPING, **MEMBERSHIP_FUNCTION_MAPPING, **BUDGET_FUNCTION_MAPPING, **ACCOUNT_FUNCTION_MAPPING}
@@ -218,7 +220,9 @@ async def chat_endpoint(request: ChatRequest = Body(...)):
             chat_response.raise_for_status()
             final_reply_text = chat_response.json().get("response", "Hello! How can I help you today?")
 
-        return ChatResponse(reply=final_reply_text)
+        current_utc_time = datetime.now(timezone.utc)
+        
+        return ChatResponse(reply=final_reply_text, responseTime=current_utc_time)
 
     except requests.exceptions.RequestException as req_err:
         logger.error(f"Python (Ollama-EN-v2): Could not connect to Ollama API: {req_err}")

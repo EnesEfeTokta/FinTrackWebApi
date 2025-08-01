@@ -194,157 +194,165 @@ namespace FinTrackWebApi.Controller.Stripe
                                 {
                                     try
                                     {
-                                        string emailBody = string.Empty;
-                                        // TODO: Path 'i dinamik olarak ayarlanacak.
-                                        using (
-                                            StreamReader reader = new StreamReader(
-                                                @"C:\Users\alfac\OneDrive\Belgeler\GitHub\FinTrackWebApi\FinTrackWebApi\Services\EmailService\EmailHtmlSchemes\MembershipPaymentBillingScheme.html"
-                                            )
-                                        )
+                                        string emailBody;
+
+                                        var assembly = typeof(StripeWebhookController).Assembly;
+
+                                        var resourceName = "FinTrackWebApi.Services.EmailService.EmailHtmlSchemes.MembershipPaymentBillingScheme.html";
+
+                                        using (Stream stream = assembly.GetManifestResourceStream(resourceName))
                                         {
-                                            emailBody = await reader.ReadToEndAsync();
-                                        }
-
-                                        emailBody = emailBody.Replace("[LOGO_URL]", "null"); // TODO: Gerçek logo URL'niz.
-                                        emailBody = emailBody.Replace(
-                                            "[Username]",
-                                            userMembership.User.UserName ?? "Valued User"
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[MembershipPlanName]",
-                                            userMembership.Plan?.Name ?? "N/A"
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[DASHBOARD_LINK]",
-                                            "https://yourdomain.com/dashboard"
-                                        ); // Gerçek dashboard linkiniz
-
-                                        string invoiceNumber =
-                                            $"INV-{payment.Id}-{DateTime.UtcNow:yyyyMMdd}"; // Basit bir fatura no
-                                        emailBody = emailBody.Replace(
-                                            "[InvoiceNumber]",
-                                            invoiceNumber
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[TransactionDate]",
-                                            payment.PaymentDate.ToString(
-                                                "dd MMMM yyyy HH:mm",
-                                                CultureInfo.InvariantCulture
-                                            )
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[StripeTransactionId]",
-                                            payment.TransactionId ?? "N/A"
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[MembershipStartDate]",
-                                            userMembership.StartDate.ToString(
-                                                "dd MMMM yyyy",
-                                                CultureInfo.InvariantCulture
-                                            )
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[MembershipEndDate]",
-                                            userMembership.EndDate.ToString(
-                                                "dd MMMM yyyy",
-                                                CultureInfo.InvariantCulture
-                                            )
-                                        );
-
-                                        string paymentMethodDisplayForEmail = "Card Payment"; // Varsayılan
-
-                                        if (!string.IsNullOrEmpty(session.PaymentIntentId))
-                                        {
-                                            try
+                                            if (stream == null)
                                             {
-                                                var paymentIntentService =
-                                                    new PaymentIntentService();
-                                                PaymentIntent paymentIntent =
-                                                    await paymentIntentService.GetAsync(
-                                                        session.PaymentIntentId,
-                                                        new PaymentIntentGetOptions
-                                                        {
-                                                            Expand = new List<string>
+                                                _logger.LogError("Email template resource '{ResourceName}' not found. Ensure the file exists and its Build Action is set to 'Embedded resource'.", resourceName);
+                                                throw new FileNotFoundException($"Embedded resource '{resourceName}' not found.");
+                                            }
+
+                                            using (StreamReader reader = new StreamReader(stream))
+                                            {
+                                                emailBody = await reader.ReadToEndAsync();
+                                            }
+
+                                            emailBody = emailBody.Replace("[LOGO_URL]", "null");
+                                            emailBody = emailBody.Replace(
+                                                "[Username]",
+                                                userMembership.User.UserName ?? "Valued User"
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[MembershipPlanName]",
+                                                userMembership.Plan?.Name ?? "N/A"
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[DASHBOARD_LINK]",
+                                                "https://yourdomain.com/dashboard"
+                                            );
+
+                                            string invoiceNumber =
+                                                $"INV-{payment.Id}-{DateTime.UtcNow:yyyyMMdd}";
+                                            emailBody = emailBody.Replace(
+                                                "[InvoiceNumber]",
+                                                invoiceNumber
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[TransactionDate]",
+                                                payment.PaymentDate.ToString(
+                                                    "dd MMMM yyyy HH:mm",
+                                                    CultureInfo.InvariantCulture
+                                                )
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[StripeTransactionId]",
+                                                payment.TransactionId ?? "N/A"
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[MembershipStartDate]",
+                                                userMembership.StartDate.ToString(
+                                                    "dd MMMM yyyy",
+                                                    CultureInfo.InvariantCulture
+                                                )
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[MembershipEndDate]",
+                                                userMembership.EndDate.ToString(
+                                                    "dd MMMM yyyy",
+                                                    CultureInfo.InvariantCulture
+                                                )
+                                            );
+
+                                            string paymentMethodDisplayForEmail = "Card Payment";
+
+                                            if (!string.IsNullOrEmpty(session.PaymentIntentId))
+                                            {
+                                                try
+                                                {
+                                                    var paymentIntentService =
+                                                        new PaymentIntentService();
+                                                    PaymentIntent paymentIntent =
+                                                        await paymentIntentService.GetAsync(
+                                                            session.PaymentIntentId,
+                                                            new PaymentIntentGetOptions
                                                             {
+                                                                Expand = new List<string>
+                                                                {
                                                                 "payment_method",
-                                                            }, // Ödeme yöntemi detaylarını da çek
-                                                        }
+                                                                },
+                                                            }
+                                                        );
+
+                                                    if (paymentIntent?.PaymentMethod?.Card != null)
+                                                    {
+                                                        paymentMethodDisplayForEmail =
+                                                            $"{paymentIntent.PaymentMethod.Card.Brand?.ToUpper()} ending in {paymentIntent.PaymentMethod.Card.Last4}";
+                                                    }
+                                                    else if (paymentIntent?.PaymentMethod?.Type != null)
+                                                    {
+                                                        paymentMethodDisplayForEmail =
+                                                            $"Paid using {paymentIntent.PaymentMethod.Type}";
+                                                    }
+                                                    _logger.LogInformation(
+                                                        "Fetched PaymentIntent {PaymentIntentId} for email details. PaymentMethod Type: {PaymentMethodType}",
+                                                        paymentIntent?.Id,
+                                                        paymentIntent?.PaymentMethod?.Type
                                                     );
+                                                }
+                                                catch (StripeException ex)
+                                                {
+                                                    _logger.LogError(
+                                                        ex,
+                                                        "StripeException while fetching PaymentIntent {PaymentIntentId} for email details.",
+                                                        session.PaymentIntentId
+                                                    );
+                                                }
+                                            }
 
-                                                if (paymentIntent?.PaymentMethod?.Card != null)
-                                                {
-                                                    paymentMethodDisplayForEmail =
-                                                        $"{paymentIntent.PaymentMethod.Card.Brand?.ToUpper()} ending in {paymentIntent.PaymentMethod.Card.Last4}";
-                                                }
-                                                else if (paymentIntent?.PaymentMethod?.Type != null)
-                                                {
-                                                    paymentMethodDisplayForEmail =
-                                                        $"Paid using {paymentIntent.PaymentMethod.Type}";
-                                                }
-                                                _logger.LogInformation(
-                                                    "Fetched PaymentIntent {PaymentIntentId} for email details. PaymentMethod Type: {PaymentMethodType}",
-                                                    paymentIntent.Id,
-                                                    paymentIntent.PaymentMethod?.Type
-                                                );
-                                            }
-                                            catch (StripeException ex)
-                                            {
-                                                _logger.LogError(
-                                                    ex,
-                                                    "StripeException while fetching PaymentIntent {PaymentIntentId} for email details.",
-                                                    session.PaymentIntentId
-                                                );
-                                                // paymentMethodDisplayForEmail varsayılan değerde kalır
-                                            }
+                                            emailBody = emailBody.Replace(
+                                                "[PaymentMethodDetails]",
+                                                paymentMethodDisplayForEmail
+                                            );
+
+                                            emailBody = emailBody.Replace(
+                                                "[TotalAmount]",
+                                                payment.Amount.ToString(
+                                                    "F2",
+                                                    CultureInfo.InvariantCulture
+                                                )
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[Currency]",
+                                                payment.Currency.ToString().ToUpper()
+                                            );
+
+                                            emailBody = emailBody.Replace(
+                                                "[SUPPORT_EMAIL]",
+                                                "enesefetokta009@gmail.com"
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[YEAR]",
+                                                DateTime.UtcNow.Year.ToString()
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[UNSUBSCRIBE_LINK]",
+                                                "https://yourdomain.com/unsubscribe"
+                                            );
+                                            emailBody = emailBody.Replace(
+                                                "[TERMS_LINK]",
+                                                "https://yourdomain.com/terms"
+                                            );
+
+                                            string emailSubject =
+                                                "Your FinTrack Payment Confirmation & Invoice";
+
+                                            await _emailSender.SendEmailAsync(
+                                                userMembership.User.Email,
+                                                emailSubject,
+                                                emailBody
+                                            );
+                                            _logger.LogInformation(
+                                                "Successfully sent payment confirmation email to {UserEmail} for UserMembershipId {UserMembershipId}.",
+                                                userMembership.User.Email,
+                                                userMembershipId
+                                            );
                                         }
-
-                                        emailBody = emailBody.Replace(
-                                            "[PaymentMethodDetails]",
-                                            paymentMethodDisplayForEmail
-                                        );
-
-                                        emailBody = emailBody.Replace(
-                                            "[TotalAmount]",
-                                            payment.Amount.ToString(
-                                                "F2",
-                                                CultureInfo.InvariantCulture
-                                            )
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[Currency]",
-                                            payment.Currency.ToString().ToUpper()
-                                        );
-
-                                        emailBody = emailBody.Replace(
-                                            "[SUPPORT_EMAIL]",
-                                            "enesefetokta009@gmail.com"
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[YEAR]",
-                                            DateTime.UtcNow.Year.ToString()
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[UNSUBSCRIBE_LINK]",
-                                            "https://yourdomain.com/unsubscribe"
-                                        );
-                                        emailBody = emailBody.Replace(
-                                            "[TERMS_LINK]",
-                                            "https://yourdomain.com/terms"
-                                        );
-
-                                        string emailSubject =
-                                            "Your FinTrack Payment Confirmation & Invoice";
-
-                                        await _emailSender.SendEmailAsync(
-                                            userMembership.User.Email,
-                                            emailSubject,
-                                            emailBody
-                                        );
-                                        _logger.LogInformation(
-                                            "Successfully sent payment confirmation email to {UserEmail} for UserMembershipId {UserMembershipId}.",
-                                            userMembership.User.Email,
-                                            userMembershipId
-                                        );
                                     }
                                     catch (Exception emailEx)
                                     {
@@ -353,7 +361,6 @@ namespace FinTrackWebApi.Controller.Stripe
                                             "Failed to send payment confirmation email for UserMembershipId {UserMembershipId}.",
                                             userMembershipId
                                         );
-                                        // E-posta gönderilemese bile ana işlem (üyelik aktivasyonu) başarılı oldu.
                                     }
                                 }
                                 else

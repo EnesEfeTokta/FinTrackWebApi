@@ -20,34 +20,34 @@ namespace FinTrackWebApi.Controller.Users
             _context = context;
         }
 
-        private string GetCurrentUserIdString()
+        private int GetAuthenticatedUserId()
         {
-            return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "null";
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("Invalid user ID in token.");
+            }
+            return userId;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetUser()
         {
-            var userId = GetCurrentUserIdString();
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Unauthorized("Failed to verify user identity.");
-            }
+            int userId = GetAuthenticatedUserId();
 
             try
             {
-                var userMembership = await _context.UserMemberships
-                    .Include(um => um.Plan)
-                    .FirstOrDefaultAsync(um => um.UserId.ToString() == userId);
+                var user = await _context.Users
+                    .Include(u => u.UserMemberships).AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == userId);
 
                 var userInfo = new
                 {
-                    UserId = userId,
-                    UserName = User.Identity?.Name,
-                    Email = User.FindFirstValue(ClaimTypes.Email),
-                    Roles = User.FindAll(ClaimTypes.Role).Select(role => role.Value).ToList(),
-                    ProfilePicture = User.FindFirstValue("ProfilePicture") ?? "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740",
-                    MembershipController = userMembership?.Plan?.Name,
+                    userId,
+                    user?.UserName,
+                    user?.Email,
+                    user?.ProfilePicture,
+                    user?.UserMemberships,
                 };
 
                 return Ok(userInfo);

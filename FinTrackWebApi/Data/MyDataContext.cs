@@ -813,7 +813,7 @@ namespace FinTrackWebApi.Data
                       .IsRequired(false);
                 entity.Property(e => e.TransactionId)
                       .HasColumnName("TransactionId")
-                      .HasMaxLength(20)
+                      .HasMaxLength(255)
                       .IsRequired(false);
                 entity.Property(e => e.Status)
                       .HasColumnName("Status")

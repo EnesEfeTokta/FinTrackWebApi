@@ -72,7 +72,7 @@ namespace FinTrackWebApi.Extensions
 
             services.AddHostedService<CurrencyUpdateService>();
 
-            //services.Configure<StripeSettings>(services.Configuration.GetSection("StripeSettings"));
+            services.Configure<StripeSettings>(configuration.GetSection("StripeSettings"));
 
             services.AddHttpContextAccessor();
 

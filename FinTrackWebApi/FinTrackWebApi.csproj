@@ -36,8 +36,19 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Content Remove="Services\EmailService\EmailHtmlSchemes\MembershipPaymentBillingScheme.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Services\EmailService\EmailHtmlSchemes\MembershipPaymentBillingScheme.html" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Data\Migrations\" />
     <Folder Include="Middlewares\" />
     <Folder Include="Models\Report\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="Services\EmailService\EmailHtmlSchemes\NewYearCelebrationScheme.html">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

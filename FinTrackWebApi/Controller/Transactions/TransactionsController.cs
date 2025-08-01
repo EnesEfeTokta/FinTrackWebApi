@@ -319,7 +319,7 @@ namespace FinTrackWebApi.Controller.Transactions
             [FromBody] TransactionCreateDto transactionDto
         )
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid && transactionDto.Amount != 0)
             {
                 _logger.LogWarning(
                     "Invalid model state for transaction creation: {ModelStateErrors}",
@@ -386,17 +386,33 @@ namespace FinTrackWebApi.Controller.Transactions
                     Description = transactionDto.Description ?? "No description",
                     CreatedAtUtc = DateTime.UtcNow,
                 };
-
                 _context.Transactions.Add(transaction);
 
+                if (category.Type == TransactionCategoryType.Income)
+                {
+                    account.Balance += transactionDto.Amount;
+                }
+                else if (category.Type == TransactionCategoryType.Expense)
+                {
+                    account.Balance -= transactionDto.Amount;
+                }
+                account.UpdatedAtUtc = DateTime.UtcNow;
+                _context.Accounts.Update(account);
+
                 await _context.SaveChangesAsync();
+
                 _logger.LogInformation(
-                    "Transaction created with ID {TransactionId} for user {UserId}",
-                    transaction.Id,
-                    userId
+                    "Creating transaction for user {UserId} with amount {Amount} in account {AccountId}",
+                    userId,
+                    transactionDto.Amount,
+                    transactionDto.AccountId
                 );
 
-                return Ok(true);
+                return CreatedAtAction(
+                    nameof(GetTransaction),
+                    new { transaction.Id },
+                    transaction
+                );
             }
             catch (DbUpdateException ex)
             {
@@ -490,7 +506,20 @@ namespace FinTrackWebApi.Controller.Transactions
                     $"Transaction with ID {Id} not found for user {userId}."
                 );
             }
+
+            var account = transaction.Account;
+            var category = transaction.Category;
+            if (category.Type == TransactionCategoryType.Income)
+            {
+                account.Balance -= transaction.Amount;
+            }
+            else if (category.Type == TransactionCategoryType.Expense)
+            {
+                account.Balance += transaction.Amount;
+            }
+            _context.Accounts.Update(account);
             _context.Transactions.Remove(transaction);
+
             try
             {
                 await _context.SaveChangesAsync();

@@ -6,7 +6,7 @@ namespace FinTrackWebApi.Services.PaymentService
 {
     public class StripePaymentService : IPaymentService
     {
-        private readonly StripeSettings _stripeSettings; // IOptions<StripeSettings> yerine doğrudan StripeSettings
+        private readonly StripeSettings _stripeSettings;
         private readonly ILogger<StripePaymentService> _logger;
 
         public StripePaymentService(
@@ -14,7 +14,7 @@ namespace FinTrackWebApi.Services.PaymentService
             ILogger<StripePaymentService> logger
         )
         {
-            _stripeSettings = stripeSettingsOptions.Value; // Value ile erişilir
+            _stripeSettings = stripeSettingsOptions.Value;
             _logger = logger;
             StripeConfiguration.ApiKey = _stripeSettings.SecretKey;
         }
