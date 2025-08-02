@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FinTrackWebApi.Data.Migrations
+namespace FinTrackWebApi.Data.Migrations.MyData
 {
     [DbContext(typeof(MyDataContext))]
     partial class MyDataContextModelSnapshot : ModelSnapshot

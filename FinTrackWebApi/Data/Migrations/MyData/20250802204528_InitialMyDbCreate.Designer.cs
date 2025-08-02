@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FinTrackWebApi.Data.Migrations
+namespace FinTrackWebApi.Data.Migrations.MyData
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250801082710_UpdatePaymentColumnLengths")]
-    partial class UpdatePaymentColumnLengths
+    [Migration("20250802204528_InitialMyDbCreate")]
+    partial class InitialMyDbCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,4 +1,6 @@
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Prometheus;
 using QuestPDF.Infrastructure;
 using Serilog;
@@ -22,12 +24,34 @@ try
 
     builder.Services
         .AddApplicationServices(builder.Configuration)
+        .AddHttpContextAccessor()
         .AddPersistenceServices(builder.Configuration)
         .AddAuthenticationServices(builder.Configuration, builder.Environment)
         .AddSwaggerServices()
         .AddMetricServer(options => { });
 
     var app = builder.Build();
+
+    //Log.Information("Applying migrations...");
+    //using (var scope = app.Services.CreateScope())
+    //{
+    //    var services = scope.ServiceProvider;
+    //    try
+    //    {
+    //        var mainContext = services.GetRequiredService<MyDataContext>();
+    //        mainContext.Database.Migrate();
+    //        Log.Information("Main database migration completed.");
+
+    //        var logContext = services.GetRequiredService<LogDataContext>();
+    //        logContext.Database.Migrate();
+    //        Log.Information("Log database migration completed.");
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Log.Error(ex, "An error occurred during migration.");
+    //        throw;
+    //    }
+    //}
 
     await app.SeedDatabaseAsync();
 

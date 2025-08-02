@@ -7,6 +7,7 @@ using FinTrackWebApi.Models.Currency;
 using FinTrackWebApi.Models.Debt;
 using FinTrackWebApi.Models.Empoyee;
 using FinTrackWebApi.Models.Feedback;
+using FinTrackWebApi.Models.Logs;
 using FinTrackWebApi.Models.Membership;
 using FinTrackWebApi.Models.Otp;
 using FinTrackWebApi.Models.Tranaction;
@@ -14,13 +15,27 @@ using FinTrackWebApi.Models.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Serilog.Context;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace FinTrackWebApi.Data
 {
     public class MyDataContext : IdentityDbContext<UserModel, IdentityRole<int>, int>
     {
-        public MyDataContext(DbContextOptions<MyDataContext> options)
-            : base(options) { }
+        private readonly LogDataContext _logDataContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public MyDataContext(
+            DbContextOptions<MyDataContext> options,
+            LogDataContext logDataContext,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(options)
+        {
+            _logDataContext = logDataContext;
+            _httpContextAccessor = httpContextAccessor;
+        }
 
         public DbSet<OtpVerificationModel> OtpVerification { get; set; }
         public DbSet<UserAppSettingsModel> UserAppSettings { get; set; }
@@ -1167,6 +1182,87 @@ namespace FinTrackWebApi.Data
                       .HasForeignKey(fu => fu.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var auditEntries = CreateAuditEntries();
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            if (auditEntries.Any() && _logDataContext != null)
+            {
+                await _logDataContext.AuditLogs.AddRangeAsync(auditEntries, cancellationToken);
+                await _logDataContext.SaveChangesAsync(cancellationToken);
+            }
+
+            return result;
+        }
+
+        private List<AuditLogModel> CreateAuditEntries()
+        {
+            var AuditLogModels = new List<AuditLogModel>();
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity is not AuditLogModel && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
+                .ToList();
+
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            foreach (var entry in entries)
+            {
+                var AuditLogModel = new AuditLogModel
+                {
+                    UserId = userId ?? "System",
+                    ActionType = entry.State.ToString(),
+                    EntityName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
+                    Timestamp = DateTime.UtcNow,
+                    Changes = GetChangesAsJson(entry)
+                };
+
+                var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                AuditLogModel.EntityId = primaryKey?.CurrentValue?.ToString() ?? "N/A";
+
+                AuditLogModels.Add(AuditLogModel);
+            }
+
+            return AuditLogModels;
+        }
+
+        private string GetChangesAsJson(EntityEntry entry)
+        {
+            var changes = new Dictionary<string, object>();
+            var options = new JsonSerializerOptions { WriteIndented = false };
+
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    changes["NewValues"] = GetValues(entry.CurrentValues);
+                    break;
+                case EntityState.Deleted:
+                    changes["OldValues"] = GetValues(entry.OriginalValues);
+                    break;
+                case EntityState.Modified:
+                    var oldValues = new Dictionary<string, object>();
+                    var newValues = new Dictionary<string, object>();
+
+                    foreach (var property in entry.Properties)
+                    {
+                        if (property.IsModified)
+                        {
+                            oldValues[property.Metadata.Name] = property.OriginalValue;
+                            newValues[property.Metadata.Name] = property.CurrentValue;
+                        }
+                    }
+                    if (oldValues.Any()) changes["OldValues"] = oldValues;
+                    if (newValues.Any()) changes["NewValues"] = newValues;
+                    break;
+            }
+
+            return JsonSerializer.Serialize(changes, options);
+        }
+
+        private Dictionary<string, object> GetValues(PropertyValues values)
+        {
+            return values.Properties.ToDictionary(p => p.Name, p => values[p]);
         }
     }
 }

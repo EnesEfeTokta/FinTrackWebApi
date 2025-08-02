@@ -8,15 +8,17 @@ services:
       dockerfile: Dockerfile
     container_name: fintrack_api
     ports:
-      - "5000:8080"
+      - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
       - PythonChatBotService__Url=http://finbot_api:8000/chat
-      - ConnectionStrings__DefaultConnection=Host=db_postgres;Port=5432;Database=myfintrackdb;Username=postgres;Password=140xxx-+
+      - ConnectionStrings__DefaultConnection=Host=db_postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__LogConnection=Host=postgres_db_logs;Port=5432;Database=myfintrack_logs;Username=postgres;Password=${LOG_DB_PASSWORD}
     depends_on:
       - finbotwebapi
       - db_postgres
-      - ollama
+      - postgres_db_logs
     networks:
       - fintrac_network
 
@@ -28,11 +30,8 @@ services:
     ports:
       - "4040:4040"
     environment:
-        - NGROK_AUTHTOKEN=YOUR_KEY
-    command:
-      - "http"
-      - "fintrack_api:8080"
-      - "--log=stdout"
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: ["http", "fintrack_api:80", "--log=stdout"]
     depends_on:
       - fintrackwebapi
     networks:
@@ -57,216 +56,127 @@ services:
 
   # PostgreSQL
   db_postgres:
-    image: postgres:15
+    build:
+      context: .
+      dockerfile: postgres/Dockerfile
     container_name: postgres_db
     ports:
       - "5433:5432"
     environment:
-      - POSTGRES_DB=myfintrackdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=140xxx-+
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - fintrac_network
-    restart: unless-stopped
-    command: >
-      postgres
-      -c archive_mode=on
-      -c archive_command='test ! -f /backup/archive/%f && pgbackrest --stanza=myfintrackstanza archive-push %p'
-      -c wal_level=replica
-      -c max_wal_senders=3
-      -c listen_addresses='*'
-      -c log_statement=all
-      -c log_directory=pg_log
-      -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
-      -c logging_collector=on
-
-  # pgBackRest
-  pgbackrest_all_in_one:
-    image: postgres:15
-    container_name: pgbackrest_manager
-    environment:
-      - PGPASSWORD=140xxx-+
-      - TZ=Europe/Istanbul
-    volumes:
       - pgbackrest_repo:/backup
-      - ./scripts:/scripts
+      - ./pgbackrest/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
       - backup_logs:/var/log/pgbackrest
     networks:
       - fintrac_network
-    depends_on:
-      - db_postgres
     restart: unless-stopped
     command: >
       bash -c "
-        apt update && 
-        apt install -y pgbackrest cron dos2unix curl &&
-        
-        # Script'leri düzelt
-        dos2unix /scripts/*.sh &&
-        chmod +x /scripts/*.sh &&
-        
-        # pgBackRest config oluştur
-        mkdir -p /etc/pgbackrest &&
-        cat > /etc/pgbackrest/pgbackrest.conf << 'EOF'
-      [global]
-      repo1-path=/backup
-      repo1-retention-full=7
-      repo1-retention-diff=4
-      repo1-retention-archive=7
-      compress-type=lz4
-      compress-level=3
-      log-level-console=info
-      log-level-file=detail
-      log-path=/var/log/pgbackrest
-      process-max=2
-      start-fast=y
-      archive-async=y
-      backup-standby=n
-      delta=y
-      buffer-size=16MiB
-      
-      [myfintrackstanza]
-      pg1-path=/var/lib/postgresql/data
-      pg1-host=db_postgres
-      pg1-port=5432
-      pg1-user=postgres
-      EOF
-        
-        # Log dizinini oluştur
-        mkdir -p /var/log/pgbackrest &&
-        
-        # Stanza oluştur (hata göz ardı et)
-        pgbackrest --stanza=myfintrackstanza stanza-create || true &&
-        
-        # İlk backup (hata göz ardı et)
-        pgbackrest --stanza=myfintrackstanza --type=full backup || true &&
-        
-        # Cron job'ları ayarla
-        echo '0 2 * * * root /scripts/backup_incremental.sh' > /etc/cron.d/pgbackrest &&
-        echo '0 3 * * 0 root /scripts/backup_full.sh' >> /etc/cron.d/pgbackrest &&
-        echo '0 */6 * * * root /scripts/health_check.sh' >> /etc/cron.d/pgbackrest &&
+        docker-entrypoint.sh postgres -c listen_addresses='*' -c wal_level=replica -c archive_mode=on -c archive_command='pgbackrest --stanza=myfintrackstanza archive-push %p' &
+
+        until pg_isready -h localhost -p 5432 -U ${POSTGRES_USER}; do
+          echo 'Waiting for postgres...' && sleep 2;
+        done &&
+
+        pgbackrest --stanza=myfintrackstanza stanza-create || echo 'Stanza already exists.' &&
+        pgbackrest --stanza=myfintrackstanza --type=full backup || echo 'Initial backup failed, will retry with cron.' &&
+
+        echo '0 2 * * * postgres /scripts/backup_incremental.sh' > /etc/cron.d/pgbackrest &&
+        echo '0 3 * * 0 postgres /scripts/backup_full.sh' >> /etc/cron.d/pgbackrest &&
         chmod 0644 /etc/cron.d/pgbackrest &&
-        crontab /etc/cron.d/pgbackrest &&
-        
-        # Cron'u başlat ve bekle
-        cron &&
-        tail -f /dev/null
+
+        echo 'Cron starting...' &&
+        cron -f
       "
 
-  # BASİT Backup Monitor
+  postgres_db_logs:
+    image: postgres:15
+    container_name: postgres_db_logs
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=myfintrack_logs
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${LOG_DB_PASSWORD}
+    volumes:
+      - log_db_data:/var/lib/postgresql/data
+    networks:
+      - fintrac_network
+
   backup_monitor_simple:
     image: nginx:alpine
     container_name: backup_dashboard
-    ports:
-      - "8081:80"
+    ports: ["8081:80"]
     volumes:
       - ./monitoring/html:/usr/share/nginx/html:ro
       - backup_logs:/var/log/pgbackrest:ro
-    networks:
-      - fintrac_network
+    networks: ["fintrac_network"]
     restart: unless-stopped
 
-  # Ollama
   ollama:
     image: ollama/ollama
     container_name: ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - fintrac_network
+    ports: ["11434:11434"]
+    volumes: ["ollama_data:/root/.ollama"]
+    networks: ["fintrac_network"]
     restart: unless-stopped
     deploy:
       resources:
         reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
 
-  # Grafana
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana-oss:latest
     container_name: grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana-storage:/var/lib/grafana
-    networks:
-      - fintrac_network
-    depends_on:
-      - prometheus
+    ports: ["3000:3000"]
+    volumes: ["grafana-storage:/var/lib/grafana"]
+    networks: ["fintrac_network"]
+    depends_on: ["prometheus"]
+    restart: unless-stopped
 
-  # Prometheus
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - "9090:9090"
+    ports: ["9090:9090"]
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus-storage:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.enable-lifecycle'
-    networks:
-      - fintrac_network
-    depends_on:
-      - cadvisor
-      - postgres_exporter
+    command: ['--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.path=/prometheus', '--web.enable-lifecycle']
+    networks: ["fintrac_network"]
+    depends_on: [cadvisor, postgres_exporter]
+    restart: unless-stopped
 
-  # cAdvisor
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    ports:
-      - "8080:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    networks:
-      - fintrac_network
+    ports: ["8080:8080"]
+    volumes: ["/:/rootfs:ro", "/var/run:/var/run:rw", "/sys:/sys:ro", "/var/lib/docker/:/var/lib/docker:ro"]
     privileged: true
-    environment:
-      - DOCKER_HOST_IP=host.docker.internal
+    networks: ["fintrac_network"]
+    restart: unless-stopped
 
-  # PostgreSQL Exporter
   postgres_exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     container_name: postgres_exporter
-    ports:
-      - "9187:9187"
     environment:
-      - DATA_SOURCE_NAME=postgresql://postgres:140xxx-+@db_postgres:5432/myfintrackdb?sslmode=disable
-    networks:
-      - fintrac_network
-    depends_on:
-      - db_postgres
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_postgres:5432/${POSTGRES_DB}?sslmode=disable
+    networks: ["fintrac_network"]
+    depends_on: ["db_postgres"]
+    restart: unless-stopped
 
-  # Node Exporter
   node_exporter:
     image: prom/node-exporter:latest
     container_name: node_exporter
+    ports: ["9100:9100"]
+    volumes: ["/proc:/host/proc:ro", "/sys:/host/sys:ro", "/:/rootfs:ro"]
+    command: ['--path.procfs=/host/proc', '--path.sysfs=/host/sys', '--path.rootfs=/rootfs']
+    networks: ["fintrac_network"]
     restart: unless-stopped
-    ports:
-      - "9100:9100"
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-    networks:
-      - fintrac_network
 
 networks:
   fintrac_network:
@@ -279,3 +189,4 @@ volumes:
   grafana-storage:
   prometheus-storage:
   backup_logs:
+  log_db_data:
