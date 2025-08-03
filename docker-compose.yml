@@ -57,15 +57,17 @@ services:
   # PostgreSQL
   db_postgres:
     build:
-      context: .
-      dockerfile: postgres/Dockerfile
+      context: ./postgres
+      dockerfile: Dockerfile
     container_name: postgres_db
+    user: postgres
     ports:
       - "5433:5432"
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - pgbackrest_repo:/backup
@@ -74,24 +76,7 @@ services:
     networks:
       - fintrac_network
     restart: unless-stopped
-    command: >
-      bash -c "
-        docker-entrypoint.sh postgres -c listen_addresses='*' -c wal_level=replica -c archive_mode=on -c archive_command='pgbackrest --stanza=myfintrackstanza archive-push %p' &
-
-        until pg_isready -h localhost -p 5432 -U ${POSTGRES_USER}; do
-          echo 'Waiting for postgres...' && sleep 2;
-        done &&
-
-        pgbackrest --stanza=myfintrackstanza stanza-create || echo 'Stanza already exists.' &&
-        pgbackrest --stanza=myfintrackstanza --type=full backup || echo 'Initial backup failed, will retry with cron.' &&
-
-        echo '0 2 * * * postgres /scripts/backup_incremental.sh' > /etc/cron.d/pgbackrest &&
-        echo '0 3 * * 0 postgres /scripts/backup_full.sh' >> /etc/cron.d/pgbackrest &&
-        chmod 0644 /etc/cron.d/pgbackrest &&
-
-        echo 'Cron starting...' &&
-        cron -f
-      "
+    command: /scripts/entrypoint.sh
 
   postgres_db_logs:
     image: postgres:15
