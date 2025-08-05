@@ -18,6 +18,7 @@ namespace FinTrackWebApi.Dtos.DebtDtos
         public DateTime DueDateUtc { get; set; }
         public string Description { get; set; } = null!;
         public DebtStatusType Status { get; set; }
+        public int? VideoMetadataId { get; set; }
         public DateTime CreateAtUtc { get; set; }
         public DateTime? UpdatedAtUtc { get; set; }
         public DateTime? PaidAtUtc { get; set; }

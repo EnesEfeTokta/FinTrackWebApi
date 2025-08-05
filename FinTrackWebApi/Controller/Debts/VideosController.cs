@@ -41,8 +41,8 @@ namespace FinTrackWebApi.Controller.Debts
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
 
-            _unapprovedVideosPath = _configuration["FilePaths:UnapprovedVideos"] ?? "Null";
-            _encryptedVideosPath = _configuration["FilePaths:EncryptedVideos"] ?? "Null";
+            _unapprovedVideosPath = Path.Combine(_webHostEnvironment.ContentRootPath, _configuration["FilePaths:UnapprovedVideos"] ?? "videos/unapproved");
+            _encryptedVideosPath = Path.Combine(_webHostEnvironment.ContentRootPath, _configuration["FilePaths:EncryptedVideos"] ?? "videos/encrypted");
 
             if (!Directory.Exists(_unapprovedVideosPath))
                 Directory.CreateDirectory(_unapprovedVideosPath);

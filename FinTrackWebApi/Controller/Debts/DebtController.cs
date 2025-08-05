@@ -49,6 +49,7 @@ namespace FinTrackWebApi.Controller.Debts
                 var debtsList = await _context
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
+                    .Include(d => d.DebtVideoMetadatas)
                     .Where(d => d.Lender.Id == userId || d.Borrower.Id == userId)
                     .ToListAsync();
 
@@ -80,6 +81,7 @@ namespace FinTrackWebApi.Controller.Debts
                         DueDateUtc = debt.DueDateUtc,
                         Description = debt.Description ?? string.Empty,
                         Status = debt.Status,
+                        VideoMetadataId = debt.DebtVideoMetadatas.OrderByDescending(dvm => dvm.Id).FirstOrDefault()?.VideoMetadataId,
                         CreateAtUtc = debt.CreateAtUtc,
                         UpdatedAtUtc = debt.UpdatedAtUtc,
                         PaidAtUtc = debt.PaidAtUtc,
@@ -114,6 +116,7 @@ namespace FinTrackWebApi.Controller.Debts
                 var debt = await _context
                     .Debts.Include(d => d.Lender)
                     .Include(d => d.Borrower)
+                    .Include(d => d.DebtVideoMetadatas)
                     .FirstOrDefaultAsync(d => d.Id == Id);
 
                 if (debt == null)
@@ -138,6 +141,7 @@ namespace FinTrackWebApi.Controller.Debts
                     DueDateUtc = debt.DueDateUtc,
                     Description = debt.Description ?? string.Empty,
                     Status = debt.Status,
+                    VideoMetadataId = debt.DebtVideoMetadatas.OrderByDescending(dvm => dvm.Id).FirstOrDefault()?.VideoMetadataId,
                     CreateAtUtc = debt.CreateAtUtc,
                     UpdatedAtUtc = debt.UpdatedAtUtc,
                     PaidAtUtc = debt.PaidAtUtc,

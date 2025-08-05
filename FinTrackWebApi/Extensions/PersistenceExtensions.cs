@@ -2,7 +2,6 @@
 using FinTrackWebApi.Models.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Serilog.Context;
 
 namespace FinTrackWebApi.Extensions
 {

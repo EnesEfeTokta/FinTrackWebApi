@@ -3,7 +3,7 @@
     public enum DebtStatusType
     {
         PendingBorrowerAcceptance,    // Borç Alan Onayı Bekliyor
-        AcceptedPendingVideoUpload,   // Borçlu Kabul Etti, Video Yüklemesi Bekleniyor (YENİ)
+        AcceptedPendingVideoUpload,   // Borçlu Kabul Etti, Video Yüklemesi Bekleniyor
         PendingOperatorApproval,      // Operatör Onayı Bekliyor
         Active,                       // Aktif Borç
         PaymentConfirmationPending,   // Ödeme Onayı Bekliyor
