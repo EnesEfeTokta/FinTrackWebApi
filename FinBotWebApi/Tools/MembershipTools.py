@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 GET_AVAILABLE_MEMBERSHIP_PLANS_TOOL = {
     "name": "get_available_membership_plans",
     "description": "Lists all available membership plans that a user can subscribe to, including their features and prices.",
-    "parameters": {"type": "OBJECT", "properties": {}, "required": []}
+    "parameters": {"type": "object", "properties": {}, "required": []}
 }
 
 GET_CURRENT_USER_MEMBERSHIP_TOOL = {

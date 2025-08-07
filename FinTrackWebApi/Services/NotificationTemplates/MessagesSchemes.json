@@ -1,0 +1,5 @@
+{
+  "MessageHead": "You Have Received a New Debt Offer",
+  "MessageBody": "The user [LENDER_USERNAME] sent you a loan offer for [AMOUNT] created on [CREATE_DATE] with a due date of [DUE_DATE].",
+  "Type": "Info"
+}

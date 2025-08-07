@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 GET_BUDGETS_TOOL = {
     "name": "get_budgets",
     "description": "Lists all of the user's budgets.",
-    "parameters": {"type": "OBJECT", "properties": {}, "required": []}
+    "parameters": {"type": "object", "properties": {}, "required": []}
 }
 
 GET_BUDGET_DETAILS_TOOL = {

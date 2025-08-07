@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 GET_USER_ACCOUNTS_TOOL = {
     "name": "get_user_accounts",
     "description": "Lists all of the user's financial accounts (e.g., bank accounts, wallets) and their current balances.",
-    "parameters": {"type": "OBJECT", "properties": {}, "required": []}
+    "parameters": {"type": "object", "properties": {}, "required": []}
 }
 
 GET_ACCOUNT_DETAILS_TOOL = {

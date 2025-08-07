@@ -1,4 +1,5 @@
 ﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos.UserProfile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,19 +39,24 @@ namespace FinTrackWebApi.Controller.Users
             try
             {
                 var user = await _context.Users
-                    .Include(u => u.UserMemberships).AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.Id == userId);
+                    .Include(u => u.UserMemberships)
+                        .ThenInclude(um => um.Plan)
+                    .AsNoTracking()
+                    .Where(u => u.Id == userId)
+                    .Select(u => new UserProfileDto
+                    {
+                        Id = u.Id,
+                        UserName = u.UserName ?? u.NormalizedUserName ?? string.Empty,
+                        Email = u.Email ?? u.NormalizedEmail ?? string.Empty,
+                        ProfilePicture = u.ProfilePicture ?? string.Empty,
+                        MembershipType = (from um in u.UserMemberships
+                                orderby um.EndDate descending
+                                select um.Plan.Name)
+                                .FirstOrDefault() ?? "Üyelik Yok"
+                    })
+                    .FirstOrDefaultAsync();
 
-                var userInfo = new
-                {
-                    userId,
-                    user?.UserName,
-                    user?.Email,
-                    user?.ProfilePicture,
-                    user?.UserMemberships,
-                };
-
-                return Ok(userInfo);
+                return Ok(user);
             }
             catch (Exception ex)
             {

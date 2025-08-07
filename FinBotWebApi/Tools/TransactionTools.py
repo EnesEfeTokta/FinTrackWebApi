@@ -1,14 +1,14 @@
 import logging
 from typing import List, Dict, Any, Optional
 from decimal import Decimal
-from ._api_helpers import _make_api_request # Use a shared helper
+from ._api_helpers import _make_api_request
 
 logger = logging.getLogger(__name__)
 
 GET_TRANSACTION_CATEGORIES_TOOL = {
     "name": "get_transaction_categories",
     "description": "Lists all user-defined transaction categories (for both income and expense). Useful for seeing available categories before adding a transaction.",
-    "parameters": {"type": "OBJECT", "properties": {}, "required": []}
+    "parameters": {"type": "object", "properties": {}, "required": []}
 }
 
 CREATE_TRANSACTION_CATEGORY_TOOL = {

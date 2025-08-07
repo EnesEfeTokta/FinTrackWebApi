@@ -237,6 +237,8 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - '--path.rootfs=/rootfs'
+      - '--collector.systemd'
+      - '--collector.processes'
     networks:
       - fintrac_network
     restart: unless-stopped
