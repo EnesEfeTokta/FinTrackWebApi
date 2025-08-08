@@ -1,4 +1,5 @@
-﻿using FinTrackWebApi.Data;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.BudgetDtos;
 using FinTrackWebApi.Models.Budget;
 using FinTrackWebApi.Models.Category;
@@ -42,10 +43,10 @@ namespace FinTrackWebApi.Controller.Budgets
         [HttpGet]
         public async Task<IActionResult> GetBudgets()
         {
+            int userId = GetAuthenticatedUserId();
+
             try
             {
-                int userId = GetAuthenticatedUserId();
-
                 var budgets = await _context.Budgets
                     .Where(b => b.UserId == userId)
                     .Select(b => new BudgetDto
@@ -55,6 +56,7 @@ namespace FinTrackWebApi.Controller.Budgets
                         Description = b.Description,
                         Category = b.Category.Name,
                         AllocatedAmount = b.AllocatedAmount,
+                        ReachedAmount = b.ReachedAmount,
                         Currency = b.Currency,
                         StartDate = b.StartDate,
                         EndDate = b.EndDate,
@@ -95,10 +97,10 @@ namespace FinTrackWebApi.Controller.Budgets
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(int id)
         {
+            int userId = GetAuthenticatedUserId();
+
             try
             {
-                int userId = GetAuthenticatedUserId();
-
                 var budget = await _context.Budgets.Where(b => b.Id == id && b.UserId == userId)
                     .Include(b => b.Category)
                     .Select(b => new BudgetDto
@@ -108,6 +110,7 @@ namespace FinTrackWebApi.Controller.Budgets
                         Description = b.Description,
                         Category = b.Category.Name,
                         AllocatedAmount = b.AllocatedAmount,
+                        ReachedAmount = b.ReachedAmount,
                         Currency = b.Currency,
                         StartDate = b.StartDate,
                         EndDate = b.EndDate,
@@ -180,6 +183,7 @@ namespace FinTrackWebApi.Controller.Budgets
                     Name = budgetDto.Name,
                     Description = budgetDto.Description,
                     AllocatedAmount = budgetDto.AllocatedAmount,
+                    ReachedAmount = budgetDto.ReachedAmount,
                     Currency = budgetDto.Currency,
                     StartDate = budgetDto.StartDate,
                     EndDate = budgetDto.EndDate,
@@ -213,10 +217,10 @@ namespace FinTrackWebApi.Controller.Budgets
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBudget(int id, [FromBody] BudgetUpdateDto budgetDto)
         {
+            int userId = GetAuthenticatedUserId();
+
             try
             {
-                int userId = GetAuthenticatedUserId();
-
                 var budgetToUpdate = await _context.Budgets
                     .FirstOrDefaultAsync(bc => bc.Id == id && bc.UserId == userId);
                 if (budgetToUpdate == null)
@@ -244,6 +248,7 @@ namespace FinTrackWebApi.Controller.Budgets
                 budgetToUpdate.Name = budgetDto.Name;
                 budgetToUpdate.Description = budgetDto.Description;
                 budgetToUpdate.AllocatedAmount = budgetDto.AllocatedAmount;
+                budgetToUpdate.ReachedAmount = budgetDto.ReachedAmount;
                 budgetToUpdate.Currency = budgetDto.Currency;
                 budgetToUpdate.StartDate = budgetDto.StartDate;
                 budgetToUpdate.EndDate = budgetDto.EndDate;
@@ -260,6 +265,7 @@ namespace FinTrackWebApi.Controller.Budgets
                     Description = budgetToUpdate.Description,
                     Category = budgetToUpdate.Category.Name,
                     AllocatedAmount = budgetToUpdate.AllocatedAmount,
+                    ReachedAmount = budgetToUpdate.ReachedAmount,
                     Currency = budgetToUpdate.Currency,
                     StartDate = budgetToUpdate.StartDate,
                     EndDate = budgetToUpdate.EndDate,
@@ -277,6 +283,69 @@ namespace FinTrackWebApi.Controller.Budgets
                     GetAuthenticatedUserId()
                 );
                 return StatusCode(500, "Internal server error while updating budget.");
+            }
+        }
+
+        [HttpPut("Update-Reached-Amount")]
+        public async Task<IActionResult> UpdateReachedAmount([FromBody] BudgetUpdateReachedAmountDto amountDto)
+        {
+            if (amountDto == null || amountDto.BudgetId <= 0)
+            {
+                return BadRequest("Invalid budget data provided.");
+            }
+
+            int userId = GetAuthenticatedUserId();
+            try
+            {
+                var budget = await _context.Budgets
+                    .Include(b => b.Category) 
+                    .FirstOrDefaultAsync(bc => bc.Id == amountDto.BudgetId && bc.UserId == userId);
+
+                if (budget == null)
+                {
+                    _logger.LogWarning(
+                        "Update failed. Budget with ID {BudgetId} not found for user ID: {UserId}",
+                        amountDto.BudgetId,
+                        userId
+                    );
+                    return NotFound($"Budget with ID {amountDto.BudgetId} not found.");
+                }
+
+                budget.ReachedAmount = amountDto.ReachedAmount;
+                budget.UpdatedAtUtc = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Reached Amount has been updated for budget ID: {BudgetId}",
+                    budget.Id
+                );
+
+                return Ok(new BudgetDto
+                {
+                    Id = budget.Id,
+                    Name = budget.Name,
+                    Description = budget.Description,
+                    Category = budget.Category?.Name ?? "Other",
+                    AllocatedAmount = budget.AllocatedAmount,
+                    ReachedAmount = budget.ReachedAmount,
+                    Currency = budget.Currency,
+                    StartDate = budget.StartDate,
+                    EndDate = budget.EndDate,
+                    IsActive = budget.IsActive,
+                    CreatedAtUtc = budget.CreatedAtUtc,
+                    UpdatedAtUtc = budget.UpdatedAtUtc
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error updating reached amount for budget with ID {BudgetId} for user ID: {UserId}",
+                    amountDto.BudgetId,
+                    userId
+                );
+                return StatusCode(500, "Internal server error while updating budget amount.");
             }
         }
 

@@ -3,17 +3,20 @@ using System;
 using FinTrackWebApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FinTrackWebApi.Data.Migrations.MyData
+namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    partial class MyDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250808071958_SomeNewFeature_v1")]
+    partial class SomeNewFeature_v1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

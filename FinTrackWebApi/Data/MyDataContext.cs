@@ -321,6 +321,10 @@ namespace FinTrackWebApi.Data
                         .HasColumnName("AllocatedAmount")
                         .HasColumnType("decimal(18, 2)")
                         .IsRequired(true);
+                entity.Property(b => b.ReachedAmount)
+                        .HasColumnName("ReachedAmount")
+                        .HasColumnType("decimal(18, 2)")
+                        .IsRequired(false);
                 entity.Property(b => b.Currency)
                       .HasColumnName("Currency")
                       .HasConversion<string>()
