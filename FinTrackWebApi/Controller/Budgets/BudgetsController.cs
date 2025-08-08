@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using FinTrackWebApi.Data;
+﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Dtos.BudgetDtos;
 using FinTrackWebApi.Models.Budget;
 using FinTrackWebApi.Models.Category;
@@ -298,7 +297,7 @@ namespace FinTrackWebApi.Controller.Budgets
             try
             {
                 var budget = await _context.Budgets
-                    .Include(b => b.Category) 
+                    .Include(b => b.Category)
                     .FirstOrDefaultAsync(bc => bc.Id == amountDto.BudgetId && bc.UserId == userId);
 
                 if (budget == null)

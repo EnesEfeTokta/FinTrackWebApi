@@ -50,8 +50,8 @@ namespace FinTrackWebApi.Controller.Users
                         Email = u.Email ?? u.NormalizedEmail ?? string.Empty,
                         ProfilePicture = u.ProfilePicture ?? string.Empty,
                         MembershipType = (from um in u.UserMemberships
-                                orderby um.EndDate descending
-                                select um.Plan.Name)
+                                          orderby um.EndDate descending
+                                          select um.Plan.Name)
                                 .FirstOrDefault() ?? "Üyelik Yok"
                     })
                     .FirstOrDefaultAsync();

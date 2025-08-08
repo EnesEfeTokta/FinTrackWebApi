@@ -1,6 +1,4 @@
-using FinTrackWebApi.Data;
 using FinTrackWebApi.Extensions;
-using Microsoft.EntityFrameworkCore;
 using Prometheus;
 using QuestPDF.Infrastructure;
 using Serilog;
