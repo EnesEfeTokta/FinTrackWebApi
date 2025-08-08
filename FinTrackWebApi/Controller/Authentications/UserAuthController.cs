@@ -253,21 +253,21 @@ namespace FinTrackWebApi.Controller.Authentications
                         };
                         await _context.UserNotificationSettings.AddAsync(userNotificationSettings);
 
-                        //var userMembership = new UserMembershipModel
-                        //{
-                        //    UserId = newUser.Id,
-                        //    MembershipPlanId = 1,
-                        //    StartDate = DateTime.UtcNow,
-                        //    EndDate = DateTime.UtcNow.AddYears(1),
-                        //    Status = MembershipStatusType.Active,
-                        //    AutoRenew = true,
-                        //    CreatedAtUtc = DateTime.UtcNow
-                        //};
-                        //await _context.UserMemberships.AddAsync(userMembership);
+                        var userMembership = new UserMembershipModel
+                        {
+                            UserId = newUser.Id,
+                            MembershipPlanId = 1,
+                            StartDate = DateTime.UtcNow,
+                            EndDate = DateTime.UtcNow.AddYears(1),
+                            Status = MembershipStatusType.Active,
+                            AutoRenew = true,
+                            CreatedAtUtc = DateTime.UtcNow
+                        };
+                        await _context.UserMemberships.AddAsync(userMembership);
 
-                        //await _context.SaveChangesAsync();
+                        await _context.SaveChangesAsync();
 
-                        //_logger.LogInformation("Initial settings and membership created for UserId: {UserId}", newUser.Id);
+                        _logger.LogInformation("Initial settings and membership created for UserId: {UserId}", newUser.Id);
                     }
                     catch (Exception ex)
                     {
