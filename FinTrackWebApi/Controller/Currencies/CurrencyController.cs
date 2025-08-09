@@ -228,6 +228,73 @@ namespace FinTrackWebApi.Controller.Currencies
             });
         }
 
+        [HttpGet("convert")]
+        public async Task<ActionResult<ConversionResultDto>> ConvertCurrency(
+            [FromQuery] string from,
+            [FromQuery] string to,
+            [FromQuery] decimal amount)
+        {
+            from = from.ToUpper();
+            to = to.ToUpper();
+
+            if (from == to)
+            {
+                return Ok(new ConversionResultDto
+                {
+                    From = from,
+                    To = to,
+                    Amount = amount,
+                    Result = amount,
+                    Rate = 1,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+
+            var latestUsdSnapshot = await _context.CurrencySnapshots
+                .AsNoTracking()
+                .Where(s => s.BaseCurrency == "USD")
+                .OrderByDescending(s => s.FetchTimestamp)
+                .Include(s => s.Rates)
+                    .ThenInclude(r => r.Currency)
+                .FirstOrDefaultAsync();
+
+            if (latestUsdSnapshot == null || !latestUsdSnapshot.Rates.Any())
+            {
+                return NotFound("Exchange rate data is not available to perform conversion.");
+            }
+
+            var fromRateInUsd = from == "USD" ? 1.0m : latestUsdSnapshot.Rates
+                .FirstOrDefault(r => r.Currency?.Code == from)?.Rate;
+
+            var toRateInUsd = to == "USD" ? 1.0m : latestUsdSnapshot.Rates
+                .FirstOrDefault(r => r.Currency?.Code == to)?.Rate;
+
+            if (fromRateInUsd == null || fromRateInUsd.Value == 0)
+            {
+                return NotFound($"Source currency '{from}' not found or has an invalid rate.");
+            }
+
+            if (toRateInUsd == null)
+            {
+                return NotFound($"Target currency '{to}' not found.");
+            }
+
+            decimal crossRate = toRateInUsd.Value / fromRateInUsd.Value;
+            decimal convertedAmount = amount * crossRate;
+
+            var resultDto = new ConversionResultDto
+            {
+                From = from,
+                To = to,
+                Amount = amount,
+                Result = convertedAmount,
+                Rate = crossRate,
+                Timestamp = latestUsdSnapshot.FetchTimestamp
+            };
+
+            return Ok(resultDto);
+        }
+
         private ChangeSummaryDto CalculateChangeSummary(List<HistoricalRatePointDto> rates)
         {
             if (rates == null || rates.Count < 2)

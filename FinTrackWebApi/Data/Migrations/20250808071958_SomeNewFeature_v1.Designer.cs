@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FinTrackWebApi.Data.Migrations
 {
     [DbContext(typeof(MyDataContext))]
-    [Migration("20250727154413_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250808071958_SomeNewFeature_v1")]
+    partial class SomeNewFeature_v1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -132,6 +132,10 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("BudgetName");
+
+                    b.Property<decimal?>("ReachedAmount")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ReachedAmount");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("date")
@@ -891,8 +895,8 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("Status");
 
                     b.Property<string>("TransactionId")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("TransactionId");
 
                     b.Property<int>("UserId")

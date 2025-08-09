@@ -2,7 +2,7 @@
 
 namespace FinTrackWebApi.Services.DocumentService.Generations
 {
-    public interface IReportModel 
+    public interface IReportModel
     {
         IList Items { get; }
     }

@@ -67,7 +67,7 @@ namespace FinTrackWebApi.Controller.Accounts
                             Name = acc.Name,
                             Type = acc.Type ?? AccountType.Error,
                             IsActive = acc.IsActive,
-                            Balance = await CalculateBalanceAsync(acc.Id, acc.Balance),
+                            Balance = acc.Balance,
                             Currency = acc.Currency ?? BaseCurrencyType.Error,
                             CreatedAtUtc = acc.CreatedAtUtc,
                             UpdatedAtUtc = acc.UpdatedAtUtc,
@@ -127,7 +127,7 @@ namespace FinTrackWebApi.Controller.Accounts
                     Name = accountFromDb.Name,
                     Type = accountFromDb.Type ?? AccountType.Error,
                     IsActive = accountFromDb.IsActive,
-                    Balance = await CalculateBalanceAsync(accountFromDb.Id, accountFromDb.Balance),
+                    Balance = accountFromDb.Balance,
                     Currency = accountFromDb.Currency ?? BaseCurrencyType.Error,
                     CreatedAtUtc = accountFromDb.CreatedAtUtc,
                     UpdatedAtUtc = accountFromDb.UpdatedAtUtc,
@@ -265,16 +265,6 @@ namespace FinTrackWebApi.Controller.Accounts
                 );
                 return StatusCode(500, "An error occurred while deleting the account.");
             }
-        }
-
-        private async Task<decimal> CalculateBalanceAsync(int Id, decimal initialBalance)
-        {
-            var balance = await _context
-                .Transactions.Where(t => t.AccountId == Id)
-                .Include(t => t.Category)
-                .SumAsync(t => t.Category.Type == TransactionCategoryType.Income ? t.Amount : -t.Amount);
-
-            return initialBalance + balance;
         }
     }
 }

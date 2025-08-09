@@ -22,26 +22,6 @@ namespace FinTrackWebApi.Models.Debt
         public DateTime? BorrowerApprovalAtUtc { get; set; }
         public DateTime? PaymentConfirmationAtUtc { get; set; }
 
-        //[Required]
-        //[ForeignKey("OperatorId")]
-        //public int OperatorId { get; set; }
-        //public virtual OperatorModel Operator { get; set; } = new OperatorModel();
-
-        //[Required]
-        //[Column("OperatorApprovalDateUtc")]
-        //[DataType(DataType.DateTime)]
-        //public DateTime? OperatorApprovalDateUtc { get; set; } = null;
-
-        //[Required]
-        //[Column("BorrowerAcceptanceDateUtc")]
-        //[DataType(DataType.DateTime)]
-        //public DateTime? BorrowerAcceptanceDateUtc { get; set; } = null;
-
-        //[Required]
-        //[Column("PaymentConfirmationDateUtc")]
-        //[DataType(DataType.DateTime)]
-        //public DateTime? PaymentConfirmationDateUtc { get; set; } = null;
-
         public virtual ICollection<DebtVideoMetadataModel> DebtVideoMetadatas { get; set; } =
             new List<DebtVideoMetadataModel>();
     }

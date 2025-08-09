@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FinTrackWebApi.Data.Migrations
+namespace FinTrackWebApi.Data.Migrations.MyData
 {
     [DbContext(typeof(MyDataContext))]
     partial class MyDataContextModelSnapshot : ModelSnapshot
@@ -129,6 +129,10 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("BudgetName");
+
+                    b.Property<decimal?>("ReachedAmount")
+                        .HasColumnType("decimal(18, 2)")
+                        .HasColumnName("ReachedAmount");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("date")
@@ -888,8 +892,8 @@ namespace FinTrackWebApi.Data.Migrations
                         .HasColumnName("Status");
 
                     b.Property<string>("TransactionId")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("TransactionId");
 
                     b.Property<int>("UserId")

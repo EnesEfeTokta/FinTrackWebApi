@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack Backup Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .status-active {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border-left-color: #28a745;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        
+        .status-info {
+            background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+        
+        .status-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-card .icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        
+        .commands-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .commands-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .command-item {
+            background: #ffffff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .command-item h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .command-code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        
+        .links-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .link-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            color: #2c3e50;
+            border: 2px solid #ecf0f1;
+            transition: all 0.3s ease;
+        }
+        
+        .link-card:hover {
+            border-color: #3498db;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .link-card .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ FinTrack Backup Monitor</h1>
+            <p>Veritabanı yedekleme sistemi izleme paneli</p>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-card status-active">
+                <h3><span class="icon">✅</span>Backup Sistemi</h3>
+                <p><strong>Durum:</strong> Aktif ve çalışıyor</p>
+                <p><strong>Son Kontrol:</strong> <span id="currentTime"></span></p>
+            </div>
+            
+            <div class="status-card status-info">
+                <h3><span class="icon">📊</span>Yedekleme Planı</h3>
+                <p><strong>Günlük:</strong> Her gün 02:00 (Incremental)</p>
+                <p><strong>Haftalık:</strong> Pazar 03:00 (Full)</p>
+                <p><strong>Sağlık Kontrolü:</strong> Her 6 saatte</p>
+            </div>
+            
+            <div class="status-card status-warning">
+                <h3><span class="icon">⚠️</span>Önemli Bilgi</h3>
+                <p><strong>Retention:</strong> 7 günlük full backup</p>
+                <p><strong>Sıkıştırma:</strong> LZ4 aktif</p>
+                <p><strong>İzleme:</strong> Log tabanlı</p>
+            </div>
+        </div>
+        
+        <div class="commands-section">
+            <h2>🛠️ Yararlı Komutlar</h2>
+            
+            <div class="command-item">
+                <h4>Backup Durumunu Kontrol Et</h4>
+                <div class="command-code">docker exec pgbackrest_scheduler pgbackrest --stanza=myfintrackstanza info</div>
+            </div>
+            
+            <div class="command-item">
+                <h4>Manuel Full Backup Başlat</h4>
+                <div class="command-code">docker exec pgbackrest_scheduler /scripts/backup_full.sh</div>
+            </div>
+            
+            <div class="command-item">
+                <h4>Sistem Sağlığını Kontrol Et</h4>
+                <div class="command-code">docker exec pgbackrest_scheduler /scripts/health_check.sh</div>
+            </div>
+            
+            <div class="command-item">
+                <h4>Log Dosyalarını İzle</h4>
+                <div class="command-code">docker exec -it pgbackrest_scheduler tail -f /var/log/pgbackrest/incremental.log</div>
+            </div>
+            
+            <div class="command-item">
+                <h4>Backup Restore Örneği</h4>
+                <div class="command-code">docker exec pgbackrest_scheduler /scripts/restore_example.sh latest</div>
+            </div>
+        </div>
+        
+        <div class="links-section">
+            <a href="/logs/" class="link-card">
+                <div class="icon">📋</div>
+                <h3>Log Dosyaları</h3>
+                <p>Detaylı sistem logları</p>
+            </a>
+            
+            <a href="http://localhost:3000" class="link-card" target="_blank">
+                <div class="icon">📈</div>
+                <h3>Grafana</h3>
+                <p>Sistem metrikleri</p>
+            </a>
+            
+            <a href="http://localhost:9090" class="link-card" target="_blank">
+                <div class="icon">🎯</div>
+                <h3>Prometheus</h3>
+                <p>Metrics toplama</p>
+            </a>
+            
+            <a href="http://localhost:4040" class="link-card" target="_blank">
+                <div class="icon">🌐</div>
+                <h3>Ngrok</h3>
+                <p>Tunnel durumu</p>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>FinTrack Backup Monitor - Sistem otomatik olarak izleniyor</p>
+            <p>Sorun yaşadığınızda Docker loglarını kontrol edin</p>
+        </div>
+    </div>
+    
+    <script>
+        // Şu anki zamanı göster
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('tr-TR');
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
+        window.onload = function() {
+            console.log('FinTrack Backup Monitor loaded successfully');
+        };
+    </script>
+</body>
+</html>

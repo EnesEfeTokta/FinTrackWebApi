@@ -26,8 +26,10 @@
     <Compile Include="FinBotWebApi.py" />
     <Compile Include="Tools\AccountTools.py" />
     <Compile Include="Tools\BudgetTools.py" />
-    <Compile Include="Tools\FinanceTools.py" />
+    <Compile Include="Tools\CalculatorTools.py" />
+    <Compile Include="Tools\TransactionTools.py" />
     <Compile Include="Tools\MembershipTools.py" />
+    <Compile Include="Tools\_api_helpers.py" />
     <Compile Include="Tools\__init__.py" />
   </ItemGroup>
   <ItemGroup>

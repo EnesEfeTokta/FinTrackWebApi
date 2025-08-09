@@ -34,6 +34,10 @@ namespace FinTrackWebApi.Extensions
             .AddEntityFrameworkStores<MyDataContext>()
             .AddDefaultTokenProviders();
 
+            var logConnectionString = configuration.GetConnectionString("LogConnection");
+            services.AddDbContext<LogDataContext>(options =>
+                options.UseNpgsql(logConnectionString));
+
             return services;
         }
     }

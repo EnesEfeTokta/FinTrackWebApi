@@ -1,159 +1,102 @@
-# -*- coding: windows-1254 -*-
-
-import decimal
 import logging
-import os
 from typing import List, Dict, Any, Optional
-import requests
-from dotenv import load_dotenv
+from decimal import Decimal
+from ._api_helpers import _make_api_request
 
-load_dotenv()
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-FINTRACK_API_BASE_URL = os.getenv("FINTRACK_API_BASE_URL", "http://localhost:5246")
-
-def _make_api_request(endpoint: str, auth_token: Optional[str], method: str = "GET", params: Optional[Dict] = None, json_data: Optional[Dict] = None) -> Dict[str, Any] | List[Dict[str, Any]]:
-    if not auth_token:
-        logger.error("API isteði için Auth Token saðlanmadý. Endpoint: %s", endpoint)
-        return {"error": "Kimlik doðrulama bilgisi eksik."}
-
-    headers = {
-        "Authorization": f"Bearer {auth_token}",
-        "Accept": "application/json"
-    }
-    if method.upper() in ["POST", "PUT"] and json_data is not None:
-        headers["Content-Type"] = "application/json"
-
-    url = f"{FINTRACK_API_BASE_URL}{endpoint}"
-    
-    try:
-        logger.info(f"Python: FinTrack API'sine istek gönderiliyor: {method} {url}, Params: {params}, Data: {json_data}")
-        if method.upper() == "GET":
-            response = requests.get(url, headers=headers, params=params, timeout=15)
-        elif method.upper() == "POST":
-            response = requests.post(url, headers=headers, json=json_data, timeout=15)
-        elif method.upper() == "PUT":
-            response = requests.put(url, headers=headers, json=json_data, timeout=15)
-        elif method.upper() == "DELETE":
-            response = requests.delete(url, headers=headers, timeout=15)
-        else:
-            logger.error(f"Desteklenmeyen HTTP metodu: {method}")
-            return {"error": f"Desteklenmeyen HTTP metodu: {method}"}
-
-        if response.status_code == 204 and method.upper() == "DELETE":
-            logger.info(f"FinTrack API'den {method} isteði için 204 No Content yanýtý alýndý. Endpoint: {url}")
-            return {"message": "Ýþlem baþarýyla silindi."}
-            
-        response.raise_for_status()
-        
-        if response.status_code == 204:
-             logger.info(f"FinTrack API'den 204 No Content yanýtý alýndý. Endpoint: {url}")
-             return {} if method.upper() != "GET" or "history" not in endpoint else []
-        
-        return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        logger.error(f"Python: FinTrack API HTTP Hatasý: {http_err} - Yanýt: {http_err.response.text if http_err.response else 'Yanýt yok'}")
-        try:
-            error_detail = http_err.response.json() if http_err.response else {"message": "Sunucudan hata detayý alýnamadý."}
-            return {"error": f"API Hatasý: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": error_detail}
-        except ValueError:
-            return {"error": f"API Hatasý: {http_err.response.status_code if http_err.response else 'Bilinmiyor'}", "details": http_err.response.text if http_err.response else 'Yanýt yok'}
-    except requests.exceptions.RequestException as req_err:
-        logger.error(f"Python: FinTrack API Ýstek Hatasý: {req_err}")
-        return {"error": f"FinTrack API'sine ulaþýlamadý: {req_err}"}
-    except Exception as e:
-        logger.error(f"Python: FinTrack API isteðinde genel hata: {e}", exc_info=True)
-        return {"error": f"Bilinmeyen bir hata oluþtu: {e}"}
-
-GET_USER_BUDGETS_TOOL = {
-    "name": "get_user_budgets",
-    "description": "Kullanýcýnýn FinTrack sistemindeki tüm bütçelerini listeler.",
-    "parameters": {
-        "type": "OBJECT",
-        "properties": {},
-        "required": []
-    }
+GET_BUDGETS_TOOL = {
+    "name": "get_budgets",
+    "description": "Lists all of the user's budgets.",
+    "parameters": {"type": "object", "properties": {}, "required": []}
 }
 
 GET_BUDGET_DETAILS_TOOL = {
     "name": "get_budget_details",
-    "description": "Kullanýcýnýn belirli bir bütçesinin detaylarýný (ID ile) getirir.",
+    "description": "Fetches the details of a specific budget by its ID.",
     "parameters": {
         "type": "OBJECT",
-        "properties": {
-            "budget_id": {
-                "type": "INTEGER",
-                "description": "Detaylarý görüntülenecek bütçenin ID'si."
-            }
-        },
-        "required": ["budget_id"]
+        "properties": {"budgetId": {"type": "INTEGER", "description": "The ID of the budget to view."}},
+        "required": ["budgetId"]
     }
 }
 
 CREATE_BUDGET_TOOL = {
     "name": "create_budget",
-    "description": "Kullanýcý için yeni bir bütçe oluþturur.",
+    "description": "Creates a new budget. If the specified category does not exist, it will be created automatically.",
     "parameters": {
         "type": "OBJECT",
         "properties": {
-            "name": {"type": "STRING", "description": "Bütçenin adý (örneðin 'Aylýk Harcamalar', 'Tatil Fonu')."},
-            "description": {"type": "STRING", "description": "Bütçe için kýsa bir açýklama (isteðe baðlý)."},
-            "category": {"type": "STRING", "description": "Bütçenin kategorisi (örneðin 'Gýda', 'Ulaþým', 'Eðlence')."},
-            "start_date": {"type": "STRING", "description": "Bütçenin baþlangýç tarihi (YYYY-AA-GG formatýnda olmalý ama kullanýcý diðer formatlarda girer ise onu da YYYY-AA-GG formatýna çevir.)."},
-            "allocatedAmount": {"type": "NUMBER", "description": "Bütçeye ayrýlan toplam miktar (isteðe baðlý, varsayýlan: 0)."},
-            "currency" : {"type": "STRING", "description": "Bütçenin para birimi (Sadece alabileceði deðerler 'TRY', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF')."},
-            "end_date": {"type": "STRING", "description": "Bütçenin bitiþ tarihi (YYYY-AA-GG formatýnda olmalý ama kullanýcý diðer formatlarda girer ise onu da YYYY-AA-GG formatýna çevir.)."},
-            "is_active": {"type": "BOOLEAN", "description": "Bütçenin aktif olup olmadýðý (varsayýlan: true)."}
+            "name": {"type": "STRING", "description": "The name of the budget (e.g., 'Monthly Expenses', 'Vacation Fund')."},
+            "category": {"type": "STRING", "description": "The category for the budget (e.g., 'Food', 'Transport', 'Entertainment')."},
+            "allocatedAmount": {"type": "NUMBER", "description": "The total amount allocated to the budget."},
+            "currency" : {"type": "STRING", "description": "The currency of the budget. e.g., 'TRY', 'USD', 'EUR'."},
+            "startDate": {"type": "STRING", "description": "The start date of the budget (YYYY-MM-DD format)."},
+            "endDate": {"type": "STRING", "description": "The end date of the budget (YYYY-MM-DD format)."},
+            "description": {"type": "STRING", "description": "A short description for the budget (optional)."},
+            "isActive": {"type": "BOOLEAN", "description": "Indicates if the budget is active (optional, defaults to true)."}
         },
-        "required": ["name", "category", "allocatedAmount", "currency", "start_date", "end_date"]
+        "required": ["name", "category", "allocatedAmount", "currency", "startDate", "endDate"]
     }
 }
 
-def get_user_budgets(auth_token: Optional[str]) -> List[Dict[str, Any]]:
-    """Kullanýcýnýn tüm bütçelerini FinTrack API'sinden alýr."""
-    logger.info(f"Python: get_user_budgets çaðrýldý.")
-    result = _make_api_request("/Budgets", auth_token)
-    return result if isinstance(result, list) else [result] if isinstance(result, dict) and "error" in result else []
+GET_CATEGORIES_TOOL = {
+    "name": "get_categories",
+    "description": "Lists all available spending and income categories defined by the user.",
+    "parameters": {"type": "OBJECT", "properties": {}, "required": []}
+}
 
-def get_budget_details(budget_id: int, auth_token: Optional[str]) -> Dict[str, Any]:
-    """Fetches the details of a specific budget from the FinTrack API."""
-    logger.info(f"Python: get_budget_details called. BudgetID: {budget_id}")
-    return _make_api_request(f"/Budgets/{budget_id}", auth_token)
+def get_budgets(auth_token: Optional[str]) -> List[Dict[str, Any]]:
+    """Fetches all budgets for the user."""
+    logger.info("Python: get_budgets called.")
+    return _make_api_request("/Budgets", auth_token)
+
+def get_budget_details(budgetId: int, auth_token: Optional[str]) -> Dict[str, Any]:
+    """Fetches the details of a specific budget."""
+    logger.info(f"Python: get_budget_details called. BudgetID: {budgetId}")
+    return _make_api_request(f"/Budgets/{budgetId}", auth_token)
 
 def create_budget(
     name: str, 
-    start_date: str, 
-    end_date: str, 
-    allocatedAmount: decimal,
-    currency: str,
     category: str,
+    allocatedAmount: Decimal,
+    currency: str,
+    startDate: str, 
+    endDate: str, 
+    auth_token: Optional[str],
     description: Optional[str] = None, 
-    is_active: bool = True, 
-    auth_token: Optional[str] = None) -> Dict[str, Any]:
-    """Creates a new budget."""
-    logger.info(f"Python: create_budget called. Name: {name}, Start: {start_date}, End: {end_date}")
+    isActive: bool = True
+) -> Dict[str, Any]:
+    """Creates a new budget. The API handles category creation implicitly."""
+    logger.info(f"Python: create_budget called. Name: {name}, Category: {category}")
     payload = {
         "name": name,
         "description": description,
         "category": category,
-        "startDate": start_date,
-        "endDate": end_date,
         "allocatedAmount": allocatedAmount,
         "currency": currency.upper(),
-        "isActive": is_active
+        "startDate": startDate,
+        "endDate": endDate,
+        "isActive": isActive
     }
     return _make_api_request("/Budgets", auth_token, method="POST", json_data=payload)
 
+def get_categories(auth_token: Optional[str]) -> List[Dict[str, Any]]:
+    """Fetches all categories from the CategoriesController."""
+    logger.info("Python: get_categories called.")
+    return _make_api_request("/Categories", auth_token)
+
+
 BUDGET_AVAILABLE_TOOLS = [
-    GET_USER_BUDGETS_TOOL,
+    GET_BUDGETS_TOOL,
     GET_BUDGET_DETAILS_TOOL,
     CREATE_BUDGET_TOOL,
+    GET_CATEGORIES_TOOL,
 ]
 
 BUDGET_FUNCTION_MAPPING = {
-    "get_user_budgets": get_user_budgets,
+    "get_budgets": get_budgets,
     "get_budget_details": get_budget_details,
     "create_budget": create_budget,
+    "get_categories": get_categories,
 }

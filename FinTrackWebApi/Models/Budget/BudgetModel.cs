@@ -16,6 +16,7 @@ namespace FinTrackWebApi.Models.Budget
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public decimal AllocatedAmount { get; set; }
+        public decimal? ReachedAmount { get; set; }
         public BaseCurrencyType Currency { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

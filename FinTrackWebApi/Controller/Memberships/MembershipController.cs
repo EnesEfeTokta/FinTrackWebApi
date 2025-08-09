@@ -50,7 +50,7 @@ namespace FinTrackWebApi.Controller.Memberships
         }
 
         [HttpGet("current")]
-        public async Task<ActionResult<UserMembershipDto>> GetCurrentUserActiveMembership()
+        public async Task<IActionResult> GetCurrentUserActiveMembership()
         {
             var userId = GetAuthenticatedUserId();
             var activeMembership = await _context
@@ -78,7 +78,7 @@ namespace FinTrackWebApi.Controller.Memberships
         }
 
         [HttpGet("history")]
-        public async Task<ActionResult<IEnumerable<UserMembershipDto>>> GetUserMembershipHistory()
+        public async Task<IActionResult> GetUserMembershipHistory()
         {
             var userId = GetAuthenticatedUserId();
 
@@ -86,6 +86,7 @@ namespace FinTrackWebApi.Controller.Memberships
                 .UserMemberships.Include(um => um.Plan)
                 .Where(um => um.UserId == userId)
                 .OrderByDescending(um => um.StartDate)
+                .AsNoTracking()
                 .Select(um => new UserMembershipDto
                 {
                     Id = um.Id,
@@ -102,12 +103,12 @@ namespace FinTrackWebApi.Controller.Memberships
 
         [HttpGet("plans")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<PlanFeatureCreateDto>>> GetAvailablePlans()
+        public async Task<IActionResult> GetAvailablePlans()
         {
             try
             {
                 var plans = await _context.MembershipPlans
-                    .Where(p => p.IsActive)
+                    .Where(p => p.IsActive).AsNoTracking()
                     .Select(p => new PlanFeatureDto
                     {
                         Id = p.Id,
@@ -140,14 +141,15 @@ namespace FinTrackWebApi.Controller.Memberships
             }
         }
 
-        [HttpGet("plan{Id}")]
+        [HttpGet("plan/{Id}")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<PlanFeatureCreateDto>>> GetAvailablePlans(int Id)
+        public async Task<IActionResult> GetAvailablePlans(int Id)
         {
             try
             {
                 var plan = await _context.MembershipPlans
                     .Where(p => p.IsActive && p.Id == Id)
+                    .AsNoTracking()
                     .Select(p => new PlanFeatureDto
                     {
                         Id = p.Id,
@@ -232,7 +234,7 @@ namespace FinTrackWebApi.Controller.Memberships
             }
         }
 
-        [HttpPut("plan{Id}")]
+        [HttpPut("plan/{Id}")]
         public async Task<IActionResult> UpdateMembershipPlan(
             int Id,
             [FromBody] PlanFeatureUpdateDto planDto
@@ -286,7 +288,7 @@ namespace FinTrackWebApi.Controller.Memberships
             }
         }
 
-        [HttpDelete("plan{Id}")]
+        [HttpDelete("plan/{Id}")]
         public async Task<IActionResult> DeleteMembershipPlan(int Id)
         {
             try
@@ -433,7 +435,7 @@ namespace FinTrackWebApi.Controller.Memberships
             {
                 var session = await _paymentService.CreateCheckoutSessionAsync(
                     planToSubscribe.Price,
-                    planToSubscribe.Currency.ToString(),
+                    planToSubscribe.Currency.ToString() ?? "USD",
                     planToSubscribe.Name,
                     planToSubscribe.Description,
                     successUrl,

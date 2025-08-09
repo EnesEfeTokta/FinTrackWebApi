@@ -1,6 +1,5 @@
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -14,17 +13,17 @@ scrape_configs:
   - job_name: 'fintrack_api'
     metrics_path: /metrics
     static_configs:
-      - targets: ['fintrack_api:8080']
+      - targets: ['fintrack_api:80']
 
   - job_name: 'finbot_api'
     metrics_path: /metrics
     static_configs:
       - targets: ['finbot_api:8000']
-
+  
   - job_name: 'postgresql'
     static_configs:
       - targets: ['postgres_exporter:9187']
 
-  - job_name: 'node_exporter'
+  - job_name: 'node'
     static_configs:
       - targets: ['node_exporter:9100']

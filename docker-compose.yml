@@ -1,26 +1,33 @@
-version: '3.8'
-
 services:
-  # ASP.Net'in yapılandırması
+  # ASP.NET Web API servisi
   fintrackwebapi:
     build:
       context: ./FinTrackWebApi
       dockerfile: Dockerfile
     container_name: fintrack_api
     ports:
-      - "5000:8080"
+      - "8090:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - FinBotApiUrl=http://finbotwebapi:8000
-      - ConnectionStrings__DefaultConnection=Host=db_postgres;Port=5432;Database=myfintrackdb;Username=postgres;Password=140xxx-+
+      - ASPNETCORE_URLS=http://+:80
+      - PythonChatBotService__Url=http://finbot_api:8000/chat
+      - ConnectionStrings__DefaultConnection=Host=postgres_db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__LogConnection=Host=postgres_db_logs;Port=5432;Database=myfintrack_logs;Username=postgres;Password=${LOG_DB_PASSWORD}
+    volumes:
+      - ./storage/unapproved:/app/videos/unapproved
+      - ./storage/encrypted:/app/videos/encrypted
     depends_on:
-      - finbotwebapi
-      - db_postgres
-      - ollama
+      finbotwebapi:
+        condition: service_started
+      db_postgres:
+        condition: service_healthy
+      postgres_db_logs:
+        condition: service_healthy
     networks:
       - fintrac_network
+    restart: unless-stopped
 
-  # Ngrok 'un' yapılandırması
+  # Ngrok tüneli (dış erişim için)
   ngrok:
     image: ngrok/ngrok:latest
     container_name: ngrok_tunnel
@@ -28,50 +35,113 @@ services:
     ports:
       - "4040:4040"
     environment:
-        - NGROK_AUTHTOKEN=YOUR_KEY
-    command:
-      - "http"
-      - "fintrack_api:8080"
-      - "--log=stdout"
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: ["http", "fintrack_api:80", "--log=stdout"]
     depends_on:
       - fintrackwebapi
     networks:
       - fintrac_network
 
-  # FinBot yapılandırması
+  # Python tabanlı FinBot API
   finbotwebapi:
     build:
       context: ./FinBotWebApi
       dockerfile: Dockerfile
     container_name: finbot_api
     ports:
-      - "5001:8000"
+      - "8000:8000"
     env_file:
       - ./FinBotWebApi/.env
     environment:
+      - FINTRACK_API_BASE_URL=http://fintrackwebapi:80
       - OLLAMA_API_URL=http://ollama:11434
     depends_on:
       - ollama
     networks:
       - fintrac_network
+    restart: unless-stopped
 
-  # Veritabanının yapılandırması
+  # Ana PostgreSQL veritabanı
   db_postgres:
     image: postgres:15
     container_name: postgres_db
     ports:
       - "5433:5432"
     environment:
-      - POSTGRES_DB=myfintrackdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=140xxx-+
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - fintrac_network
     restart: unless-stopped
 
-  # Ollama yapılandırması
+  # PostgreSQL yedekleme servisi (her gece 03:00'te yedek alır)
+  postgres_backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: postgres_backup_service
+    restart: always
+    environment:
+      - POSTGRES_HOST=postgres_db
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SCHEDULE=0 3 * * *
+      - BACKUP_DIR=/backups
+      - BACKUP_KEEP_DAYS=7
+      - DUMP_FILENAME=${POSTGRES_DB}-%Y-%m-%d_%H-%M-%S.sql.gz
+      - HEALTHCHECK_PORT=8080
+    ports:
+      - "8082:8080"
+    volumes:
+      - pgbackrest_repo:/backups
+    depends_on:
+      db_postgres:
+        condition: service_healthy
+    networks:
+      - fintrac_network
+
+  # Loglar için PostgreSQL veritabanı
+  postgres_db_logs:
+    image: postgres:15
+    container_name: postgres_db_logs
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=myfintrack_logs
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${LOG_DB_PASSWORD}
+    volumes:
+      - log_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d myfintrack_logs"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fintrac_network
+
+  # Yedekleme izleme paneli
+  backup_monitor_simple:
+    image: nginx:alpine
+    container_name: backup_dashboard
+    ports:
+      - "8081:80"
+    volumes:
+      - ./monitoring/html:/usr/share/nginx/html:ro
+      - backup_logs:/var/log/pgbackrest:ro
+    networks:
+      - fintrac_network
+    restart: unless-stopped
+
+  # Ollama (AI modeli için)
   ollama:
     image: ollama/ollama
     container_name: ollama
@@ -90,9 +160,9 @@ services:
               count: 1
               capabilities: [gpu]
 
-  # Grafana yapılandırması
+  # Grafana (izleme ve görselleştirme)
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana-oss:latest
     container_name: grafana
     ports:
       - "3000:3000"
@@ -102,8 +172,9 @@ services:
       - fintrac_network
     depends_on:
       - prometheus
+    restart: unless-stopped
 
-  # Prometheus yapılandırması
+  # Prometheus (metrik toplama)
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -121,8 +192,9 @@ services:
     depends_on:
       - cadvisor
       - postgres_exporter
+    restart: unless-stopped
 
-  # cAdvisor yapılandırması
+  # cAdvisor (konteyner izleme)
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
@@ -133,31 +205,28 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
+    privileged: true
     networks:
       - fintrac_network
-    privileged: true
-    environment:
-      - DOCKER_HOST_IP=host.docker.internal
+    restart: unless-stopped
 
-  # PostgreSQL Exporter yapılandırması
+  # PostgreSQL metrik exporter
   postgres_exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     container_name: postgres_exporter
-    ports:
-      - "9187:9187"
     environment:
-      - DATA_SOURCE_NAME=postgresql://postgres:140xxx-+@db_postgres:5432/myfintrackdb?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_postgres:5432/${POSTGRES_DB}?sslmode=disable
     networks:
       - fintrac_network
     depends_on:
-      - db_postgres
+      db_postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
-  # Node Exporter yapılandırması
+  # Node Exporter (sistem metrikleri)
   node_exporter:
     image: prom/node-exporter:latest
     container_name: node_exporter
-    restart: unless-stopped
     ports:
       - "9100:9100"
     volumes:
@@ -168,17 +237,23 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - '--path.rootfs=/rootfs'
+      - '--collector.systemd'
+      - '--collector.processes'
     networks:
       - fintrac_network
+    restart: unless-stopped
 
+# Ağ tanımları
 networks:
   fintrac_network:
     driver: bridge
 
+# Volume tanımları
 volumes:
   postgres_data:
-    driver: local
+  pgbackrest_repo:
   ollama_data:
-    driver: local
   grafana-storage:
   prometheus-storage:
+  backup_logs:
+  log_db_data:
