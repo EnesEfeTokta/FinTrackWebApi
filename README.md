@@ -8,10 +8,6 @@
 
 **Mikroservis Mimarisi ile Geliştirilmiş Yeni Nesil Finansal Yönetim Platformu**
 
-**Proje Sahibi:** [Adınız Soyadınız]
-**Tarih:** 24.05.2024
-**Versiyon:** 2.0
-
 ---
 
 ### **İçindekiler**
