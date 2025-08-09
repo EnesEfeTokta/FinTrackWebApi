@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+<<<<<<< Updated upstream
     <data-source
       source="LOCAL"
       name="myfintrackdb@localhost"
       uuid="6f5ea6b3-73ba-4b4e-876f-865c785bb3f1"
     >
+=======
+    <data-source source="LOCAL" name="myfintrackdb@localhost" uuid="6f5ea6b3-73ba-4b4e-876f-865c785bb3f1">
+>>>>>>> Stashed changes
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <configured-by-url>true</configured-by-url>
@@ -14,4 +18,8 @@
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
+<<<<<<< Updated upstream
 </project>
+=======
+</project>
+>>>>>>> Stashed changes

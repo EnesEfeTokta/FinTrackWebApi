@@ -17,7 +17,7 @@
 *.userprefs
 
 # User-specific files
-
+appsettings.json
 appsettings.Development.json
 
 # Mono auto generated files
