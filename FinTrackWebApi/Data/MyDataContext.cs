@@ -207,6 +207,11 @@ namespace FinTrackWebApi.Data
                       .HasConversion<string>()
                       .HasDefaultValue(BaseCurrencyType.TRY)
                       .IsRequired(true);
+                entity.Property(s => s.Language)
+                        .HasColumnName("Language")
+                        .HasConversion<string>()
+                        .HasDefaultValue(LanguageType.Turkish)
+                        .IsRequired(true);
                 entity.Property(s => s.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone")
@@ -1253,8 +1258,8 @@ namespace FinTrackWebApi.Data
                     {
                         if (property.IsModified)
                         {
-                            oldValues[property.Metadata.Name] = property.OriginalValue;
-                            newValues[property.Metadata.Name] = property.CurrentValue;
+                            oldValues[property.Metadata.Name] = property.OriginalValue ?? null!;
+                            newValues[property.Metadata.Name] = property.CurrentValue ?? null!;
                         }
                     }
                     if (oldValues.Any()) changes["OldValues"] = oldValues;

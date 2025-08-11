@@ -2,6 +2,6 @@
 {
     public class UpdateProfilePictureDto
     {
-        public string ProfilePictureUrl = string.Empty;
+        public string ProfilePictureUrl { get; set; } = string.Empty;
     }
 }
