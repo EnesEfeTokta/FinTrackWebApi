@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your New Email Address - FinTrack</title>
+    <style>
+        /* Reset & Base */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+        }
+
+        img {
+            border: 0;
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        /* Container */
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .header {
+            background-color: #24292e;
+            padding: 20px;
+            text-align: center;
+        }
+
+            .header img {
+                width: 120px;
+            }
+
+        /* Hero Section */
+        .hero {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+            .hero h1 {
+                font-size: 24px;
+                color: #24292e;
+                margin-bottom: 10px;
+            }
+
+            .hero p {
+                font-size: 16px;
+                color: #586069;
+                margin: 0 0 20px;
+                line-height: 1.5;
+            }
+
+        /* Code Box */
+        .code-box {
+            background-color: #f1f8ff;
+            border: 1px solid #c8e1ff;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 22px;
+            text-align: center;
+            border-radius: 4px;
+            color: #24292e;
+            margin: 20px auto;
+            max-width: 260px;
+            letter-spacing: 5px; /* Rakamların arasını açmak için */
+        }
+
+        /* Content */
+        .content {
+            padding: 0 20px 20px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+        }
+
+            .content p {
+                margin: 10px 0;
+            }
+
+        /* Closing */
+        .closing {
+            padding: 20px;
+            font-size: 16px;
+            color: #24292e;
+            line-height: 1.6;
+        }
+
+            .closing a {
+                color: #0366d6;
+                font-weight: 600;
+            }
+
+        /* Footer */
+        .footer {
+            background: #24292e;
+            color: #adbac7;
+            font-size: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+            .footer a {
+                color: #adbac7;
+                text-decoration: underline;
+            }
+
+            .footer .disclaimer {
+                margin-top: 10px;
+                font-style: italic;
+                color: #8b949e;
+            }
+    </style>
+</head>
+<body>
+    <table role="presentation" style="background-color: #f6f8fa;">
+        <tr>
+            <td>
+                <table role="presentation" class="email-container">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <img src="[LOGO_URL]" alt="FinTrack Logo">
+                        </td>
+                    </tr>
+
+                    <!-- Hero -->
+                    <tr>
+                        <td class="hero">
+                            <h1>Confirm Your New Email Address</h1>
+                            <p>Hi [UserName], you requested to change the email address for your FinTrack account. Please use the code below to confirm that this new email address belongs to you.</p>
+                            <div class="code-box">[CONFIRMATION_CODE]</div>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td class="content">
+                            <p>To complete the change, enter this code in the application. This code is valid for 15 minutes.</p>
+                            <p>If you did not request this change, you can safely ignore this email. No changes will be made to your account.</p>
+                        </td>
+                    </tr>
+
+                    <!-- Closing -->
+                    <tr>
+                        <td class="closing">
+                            <p>Need help? Visit our <a href="[SUPPORT_LINK]">Support Center</a>.</p>
+                            <p>Cheers,<br><strong>The FinTrack Team</strong></p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            You received this email because an email change was requested for your FinTrack account.<br>
+                            © [YEAR] FinTrack. All rights reserved.<br>
+                            <a href="[PREFERENCES_LINK]">Manage Email Preferences</a>
+                            <p class="disclaimer">FinTrack is an educational project. Use responsibly.</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

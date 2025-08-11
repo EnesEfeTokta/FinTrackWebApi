@@ -26,6 +26,8 @@ namespace FinTrackWebApi.Data
         private readonly LogDataContext _logDataContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+        private readonly UserManager<IdentityUser> _userManager;
+
         public MyDataContext(
             DbContextOptions<MyDataContext> options,
             LogDataContext logDataContext,
