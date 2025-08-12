@@ -6,5 +6,6 @@ namespace FinTrackWebApi.Dtos.UserSettingsDtos
     {
         public AppearanceType Appearance { get; set; }
         public BaseCurrencyType Currency { get; set; }
+        public LanguageType Language { get; set; }
     }
 }

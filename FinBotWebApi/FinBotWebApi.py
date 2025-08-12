@@ -14,24 +14,21 @@ from prometheus_client import generate_latest, Counter, Histogram
 import time
 from datetime import datetime, timezone
 
-# --- Tool Imports ---
 from Tools.TransactionTools import TRANSACTION_AVAILABLE_TOOLS, TRANSACTION_FUNCTION_MAPPING
 from Tools.MembershipTools import MEMBERSHIP_AVAILABLE_TOOLS, MEMBERSHIP_FUNCTION_MAPPING
 from Tools.BudgetTools import BUDGET_AVAILABLE_TOOLS, BUDGET_FUNCTION_MAPPING
 from Tools.AccountTools import ACCOUNT_AVAILABLE_TOOLS, ACCOUNT_FUNCTION_MAPPING
 from Tools.CalculatorTools import CALCULATOR_AVAILABLE_TOOLS, CALCULATOR_FUNCTION_MAPPING
+from Tools.FaqTools import FAQ_AVAILABLE_TOOLS, FAQ_FUNCTION_MAPPING
 
-# --- Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
 logger = logging.getLogger(__name__)
 load_dotenv()
 
-# --- Configuration ---
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
 OLLAMA_MODEL_NAME = "mistral:instruct"
 app = FastAPI(title="FinTrack ChatBot Service - User-Centric Edition")
 
-# --- Prometheus & Middleware (No changes) ---
 REQUEST_COUNT = Counter('finbot_http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status_code'])
 REQUEST_LATENCY = Histogram('finbot_http_request_duration_seconds', 'HTTP request latency', ['endpoint'])
 MESSAGES_PROCESSED_TOTAL = Counter('finbot_messages_processed_total', 'Total messages processed')
@@ -49,7 +46,6 @@ async def add_process_time_header(request: Request, call_next):
     REQUEST_LATENCY.labels(endpoint=endpoint).observe(process_time)
     return response
 
-# --- Pydantic Models (No changes) ---
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -65,7 +61,6 @@ class ChatResponse(BaseModel):
     reply: str
     responseTime: datetime
 
-# --- Secure Tool Merging (No changes) ---
 def merge_tool_mappings(*mappings: Dict[str, callable]) -> Dict[str, callable]:
     merged = {}
     for mapping in mappings:
@@ -77,20 +72,20 @@ def merge_tool_mappings(*mappings: Dict[str, callable]) -> Dict[str, callable]:
 
 ALL_AVAILABLE_TOOLS = (
     TRANSACTION_AVAILABLE_TOOLS + MEMBERSHIP_AVAILABLE_TOOLS +
-    BUDGET_AVAILABLE_TOOLS + ACCOUNT_AVAILABLE_TOOLS + CALCULATOR_AVAILABLE_TOOLS
+    BUDGET_AVAILABLE_TOOLS + ACCOUNT_AVAILABLE_TOOLS + CALCULATOR_AVAILABLE_TOOLS +
+    FAQ_AVAILABLE_TOOLS
 )
 try:
     ALL_FUNCTION_MAPPING = merge_tool_mappings(
         TRANSACTION_FUNCTION_MAPPING, MEMBERSHIP_FUNCTION_MAPPING, BUDGET_FUNCTION_MAPPING,
-        ACCOUNT_FUNCTION_MAPPING, CALCULATOR_FUNCTION_MAPPING
+        ACCOUNT_FUNCTION_MAPPING, CALCULATOR_FUNCTION_MAPPING,
+        FAQ_FUNCTION_MAPPING
     )
 except NameError as e:
     logger.error(e)
     raise SystemExit(f"CRITICAL STARTUP ERROR: {e}")
 
 ALL_TOOLS_JSON_STRING = json.dumps(ALL_AVAILABLE_TOOLS, indent=2)
-
-# --- USER-CENTRIC PROMPT ENGINEERING ---
 
 SYSTEM_PROMPT = """You are FinBot, an expert, proactive, and transparent financial assistant. Your primary goal is to help the user while making them feel in control and informed.
 
@@ -173,15 +168,11 @@ async def chat_endpoint(request: ChatRequest = Body(...)):
     final_reply_text = "I'm sorry, I encountered an issue and can't respond right now."
 
     try:
-        # Determine if the user's message is a simple confirmation like "yes", "ok", "proceed"
         is_confirmation = request.message.lower().strip() in ["yes", "yep", "ok", "okay", "proceed", "sure", "do it"]
 
-        # Build the initial context for the model
         generation_prompt = get_generation_prompt(ALL_TOOLS_JSON_STRING, request.message, request.history)
         
-        # If it's a confirmation, we force the model to call the tool it previously suggested.
         if is_confirmation and request.history:
-            # We assume the last assistant message was a plan proposal. We use that context.
             forced_tool_prompt = get_forced_tool_call_prompt(generation_prompt)
             model_response_str = _call_ollama(forced_tool_prompt)
         else:

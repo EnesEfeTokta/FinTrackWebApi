@@ -26,7 +26,7 @@ namespace FinTrackWebApi.Data
         private readonly LogDataContext _logDataContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<IdentityUser>? _userManager;
 
         public MyDataContext(
             DbContextOptions<MyDataContext> options,
@@ -210,7 +210,7 @@ namespace FinTrackWebApi.Data
                 entity.Property(s => s.Language)
                         .HasColumnName("Language")
                         .HasConversion<string>()
-                        .HasDefaultValue(LanguageType.Turkish)
+                        .HasDefaultValue(LanguageType.tr_TR)
                         .IsRequired(true);
                 entity.Property(s => s.CreatedAtUtc)
                         .HasColumnName("CreatedAtUtc")

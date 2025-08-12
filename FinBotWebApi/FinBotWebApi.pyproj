@@ -27,6 +27,7 @@
     <Compile Include="Tools\AccountTools.py" />
     <Compile Include="Tools\BudgetTools.py" />
     <Compile Include="Tools\CalculatorTools.py" />
+    <Compile Include="Tools\FaqTools.py" />
     <Compile Include="Tools\TransactionTools.py" />
     <Compile Include="Tools\MembershipTools.py" />
     <Compile Include="Tools\_api_helpers.py" />
@@ -38,6 +39,7 @@
   <ItemGroup>
     <Content Include=".env" />
     <Content Include="Dockerfile" />
+    <Content Include="faq_data.json" />
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
