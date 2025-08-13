@@ -215,7 +215,43 @@ namespace FinTrackWebApi.Controller.Currencies
                 return NotFound($"Could not calculate cross-rates for {baseCode}/{targetCode} in the given period.");
             }
 
-            var changeSummary = CalculateChangeSummary(historicalRates);
+            decimal? dailyLow = null;
+            decimal? dailyHigh = null;
+
+            var dailyCalculationStartDate = endDate.AddDays(-1);
+
+            var timestampsInLast24Hours = allRatesFromHistory
+                .Where(r => r.FetchTimestamp >= dailyCalculationStartDate)
+                .Select(r => r.FetchTimestamp)
+                .Distinct()
+                .OrderBy(t => t);
+
+            var crossRatesLast24Hours = new List<decimal>();
+
+            foreach (var timestamp in timestampsInLast24Hours)
+            {
+                var baseRateAtTime = baseCode == "USD" ? 1.0m : allRatesFromHistory
+                    .LastOrDefault(r => r.Code == baseCode && r.FetchTimestamp <= timestamp)?.Rate;
+
+                var targetRateAtTime = targetCode == "USD" ? 1.0m : allRatesFromHistory
+                    .LastOrDefault(r => r.Code == targetCode && r.FetchTimestamp <= timestamp)?.Rate;
+
+                if (baseRateAtTime.HasValue && baseRateAtTime.Value != 0 && targetRateAtTime.HasValue)
+                {
+                    crossRatesLast24Hours.Add(targetRateAtTime.Value / baseRateAtTime.Value);
+                }
+            }
+
+            if (crossRatesLast24Hours.Any())
+            {
+                var finalRate = historicalRates.LastOrDefault()?.Rate;
+                if (finalRate.HasValue) crossRatesLast24Hours.Add(finalRate.Value);
+
+                dailyLow = crossRatesLast24Hours.Min();
+                dailyHigh = crossRatesLast24Hours.Max();
+            }
+
+            var changeSummary = CalculateChangeSummary(historicalRates, dailyLow, dailyHigh);
 
             return Ok(new CurrencyHistoryDto
             {
@@ -295,17 +331,21 @@ namespace FinTrackWebApi.Controller.Currencies
             return Ok(resultDto);
         }
 
-        private ChangeSummaryDto CalculateChangeSummary(List<HistoricalRatePointDto> rates)
+        private ChangeSummaryDto CalculateChangeSummary(List<HistoricalRatePointDto> rates, decimal? dailyLow, decimal? dailyHigh)
         {
+            var summary = new ChangeSummaryDto
+            {
+                DailyLow = dailyLow,
+                DailyHigh = dailyHigh
+            };
+
             if (rates == null || rates.Count < 2)
             {
-                return new ChangeSummaryDto();
+                return summary;
             }
 
             var sortedRates = rates.OrderBy(r => r.Date).ToList();
             var latestRatePoint = sortedRates.Last();
-
-            var summary = new ChangeSummaryDto();
 
             var dayBeforeLast = sortedRates[^2];
             if (dayBeforeLast.Rate != 0)

@@ -1,9 +1,7 @@
-# .NET build çıktıları ve kullanıcıya özel dosyalar
 **/bin/
 **/obj/
 *.*proj.user
 
-# IDE ve Git dosyaları
 .idea/
 .vs/
 .vscode/

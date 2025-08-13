@@ -2,6 +2,10 @@
 {
     public class ChangeSummaryDto
     {
+        // Günlük
+        public decimal? DailyLow { get; set; }
+        public decimal? DailyHigh { get; set; }
+
         // Değişim Miktarı
         public decimal? DailyChangeValue { get; set; }
         public decimal? WeeklyChangeValue { get; set; }

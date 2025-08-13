@@ -1,17 +1,13 @@
-# Sanal ortam klasörü
 env/
 venv/
 .venv/
 
-# Python cache
 __pycache__/
 *.pyc
 
-# IDE ve Git dosyaları
 .idea/
 .vscode/
 .git/
 .gitignore
 
-# Hassas bilgiler
 .env

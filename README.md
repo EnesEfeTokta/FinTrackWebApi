@@ -1,9 +1,9 @@
-### **FinTrack Projesi: Kapsamlı Teknik ve İşlevsel Dokümantasyon**
+# **FinTrack Projesi: Kapsamlı Teknik ve İşlevsel Dokümantasyon**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/EnesEfeTokta/FinTrackWebApi)
 [![Lisans](https://img.shields.io/badge/license-GPL-blue)](LICENSE)
 [![.NET Versiyonu](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/download/dotnet/8.0)
-[![Python Versiyonu](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![Python Versiyonu](https://img.shields.io/badge/Python-3.10-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
 
 **Mikroservis Mimarisi ile Geliştirilmiş Yeni Nesil Finansal Yönetim Platformu**
@@ -25,7 +25,8 @@
 7.  **Anahtar Sistemler ve İş Akışları**
     *   7.1. Kullanıcı Kimlik Doğrulama ve Kayıt (OTP & JWT)
     *   7.2. Güvenli Borç Sistemi (GBS)
-    *   7.3. Dinamik Kur Yönetim Sistemi
+    *   7.3. Çok Formatlı Raporlama Sistemi
+    *   7.4. Dinamik Kur Yönetim Sistemi
 8.  **DevOps, Konteynerizasyon ve Gözetim (Monitoring)**
     *   8.1. Docker Mimarisi ve Servisler
     *   8.2. Gözetim ve Sağlık Durumu İzleme (Prometheus & Grafana)
@@ -42,7 +43,7 @@
 
 ### **1. Yönetici Özeti**
 
-FinTrack, bireysel ve profesyonel kullanıcıların finansal hayatlarını tam kontrol altına almalarını sağlayan, yeni nesil bir **Hizmet Olarak Yazılım (SaaS)** platformudur. Mikroservis mimarisi üzerine inşa edilen proje, ana iş mantığını yürüten **FinTrackWebApi**, yapay zeka operasyonlarını yöneten **FinBotWebApi** ve sistemin genel idaresini sağlayan **WinTrackManagerPanel** servislerinden oluşur. Kapsamlı özellik seti, yapay zeka destekli akıllı asistanı ve çoklu platform desteği ile FinTrack, finansal yönetimde karmaşıklığı ortadan kaldırarak kullanıcılarına netlik, güvenlik ve verimlilik sunar.
+FinTrack, bireysel ve profesyonel kullanıcıların finansal hayatlarını tam kontrol altına almalarını sağlayan, yeni nesil bir **Hizmet Olarak Yazılım (SaaS)** platformudur. Mikroservis mimarisi üzerine inşa edilen proje, ana iş mantığını yürüten **FinTrackWebApi**, yapay zeka operasyonlarını yöneten **FinBotWebApi** ve sistemin genel idaresini sağlayan WinTrackManagerPanel(Geliştirme aşamasında...) servislerinden oluşur. Kapsamlı özellik seti, çok formatlı profesyonel raporlama yeteneği, yapay zeka destekli akıllı asistanı ve çoklu platform desteği ile FinTrack, finansal yönetimde karmaşıklığı ortadan kaldırarak kullanıcılarına netlik, güvenlik ve verimlilik sunar.
 
 ### **2. Proje Vizyonu ve Hedef Kitle**
 
@@ -93,19 +94,31 @@ FinTrack, birbirinden bağımsız, ölçeklenebilir ve esnek birimlerden oluşan
 *   **Merkezi Veri Yönetimi (Store Pattern):** `AccountStore`, `BudgetStore` gibi merkezi servisler (Store'lar) kullanılarak veri yönetimi tekilleştirilir. Bu, bileşenler arası veri tutarlılığını sağlar ve API'ye yapılan çağrıları optimize eder.
 
 #### **5.4. Veritabanı Mimarisi ve Stratejisi**
-*   **Veritabanı Motoru:** **PostgreSQL v15**
-*   **ORM:** **Entity Framework (EF) Core 8.0**
-*   **İkili Veritabanı Stratejisi:**
-    *   **MainDB:** Ana uygulama verilerinin (kullanıcılar, hesaplar, işlemler vb.) tutulduğu birincil veritabanı.
-    *   **LogDB:** MainDB üzerinde gerçekleşen tüm kritik veri manipülasyonu (POST, PUT, DELETE) işlemlerini denetim (audit) amacıyla kaydeden ikincil veritabanı.
-*   **Yedekleme Stratejisi:** `pg_dump` aracı ile düzenli (günlük) yedeklemeler alınır ve güvenli bir depolama alanına kopyalanır. `Point-in-Time Recovery (PITR)` yapılandırması ile veri kaybı riski minimize edilir.
+
+#### Veri Tabanı
+*   **Veritabanı Motoru:** PostgreSQL 15
+*   **ORM (Object-Relational Mapper):** Entity Framework Core 8
+*   **Yaklaşım:** Code-First with Migrations
+
+#### Veritabanı Mimarisi
+
+FinTrack, veri bütünlüğünü ve denetlenebilirliği sağlamak için ikili bir veritabanı stratejisi kullanır:
+
+1.  **MainDB:** Ana uygulama verilerinin (kullanıcılar, hesaplar, işlemler, bütçeler vb.) tutulduğu birincil veritabanıdır.
+2.  **LogDB:** `MainDB` üzerinde gerçekleşen tüm veri manipülasyonu (POST, PUT, DELETE) işlemlerini denetim (audit) amacıyla kaydeden ikincil veritabanıdır.
+
+#### Detaylı Veritabanı Şeması (ERD & Tablo Yapısı)
+
+Veritabanının tüm tablolarını, kolonlarını, veri tiplerini, ilişkilerini (ilişki diyagramı dahil), kısıtlamalarını ve indekslerini içeren kapsamlı teknik dokümantasyon için lütfen aşağıdaki dosyaya göz atın:
+
+➡️ **[Detaylı Veritabanı Şeması Dokümanı](./docs/DATABASE.md)**
 
 ### **6. Kullanılan Teknolojiler**
 
 | Kategori | Teknoloji / Araç |
 | :--- | :--- |
 | **Backend Framework** | ASP.NET Core 8.0, Python (FastAPI) |
-| **Dil** | C# 12, Python 3.11 |
+| **Dil** | C# 12, Python 3.10-slim |
 | **Frontend** | WPF (.NET) |
 | **Veritabanı** | PostgreSQL v15 |
 | **ORM** | Entity Framework Core 8.0 |
@@ -124,17 +137,17 @@ FinTrack, birbirinden bağımsız, ölçeklenebilir ve esnek birimlerden oluşan
 #### **7.1. Kullanıcı Kimlik Doğrulama ve Kayıt (OTP & JWT)**
 
 ##### **Adım A: Kayıt Başlatma ve OTP Gönderimi**
-1.  **İstek:** Kullanıcı, e-posta, kullanıcı adı ve şifre bilgilerini `POST /api/Auth/user/initiate-registration` endpoint'ine gönderir.
+1.  **İstek:** Kullanıcı, e-posta, kullanıcı adı ve şifre bilgilerini `POST /Auth/user/initiate-registration` endpoint'ine gönderir.
 2.  **İşlem:** Sunucu, bilgilerin benzersizliğini kontrol eder. 6 haneli bir OTP üretir. Bu OTP'nin hash'lenmiş halini ve kullanıcı bilgilerini (şifre dahil) geçici olarak `OtpVerifications` tablosuna kaydeder. Düz OTP'yi kullanıcıya e-posta ile gönderir.
 3.  **Yanıt:** Başarılı olursa, "OTP e-posta adresinize gönderildi" mesajı döner.
 
 ##### **Adım B: OTP Doğrulama ve Kayıt Tamamlama**
-1.  **İstek:** Kullanıcı, e-postasındaki kodu `POST /api/Auth/user/verify-otp-and-register` endpoint'ine gönderir.
+1.  **İstek:** Kullanıcı, e-postasındaki kodu `POST /Auth/user/verify-otp-and-register` endpoint'ine gönderir.
 2.  **İşlem:** Sunucu, OTP'yi doğrular. Doğruysa, geçici tablodan kullanıcı bilgilerini alır ve `UserManager.CreateAsync()` ile ASP.NET Identity sistemine kalıcı olarak kaydeder. Kullanıcıya varsayılan rol atanır ve geçici OTP kaydı silinir.
 3.  **Yanıt:** "Kayıt başarılı. Artık giriş yapabilirsiniz" mesajı döner.
 
 ##### **Adım C: Kullanıcı Girişi ve Token Üretimi**
-1.  **İstek:** Kullanıcı, e-posta ve şifresiyle `POST /api/Auth/user/login` endpoint'ine istek atar.
+1.  **İstek:** Kullanıcı, e-posta ve şifresiyle `POST /Auth/user/login` endpoint'ine istek atar.
 2.  **İşlem:** `SignInManager.CheckPasswordSignInAsync` ile kimlik bilgileri doğrulanır. Başarılıysa, kullanıcının ID, e-posta ve rollerini içeren bir **JWT Access Token** üretilir.
 3.  **Yanıt:** `200 OK` ile birlikte kullanıcı bilgileri ve `accessToken` döndürülür. Bu token, korumalı endpoint'lere erişim için `Authorization: Bearer <token>` başlığında kullanılır.
 
@@ -145,7 +158,15 @@ FinTrack, birbirinden bağımsız, ölçeklenebilir ve esnek birimlerden oluşan
 4.  **Şifreleme:** Onaylanan video, geri döndürülemez şekilde şifrelenir. Videoyu açacak **20 karakterlik özel anahtar** sadece borç verene teslim edilir.
 5.  **Otomatik Takip:** Vadesi geçen borçlarda, alacaklıya video erişim hakkı tanınır ve anahtarıyla videoyu deşifre edebilir.
 
-#### **7.3. Dinamik Kur Yönetim Sistemi**
+#### **7.3. Çok Formatlı Raporlama Sistemi**
+Kullanıcıların finansal verilerini anlamlı ve taşınabilir belgelere dönüştürmesini sağlayan esnek bir sistemdir.
+1.  **İstek:** Kullanıcı, WPF uygulaması üzerinden raporlamak istediği veri aralığını (tarih, hesaplar, kategoriler vb.) ve istediği formatı (PDF, WORD, EXCEL, XML, TEXT, MARKDOWN) seçer.
+2.  **API Çağrısı:** İstemci, bu kriterleri içeren bir isteği FinTrackWebApi üzerindeki ilgili raporlama endpoint'ine (örn: POST /api/reports/generate) gönderir.
+Veri Toplama ve İşleme: Sunucu, isteğe göre veritabanından ilgili finansal verileri çeker.
+3.  **Rapor Üretimi:** Çekilen veriler, seçilen formata uygun kütüphaneler (örn: PDF için QuestPDF, Excel için ClosedXML) kullanılarak işlenir ve bir dosya akışına (stream) dönüştürülür.
+4.  **Yanıt:** Oluşturulan dosya akışı, uygun Content-Type başlığı ile istemciye geri döndürülür. İstemci de bu dosyayı kullanıcıya indirilebilir olarak sunar.
+
+#### **7.4. Dinamik Kur Yönetim Sistemi**
 Veri depolama verimliliği için akıllı bir mekanizma kullanılır. Sistem, dış sağlayıcıdan çektiği kur verisini mevcut veri ile karşılaştırır. Eğer kurdaki değişiklik anlamlı bir seviyenin (örn: ondalık 6. basamak) altındaysa, yeni kayıt oluşturmak yerine mevcut kaydın bir "çarpan" değeri güncellenir. Bu, veritabanı boyutunu optimize eder ve sorgu performansını artırır.
 
 ### **8. DevOps, Konteynerizasyon ve Gözetim (Monitoring)**
@@ -182,7 +203,7 @@ Tüm sistem bileşenleri, **Docker** ile konteynerize edilerek taşınabilirlik,
 *   .NET SDK 8.0+
 *   Docker Desktop
 *   Git
-*   Python 3.11+
+*   Python 3.10-Slim
 
 #### **9.2. Docker ile Hızlı Kurulum (Önerilen)**
 1.  **Repository'yi Klonlayın:**
@@ -202,37 +223,119 @@ Hassas yapılandırmalar (API anahtarları, şifreler) `appsettings.json` dosyas
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=postgres_db;Port=5432;..."
+    "DefaultConnection": "Host=localhost;Port=Your_Port;Database=Your_DB;Username=Your_UserName;Password=Your_Password",
+    "LogConnection": "Host=localhost;Port=Your_Port;Database=Your_DB;Username=Your_UserName;Password=Your_Password"
   },
+
   "Token": {
-    "SecurityKey": "YOUR_ULTRA_SECRET_KEY_FOR_JWT_SIGNING"
+    "Issuer": "Your_Url",
+    "Audience": "Your_Url",
+    "SecurityKey": "Your_SecurityKey",
+    "Expiration": 0
   },
+
+  "SMTP": {
+    "NetworkCredentialMail": "Your_Email",
+    "NetworkCredentialPassword": "Your_Password",
+    "Host": "Your_Host",
+    "Port": "Your_Port",
+    "SenderMail": "Your_Email",
+    "SenderName": "FinTrack"
+  },
+
   "StripeSettings": {
-    "SecretKey": "sk_test_..."
+    "PublishableKey": "Your_PublishableKey",
+    "SecretKey": "Your_SecretKey",
+    "WebhookSecret": "Your_WebhookSecret",
+    "FreeMembership": null,
+    "PlusMembership": null,
+    "ProMembership": null
   },
+
+  "CurrencyFreaks": {
+    "ApiKey": "Your_ApiKey",
+    "BaseUrl": "https://api.currencyfreaks.com/v2.0/",
+    "SupportedCurrenciesUrl": "https://api.currencyfreaks.com/v2.0/supported-currencies",
+    "UpdateIntervalMinutes": 0
+  },
+
   "PythonChatBotService": {
-    "Url": "http://finbot_api:8000/chat"
-  }
+    "Url": "http://localhost:8000/chat"
+  },
+
+  "FilePaths": {
+    "UnapprovedVideos": "videos/unapproved",
+    "EncryptedVideos": "videos/encrypted"
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore": "Information",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Information",
+      "Microsoft.EntityFrameworkCore.Infrastructure": "Information",
+      "Microsoft.EntityFrameworkCore.Model.Validation": "Information",
+      "Microsoft.AspNetCore.Authentication": "Debug",
+      "Microsoft.AspNetCore.Authorization": "Debug"
+
+    }
+  },
+  "AllowedHosts": "*"
 }
 ```
 **Güvenlik Notu:** Üretim ortamında hassas veriler için **ortam değişkenleri, Azure Key Vault** veya benzeri güvenli konfigürasyon yönetimi araçları kullanılmalıdır.
 
-### **10. API Kullanımı ve Testler**
+### **10. API Kullanımı**
 
-*   **API Dokümantasyonu:** Her servis, Swagger UI üzerinden kendi endpoint dokümantasyonunu sunar:
-    *   **FinTrackWebApi:** `http://localhost:5246/swagger`
-    *   **WinTrackManagerPanel:** `http://localhost:5247/swagger`
-    *   **FinBotWebApi:** `http://localhost:8000/docs`
-*   **Testleri Çalıştırma:**
-    ```bash
-    # .NET Projeleri için
-    cd FinTrackWebApi
-    dotnet test
-    
-    # Python Projesi için
-    cd FinBotWebApi
-    pytest
-    ```
+*   **API Referansı ve Detaylı Dokümantasyon**
+FinTrack API'si, interaktif olarak test edilebileceği Swagger arayüzü ve her bir controller için hazırlanmış detaylı Markdown dokümanları ile belgelenmiştir.
+
+*   **İnteraktif API Dokümantasyonu (Swagger)**
+Canlı olarak API endpoint'lerini test etmek ve şemaları görmek için, proje çalıştırıldığında aşağıdaki adresten Swagger arayüzüne erişebilirsiniz:
+    * FinTrackWebApi: http://localhost:5246/swagger
+
+*  **Grafana**
+Sistemin genel sağlığını tek bir merkezi yerden incelememize olanak sağlıyor. Varsayılan olarak kullanıcı adı Admin iken şifre de Admin 'dir.
+    * Grafana: http://localhost:3000
+
+*  **Detaylı Endpoint Dokümanları**
+Aşağıda, **FinTrackWebApi** servisinin her bir controller'ı için hazırlanmış detaylı dokümantasyon dosyalarına linkler bulunmaktadır. Her doküman, endpoint'in amacını, gerekli istek formatlarını, başarılı ve hata yanıtlarını detaylı bir şekilde açıklamaktadır.
+
+    * [**`UserAuthController`**](./docs/api/UserAuthController.md) - Kullanıcı kayıt, OTP doğrulama ve giriş işlemlerini yönetir.
+    *  [**`UserController`**](./docs/api/UserController.md) - Giriş yapmış kullanıcının tüm profil, ayar ve özet verilerini tek bir merkezden sunar.
+    * [**`UserSettingsController`**](./docs/api/UserSettingsController.md) - Kullanıcının profil, güvenlik, uygulama ve bildirim ayarlarını yönetir.
+    * [**`AccountController`**](./docs/api/AccountController.md) - Kullanıcının finansal hesaplarını (banka, nakit vb.) yönetir.
+    * [**`TransactionCategoryController`**](./docs/api/TransactionCategoryController.md) - Gelir/Gider işlemleri için kişisel kategorileri yönetir.
+    * [**`TransactionsController`**](./docs/api/TransactionsController.md) - Tüm gelir/gider işlemlerini kaydeder ve filtreler.
+    * [**`BudgetsController`**](./docs/api/BudgetsController.md) - Kullanıcının bütçelerini oluşturur ve yönetir.
+    * [**`ReportsController`**](./docs/api/ReportsController.md) - Çeşitli formatlarda (PDF, Excel vb.) dinamik finansal raporlar üretir.
+    * [**`DebtController`**](./docs/api/DebtController.md) - Güvenli Borç Sistemi'nin (GBS) ana iş akışını yönetir (teklif, kabul, temerrüt).
+    * [**`VideosController`**](./docs/api/VideosController.md) - GBS için video yükleme, şifreleme ve güvenli izleme süreçlerini yönetir.
+    * [**`MembershipController`**](./docs/api/MembershipController.md) - Abonelik planlarını ve kullanıcı üyeliklerini yönetir, Stripe ödeme oturumlarını başlatır.
+    * [**`StripeWebhookController`**](./docs/api/StripeWebhookController.md) - Stripe'tan gelen başarılı ödeme olaylarını dinler ve üyelikleri otomatik olarak aktive eder.
+    * [**`NotificationController`**](./docs/api/NotificationController.md) - Kullanıcıya özel uygulama içi bildirimleri yönetir.
+    * [**`FeedbackController`**](./docs/api/FeedbackController.md) - Kullanıcıların geri bildirim göndermesini sağlar.
+    * [**`ChatController`**](./docs/api/ChatController.md) - FinBot (Python) servisi için bir proxy görevi görerek güvenli iletişimi sağlar.
+    * [**`LogController`**](./docs/api/LogController.md) - Sistem log dosyalarına (güvenlikli) erişim sağlar.
+
+### **Proje Dokümantasyonu**
+Bu proje, farklı teknik seviyelere hitap eden kapsamlı dokümanlarla desteklenmektedir. İhtiyacınız olan bilgiye hızlıca ulaşmak için aşağıdaki linkleri kullanabilirsiniz.
+
+*   ➡️ **[Sistem Mimarisi](./docs/ARCHITECTURE.md)**
+    *   Projenin üst düzey mimarisini, servislerini, teknolojilerini ve aralarındaki veri akışını anlamak için bu dokümanı okuyun.
+
+*   ➡️ **[Detaylı Veritabanı Şeması](./docs/DATABASE.md)**
+    *   Veritabanı tablolarının, kolonlarının, ilişkilerinin ve ERD'nin detaylı bir açıklaması için buraya bakın.
+
+*   ➡️ **[API Referansı ve Endpoint Detayları](./docs/api/)**
+    *   Tüm API endpoint'lerinin teknik detaylarını, istek/yanıt formatlarını ve kullanım örneklerini içeren Markdown dosyaları burada toplanmıştır.
+
+*   ➡️ **[Sıkça Sorulan Sorular (SSS)](./docs/FAQ.md)**
+    *   Projeyi kurma, çalıştırma, API kullanımı ve sık karşılaşılan sorunlar hakkında hızlı yanıtlar için bu dokümanı inceleyin.
+
+*   ➡️ **[Roller ve Yetki Matrisi](./docs/ROLES_AND_PERMISSIONS.md)**
+    *   Sistemdeki kullanıcı rollerini (`User`, `Admin` vb.) ve bu rollerin API üzerindeki yetkilerini anlamak için bu dokümanı kullanın.
 
 ### **11. Sonuç ve Gelecek Vizyonu**
 

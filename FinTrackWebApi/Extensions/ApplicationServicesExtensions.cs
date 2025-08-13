@@ -1,4 +1,6 @@
-﻿using FinTrackWebApi.Services.ChatBotService;
+﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Models.User;
+using FinTrackWebApi.Services.ChatBotService;
 using FinTrackWebApi.Services.CurrencyServices;
 using FinTrackWebApi.Services.DocumentService;
 using FinTrackWebApi.Services.DocumentService.Generations.Account;
@@ -9,6 +11,7 @@ using FinTrackWebApi.Services.MediaEncryptionService;
 using FinTrackWebApi.Services.OtpService;
 using FinTrackWebApi.Services.PaymentService;
 using FinTrackWebApi.Services.SecureDebtService;
+using Microsoft.AspNetCore.Identity;
 using System.Text.Json.Serialization;
 
 namespace FinTrackWebApi.Extensions
@@ -75,6 +78,10 @@ namespace FinTrackWebApi.Extensions
             services.Configure<StripeSettings>(configuration.GetSection("StripeSettings"));
 
             services.AddHttpContextAccessor();
+
+            services.AddIdentity<UserModel, IdentityRole<int>>()
+                .AddEntityFrameworkStores<MyDataContext>()
+                .AddDefaultTokenProviders();
 
             return services;
         }

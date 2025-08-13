@@ -1,0 +1,110 @@
+[
+  {
+    "id": "faq_fintrack_what_is",
+    "question": "What is FinTrack?",
+    "answer": "FinTrack is a comprehensive Software as a Service (SaaS) project designed to help users manage their personal finances. It allows you to track accounts, budgets, income/expenses, debts, and over 950 currency rates in one place, supported by powerful data visualization and an AI-powered chatbot.",
+    "keywords": [ "fintrack", "what is", "about", "application", "purpose" ]
+  },
+  {
+    "id": "faq_features_main",
+    "question": "What are the main features of FinTrack?",
+    "answer": "FinTrack's key features include: tracking over 950 currencies, budget and account management, income/expense tracking, a secure peer-to-peer debt system, an AI chatbot to interact with your data, detailed reporting in various formats (PDF, Excel, etc.), and advanced data visualization with charts.",
+    "keywords": [ "features", "capabilities", "what can i do", "functions", "tools" ]
+  },
+  {
+    "id": "faq_subscription_plans",
+    "question": "What subscription plans are available?",
+    "answer": "FinTrack offers three subscription plans: 'Free' ($0/month) for basic entry-level use, 'Plus' ($10/month) for intermediate users, and 'Pro' ($25/month) for professional and power users. Payments are securely handled by Stripe.",
+    "keywords": [ "subscription", "plans", "pricing", "cost", "membership", "free", "plus", "pro" ]
+  },
+  {
+    "id": "faq_payment_system",
+    "question": "What payment system do you use?",
+    "answer": "We use Stripe, a globally trusted and secure payment processing platform, to handle all subscriptions and payments. You can manage your plan, renew, or cancel directly through the application.",
+    "keywords": [ "payment", "stripe", "billing", "credit card", "renew", "cancel" ]
+  },
+  {
+    "id": "faq_tech_stack_backend",
+    "question": "What is the backend technology of FinTrack?",
+    "answer": "The server-side is split into two main services. 'FinTrackWebApi' is built with ASP.NET Core and handles all core business logic. 'FinBotWebApi' is built with Python and FastAPI, which communicates with the Ollama service to power the AI chatbot.",
+    "keywords": [ "backend", "technology", "tech stack", "server", "asp.net", "python", "fastapi" ]
+  },
+  {
+    "id": "faq_tech_stack_frontend",
+    "question": "What technology is used for the Windows application?",
+    "answer": "The native Windows application, FinTrackForWindows, is built using the Windows Presentation Foundation (WPF) framework. It communicates with the FinTrackWebApi for data. For data visualization, we use LiveCharts2, and for in-app notifications, Notification.Wpf is used.",
+    "keywords": [ "frontend", "windows", "desktop", "app", "wpf", "technology" ]
+  },
+  {
+    "id": "faq_database_info",
+    "question": "What database do you use?",
+    "answer": "We use PostgreSQL v15 as our primary database. We have two separate databases: 'MainDB' for all core application data and 'LogDB' to record all create, update, and delete operations for auditing purposes. We use Entity Framework (EF) Core as our ORM.",
+    "keywords": [ "database", "db", "postgresql", "ef core", "orm", "data storage" ]
+  },
+  {
+    "id": "faq_backup_policy",
+    "question": "How is my data backed up?",
+    "answer": "Your data is very important to us. The main database (MainDB) is automatically backed up every night at 03:00 UTC to prevent data loss.",
+    "keywords": [ "backup", "data safety", "restore", "disaster recovery" ]
+  },
+  {
+    "id": "faq_authentication_signup",
+    "question": "How does the sign-up process work?",
+    "answer": "When you sign up, we send a 6-digit one-time password (OTP) to your email for verification. You have 5 minutes to enter this code. After successful verification, your account is activated with the Free plan automatically.",
+    "keywords": [ "sign up", "register", "account creation", "otp", "verification" ]
+  },
+  {
+    "id": "faq_authentication_login",
+    "question": "How does login work? What is a JWT token?",
+    "answer": "Upon successful login, the system issues a JSON Web Token (JWT). This token is stored in memory and sent with every request to the server. The server checks the role within the token to authorize your access to different features and endpoints.",
+    "keywords": [ "login", "authentication", "jwt", "token", "authorization", "permission" ]
+  },
+  {
+    "id": "faq_debt_system_how",
+    "question": "How does the Secure Debt System work?",
+    "answer": "The Secure Debt System (GBS) is a multi-step process. 1: A lender sends a debt offer to a borrower's email. 2: The borrower reviews and accepts the offer. 3: The borrower records a security video, which acts as legal proof. 4: An operator reviews and approves the debt. 5: The debt becomes active, and the video is encrypted. The lender receives a unique 20-character key to decrypt the video only if the borrower defaults on the payment.",
+    "keywords": [ "debt", "borrow", "lend", "gbs", "secure debt", "video", "proof" ]
+  },
+  {
+    "id": "faq_debt_system_default",
+    "question": "What happens if a borrower defaults on a debt?",
+    "answer": "The system automatically monitors active debts. If a payment is overdue, the system marks the debt as 'Defaulted' and grants the lender access to the security video. The lender can then use their unique 20-character key to decrypt and view the video, which can be used as legal evidence.",
+    "keywords": [ "default", "overdue", "late payment", "debt video", "legal proof" ]
+  },
+  {
+    "id": "faq_currency_system",
+    "question": "How does the currency tracking system work?",
+    "answer": "Our server periodically fetches exchange rates from an external data provider. To save space and optimize performance, the system analyzes the new rates. If a rate hasn't changed up to the 6th decimal place, it's stored as a multiplier. If there is a significant change, a new data record is created. This process uses data normalization to ensure efficiency.",
+    "keywords": [ "currency", "exchange rate", "rates", "how it works", "data provider" ]
+  },
+  {
+    "id": "faq_reporting_feature",
+    "question": "What kind of reports can I generate?",
+    "answer": "You can generate detailed financial reports from the 'Reports' panel. FinTrack supports exporting your data into multiple formats, including PDF, Microsoft Word, Excel, plain Text, XML, and Markdown, giving you flexibility in how you analyze and share your financial information.",
+    "keywords": [ "reports", "export", "documents", "pdf", "excel", "word", "download" ]
+  },
+  {
+    "id": "faq_finbot_what_is",
+    "question": "What is FinBot and what can it do?",
+    "answer": "FinBot is your personal AI financial assistant, accessible from the 'FinBot' panel. It can interact directly with your financial data. You can ask it questions like 'What was my biggest expense last month?' or 'How much do I have left in my food budget?', and it will provide clear, concise answers.",
+    "keywords": [ "finbot", "chatbot", "ai", "assistant", "ask questions", "chat" ]
+  },
+  {
+    "id": "faq_monitoring_system",
+    "question": "How is the system's health monitored?",
+    "answer": "We use a robust monitoring stack. Prometheus collects health metrics from our services (like the ASP.NET API and Python Bot) using exporters like Node Exporter and Postgres Exporter. All this data is then visualized in a Grafana dashboard, allowing our team to monitor the system's performance and health in real-time.",
+    "keywords": [ "monitoring", "health", "grafana", "prometheus", "system status", "docker" ]
+  },
+  {
+    "id": "faq_panels_dashboard",
+    "question": "What is the Dashboard panel for?",
+    "answer": "The Dashboard is your main landing screen after logging in. It provides an at-a-glance overview of your entire financial situation, including your total balance, recent transactions, budget status, and other key metrics.",
+    "keywords": [ "dashboard", "overview", "summary", "main screen" ]
+  },
+  {
+    "id": "faq_panels_settings",
+    "question": "What can I do in the Settings panel?",
+    "answer": "The 'Settings' panel is where you can manage your user profile, change your password, and view or manage your subscription plan. It contains all the detailed configurations for your account.",
+    "keywords": [ "settings", "configuration", "profile", "manage account", "subscription settings" ]
+  }
+]

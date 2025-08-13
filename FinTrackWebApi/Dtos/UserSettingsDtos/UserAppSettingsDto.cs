@@ -7,6 +7,7 @@ namespace FinTrackWebApi.Dtos.UserSettingsDtos
         public int Id { get; set; }
         public AppearanceType Appearance { get; set; }
         public BaseCurrencyType Currency { get; set; }
+        public LanguageType Language { get; set; }
         public DateTime CreatedAtUtc { get; set; }
         public DateTime? UpdatedAtUtc { get; set; }
     }

@@ -406,3 +406,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /UnapprovedVideos_NotGitHub
+FinTrackWebApi/appsettings.json
+FinTrackWebApi/appsettings.json
+FinTrackWebApi/appsettings.json
+/FinTrackWebApi/appsettings.json
+FinTrackWebApi/appsettings.json
