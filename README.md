@@ -319,6 +319,24 @@ Aşağıda, **FinTrackWebApi** servisinin her bir controller'ı için hazırlanm
     * [**`ChatController`**](./docs/api/ChatController.md) - FinBot (Python) servisi için bir proxy görevi görerek güvenli iletişimi sağlar.
     * [**`LogController`**](./docs/api/LogController.md) - Sistem log dosyalarına (güvenlikli) erişim sağlar.
 
+### **Proje Dokümantasyonu**
+Bu proje, farklı teknik seviyelere hitap eden kapsamlı dokümanlarla desteklenmektedir. İhtiyacınız olan bilgiye hızlıca ulaşmak için aşağıdaki linkleri kullanabilirsiniz.
+
+*   ➡️ **[Sistem Mimarisi](./docs/ARCHITECTURE.md)**
+    *   Projenin üst düzey mimarisini, servislerini, teknolojilerini ve aralarındaki veri akışını anlamak için bu dokümanı okuyun.
+
+*   ➡️ **[Detaylı Veritabanı Şeması](./docs/DATABASE.md)**
+    *   Veritabanı tablolarının, kolonlarının, ilişkilerinin ve ERD'nin detaylı bir açıklaması için buraya bakın.
+
+*   ➡️ **[API Referansı ve Endpoint Detayları](./docs/api/)**
+    *   Tüm API endpoint'lerinin teknik detaylarını, istek/yanıt formatlarını ve kullanım örneklerini içeren Markdown dosyaları burada toplanmıştır.
+
+*   ➡️ **[Sıkça Sorulan Sorular (SSS)](./docs/FAQ.md)**
+    *   Projeyi kurma, çalıştırma, API kullanımı ve sık karşılaşılan sorunlar hakkında hızlı yanıtlar için bu dokümanı inceleyin.
+
+*   ➡️ **[Roller ve Yetki Matrisi](./docs/ROLES_AND_PERMISSIONS.md)**
+    *   Sistemdeki kullanıcı rollerini (`User`, `Admin` vb.) ve bu rollerin API üzerindeki yetkilerini anlamak için bu dokümanı kullanın.
+
 ### **11. Sonuç ve Gelecek Vizyonu**
 
 FinTrack, sadece bir finansal takip aracı değil, aynı zamanda kullanıcılarının finansal refahını artırmayı hedefleyen bütünsel bir ekosistemdir. Sağlam teknik temelleri, modern mikroservis mimarisi ve yenilikçi özellikleriyle pazarın ihtiyaçlarına cevap vermeye hazırdır. Gelecek vizyonu, **mobil uygulamalar (iOS & Android)**, **gelişmiş AI özellikleri** (anomali tespiti, proaktif bütçe optimizasyonu) ve **üçüncü parti entegrasyonlarını** içermektedir.
