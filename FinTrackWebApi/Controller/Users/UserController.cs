@@ -72,7 +72,7 @@ namespace FinTrackWebApi.Controller.Users
 
                         // Ayarlar
                         Thema = u.AppSettings.Appearance ?? Enums.AppearanceType.Light,
-                        Language = u.AppSettings.Language ?? Enums.LanguageType.en_EN,
+                        Language = u.AppSettings.Language ?? Enums.LanguageType.en_US,
                         Currency = u.AppSettings.BaseCurrency ?? Enums.BaseCurrencyType.USD,
                         SpendingLimitWarning = u.NotificationSettings.SpendingLimitWarning,
                         ExpectedBillReminder = u.NotificationSettings.ExpectedBillReminder,

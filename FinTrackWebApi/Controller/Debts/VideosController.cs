@@ -133,21 +133,21 @@ namespace FinTrackWebApi.Controller.Debts
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation(
-                    "Video metadata başarıyla kaydedildi: {VideoMetadata}",
+                    "Video metadata successfully saved: {VideoMetadata}",
                     videoMetadata
                 );
                 return Ok(
                     new
                     {
-                        Message = "Video metadata başarıyla kaydedildi: {VideoMetadata}",
+                        Message = "Video metadata successfully saved: {VideoMetadata}",
                         videoMetadata,
                     }
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Dosya kaydedilirken hata oluştu.");
-                return StatusCode(500, "Dosya kaydedilirken hata oluştu.");
+                _logger.LogError(ex, "An error occurred while saving the file.");
+                return StatusCode(500, "An error occurred while saving the file.");
             }
         }
 
@@ -233,20 +233,20 @@ namespace FinTrackWebApi.Controller.Debts
                 }
 
                 _logger.LogInformation(
-                    "Video başarıyla onaylandı ve şifrelendi: {VideoMetadata}",
+                    "Video successfully verified and encrypted: {VideoMetadata}",
                     videoMeta
                 );
                 return Ok(
-                    new { Message = "Video başarıyla onaylandı ve şifrelendi.", videoMeta }
+                    new { Message = "The video has been successfully verified and encrypted.", videoMeta }
                 );
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Video şifrelenirken hata oluştu.");
+                _logger.LogError(ex, "An error occurred while encrypting the video.");
                 debtVideoMetadata.Status = VideoStatusType.EncryptionFailed;
                 videoMeta.Status = VideoStatusType.EncryptionFailed;
                 await _context.SaveChangesAsync();
-                return StatusCode(500, "Video şifrelenirken hata oluştu.");
+                return StatusCode(500, "An error occurred while encrypting the video.");
             }
         }
 
@@ -334,7 +334,7 @@ namespace FinTrackWebApi.Controller.Debts
             );
 
             _logger.LogInformation(
-                "Onaylanmış ve şifrelenmiş video için e-posta gönderildi: {Email}",
+                "An email containing a verified and encrypted video has been sent: {Email}",
                 videoMeta?.UploadedUser?.Email
             );
         }
@@ -348,7 +348,7 @@ namespace FinTrackWebApi.Controller.Debts
         )
         {
             if (string.IsNullOrEmpty(key))
-                return BadRequest("Şifreleme anahtarı (key) gereklidir.");
+                return BadRequest("An encryption key is required.");
 
             int userId = GetAuthenticatedId();
 

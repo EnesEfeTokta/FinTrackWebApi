@@ -112,7 +112,7 @@ namespace FinTrackWebApi.Services.CurrencyServices
         {
             if (newRatesResponse?.Rates == null || !newRatesResponse.Rates.Any())
             {
-                _logger.LogWarning("API'den oran gelmediği için snapshot oluşturulmuyor.");
+                _logger.LogWarning("Snapshot is not created because no rates were received from the API.");
                 return;
             }
 
@@ -193,21 +193,21 @@ namespace FinTrackWebApi.Services.CurrencyServices
                 if (newDbSnapshot.HasChanges)
                 {
                     _logger.LogInformation(
-                        "Değişiklik içeren yeni bir snapshot (ID: {SnapshotId}) {RateCount} oran ile kaydedildi.",
+                        "A new snapshot containing changes (ID: {SnapshotId}) has been saved with {RateCount} rates.",
                         newDbSnapshot.Id, newDbSnapshot.Rates.Count
                     );
                 }
                 else
                 {
                     _logger.LogInformation(
-                        "Değişiklik içermeyen yeni bir kontrol snapshot'ı (ID: {SnapshotId}) kaydedildi.",
+                        "A new control snapshot without changes (ID: {SnapshotId}) has been saved.",
                         newDbSnapshot.Id
                     );
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Snapshot kaydedilirken bir hata oluştu.");
+                _logger.LogError(ex, "An error occurred while saving the snapshot.");
             }
         }
 

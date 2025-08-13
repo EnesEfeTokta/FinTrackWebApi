@@ -270,7 +270,7 @@ namespace FinTrackWebApi.Controller.Users
                         Id = s.Id,
                         Appearance = s.Appearance ?? AppearanceType.Dark,
                         Currency = s.BaseCurrency ?? BaseCurrencyType.Error,
-                        Language = s.Language ?? LanguageType.en_EN,
+                        Language = s.Language ?? LanguageType.en_US,
                         CreatedAtUtc = s.CreatedAtUtc,
                         UpdatedAtUtc = s.UpdatedAtUtc
                     }).FirstOrDefaultAsync();
@@ -313,6 +313,7 @@ namespace FinTrackWebApi.Controller.Users
 
                 settings.Appearance = updateDto.Appearance;
                 settings.BaseCurrency = updateDto.Currency;
+                settings.Language = updateDto.Language;
                 settings.UpdatedAtUtc = DateTime.UtcNow;
 
                 _context.UserAppSettings.Update(settings);
