@@ -80,7 +80,7 @@ namespace FinTrackWebApi.Extensions
             services.AddHttpContextAccessor();
 
             services.AddIdentity<UserModel, IdentityRole<int>>()
-                .AddEntityFrameworkStores<MyDataContext>() 
+                .AddEntityFrameworkStores<MyDataContext>()
                 .AddDefaultTokenProviders();
 
             return services;

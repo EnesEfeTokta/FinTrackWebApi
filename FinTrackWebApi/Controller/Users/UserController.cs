@@ -58,8 +58,8 @@ namespace FinTrackWebApi.Controller.Users
                             .Select(um => um.Plan.Id)
                             .FirstOrDefault(),
                         CurrentMembershipPlanType = (from um in u.UserMemberships
-                                          orderby um.EndDate descending
-                                          select um.Plan.Name)
+                                                     orderby um.EndDate descending
+                                                     select um.Plan.Name)
                                 .FirstOrDefault() ?? "No Membership",
                         MembershipStartDateUtc = u.UserMemberships
                             .OrderByDescending(um => um.EndDate)
