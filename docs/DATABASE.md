@@ -154,7 +154,6 @@ erDiagram
     CurrencySnapshots ||--o{ ExchangeRates : "contains"
     Currencies ||--o{ ExchangeRates : "has_rate"
 ```
-*(Not: `Employees`, `Departments` gibi iç tablolar, ana kullanıcı akışından ayrı olduğu için diyagramda gösterilmemiştir.)*
 
 ## 3. Tablo Detayları
 
