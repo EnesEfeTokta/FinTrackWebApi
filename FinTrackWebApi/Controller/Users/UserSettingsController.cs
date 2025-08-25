@@ -406,5 +406,17 @@ namespace FinTrackWebApi.Controller.Users
                 return StatusCode(500, "An error occurred while updating the notification settings.");
             }
         }
+
+        [HttpGet("user-dashboard")]
+        public async Task<IActionResult> GetUserDashboardSettings()
+        {
+            return Ok();
+        }
+
+        [HttpPost("user-dashboard")]
+        public async Task<IActionResult> SetUserDashboardSettings([FromBody] UserDashboardSettingsUpdateDto updateDto)
+        {
+            return Ok();
+        }
     }
 }

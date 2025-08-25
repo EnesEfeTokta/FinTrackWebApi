@@ -40,6 +40,7 @@ namespace FinTrackWebApi.Data
 
         public DbSet<OtpVerificationModel> OtpVerification { get; set; }
         public DbSet<UserAppSettingsModel> UserAppSettings { get; set; }
+        public DbSet<UserDashboardSettingsModel> UserDashboardSettings { get; set; }
         public DbSet<UserNotificationSettingsModel> UserNotificationSettings { get; set; }
         public DbSet<CategoryModel> Categories { get; set; }
         public DbSet<BudgetModel> Budgets { get; set; }
@@ -86,6 +87,11 @@ namespace FinTrackWebApi.Data
                     .HasOne(u => u.AppSettings)
                     .WithOne(s => s.User)
                     .HasForeignKey<UserAppSettingsModel>(s => s.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity
+                    .HasOne(u => u.DashboardSettings)
+                    .WithOne(s => s.User)
+                    .HasForeignKey<UserDashboardSettingsModel>(s => s.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
                 entity
                     .HasOne(u => u.NotificationSettings)
@@ -226,6 +232,40 @@ namespace FinTrackWebApi.Data
                 entity.HasOne(s => s.User)
                       .WithOne(u => u.AppSettings)
                       .HasForeignKey<UserAppSettingsModel>(s => s.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // -- Index --
+                entity.HasIndex(s => s.UserId).IsUnique();
+            });
+
+            modelBuilder.Entity<UserDashboardSettingsModel>(entity => 
+            {
+                // --Tablo--
+                entity.ToTable("UserDashboardSettings");
+                entity.HasKey(s => s.Id);
+                entity.Property(s => s.Id).ValueGeneratedOnAdd();
+
+                var options = new JsonSerializerOptions();
+                entity.Property(e => e.SelectedCurrencies)
+                      .HasConversion(
+                            v => JsonSerializer.Serialize(v, options),
+                            v => JsonSerializer.Deserialize<int[]>(v, options) ?? Array.Empty<int>()
+                       );
+                entity.Property(e => e.SelectedBudgets)
+                      .HasConversion(
+                            v => JsonSerializer.Serialize(v, options),
+                            v => JsonSerializer.Deserialize<int[]>(v, options) ?? Array.Empty<int>()
+                       );
+                entity.Property(e => e.SelectedAccounts)
+                      .HasConversion(
+                            v => JsonSerializer.Serialize(v, options),
+                            v => JsonSerializer.Deserialize<int[]>(v, options) ?? Array.Empty<int>()
+                       );
+
+                // --İlişkiler--
+                entity.HasOne(s => s.User)
+                      .WithOne(u => u.DashboardSettings)
+                      .HasForeignKey<UserDashboardSettingsModel>(s => s.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
 
                 // -- Index --

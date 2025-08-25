@@ -135,3 +135,26 @@ Kullanıcının bildirim tercihlerini günceller.
 | `weeklySpendingSummary`| `boolean`| Haftalık harcama özeti. |
 | `newFeaturesAndAnnouncements`| `boolean` | Yeni özellik ve duyurular. |
 | `enableDesktopNotifications`| `boolean` | Masaüstü bildirimlerini etkinleştir. |
+
+---
+
+## 4. Dashboard Öncelik Tercihleri
+
+### 4.1. Öncelik Tercihlerini Getirir
+
+Kullanıcının kendi kişisel dashboard tercihlerini getirir.
+
+*   **Endpoint:** `GET /UserSettings/user-dashboard`
+
+### 4.2. Öncelik Tercihlerini Güncelleme
+
+Kullanıcının dashboard tercihlerini günceller.
+
+*   **Endpoint:** `POST /UserSettings/user-notificationettings` 
+
+#### Request Body (`UserDashboardSettingsUpdateDto`)
+| Alan | Tip | Açıklama |
+| :--- | :--- | :--- |
+| `selectedCurencies`| `Array(İnt)` | Seçilen para birimleri. Max(5) |
+| `selectedBudgets`| `Array(İnt)` | Seçilen bütçeler. Max(4) |
+| `selectedAccounts`| `Array(İnt)`| Seçilen hesaplar. Max(2) |
