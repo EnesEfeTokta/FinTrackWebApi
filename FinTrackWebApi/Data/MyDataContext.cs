@@ -261,6 +261,15 @@ namespace FinTrackWebApi.Data
                             v => JsonSerializer.Serialize(v, options),
                             v => JsonSerializer.Deserialize<int[]>(v, options) ?? Array.Empty<int>()
                        );
+                entity.Property(s => s.CreatedAtUtc)
+                        .HasColumnName("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()")
+                        .IsRequired(true);
+                entity.Property(s => s.UpdatedAtUtc)
+                        .HasColumnName("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .IsRequired(false);
 
                 // --İlişkiler--
                 entity.HasOne(s => s.User)

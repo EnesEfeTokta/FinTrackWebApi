@@ -48,5 +48,8 @@
                 _selectedAccounts = value ?? Array.Empty<int>();
             }
         }
+
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAtUtc { get; set; }
     }
 }

@@ -1194,6 +1194,12 @@ namespace FinTrackWebApi.Data.Migrations.MyData
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
                     b.Property<string>("SelectedAccounts")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1205,6 +1211,10 @@ namespace FinTrackWebApi.Data.Migrations.MyData
                     b.Property<string>("SelectedCurrencies")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");

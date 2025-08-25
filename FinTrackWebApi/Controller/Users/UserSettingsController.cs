@@ -410,13 +410,73 @@ namespace FinTrackWebApi.Controller.Users
         [HttpGet("user-dashboard")]
         public async Task<IActionResult> GetUserDashboardSettings()
         {
-            return Ok();
+            var (user, userId, errorResult) = await GetAuthenticatedUserAndIdAsync();
+            if (errorResult != null) return errorResult;
+
+            try
+            {
+                var settings = await _context.UserDashboardSettings.AsNoTracking()
+                    .Where(s => s.UserId == userId)
+                    .Select(s => new UserDashboardSettingsDto
+                    {
+                        Id = s.Id,
+                        SelectedAccounts = s.SelectedAccounts,
+                        SelectedBudgets = s.SelectedBudgets,
+                        SelectedCurrencies = s.SelectedCurrencies,
+                        CreatedAtUtc = s.CreatedAtUtc,
+                        UpdatedAtUtc = s.UpdatedAtUtc
+                    }).FirstOrDefaultAsync();
+                if (settings == null)
+                {
+                    _logger.LogWarning("Dashboard settings for user ID {UserId} could not be found.", userId);
+                    return NotFound($"Dashboard settings for user ID {userId} could not be found.");
+                }
+                _logger.LogInformation("Dashboard settings found for user ID {userId}.", userId);
+                return Ok(settings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Dashboard settings for user ID {userId} could not be found.", userId);
+                return StatusCode(500, "Dashboard settings for user ID not found.");
+            }
         }
 
         [HttpPost("user-dashboard")]
         public async Task<IActionResult> SetUserDashboardSettings([FromBody] UserDashboardSettingsUpdateDto updateDto)
         {
-            return Ok();
+            if (updateDto == null)
+            {
+                return BadRequest("UserDashboardSettings data is required.");
+            }
+
+            var (user, userId, errorResult) = await GetAuthenticatedUserAndIdAsync();
+            if (errorResult != null) return errorResult;
+
+            try
+            {
+                var settings = await _context.UserDashboardSettings.FirstOrDefaultAsync(s => s.UserId == userId);
+                if (settings == null)
+                {
+                    _logger.LogWarning("Dashboard settings for user ID {UserId} could not be found.", userId);
+                    return NotFound($"Dashboard settings for user ID {userId} could not be found.");
+                }
+
+                settings.SelectedAccounts = updateDto.SelectedAccounts ?? Array.Empty<int>();
+                settings.SelectedBudgets = updateDto.SelectedBudgets ?? Array.Empty<int>();
+                settings.SelectedCurrencies = updateDto.SelectedCurrencies ?? Array.Empty<int>();
+                settings.UpdatedAtUtc = DateTime.UtcNow;
+
+                _context.UserDashboardSettings.Update(settings);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"The Dashboard settings for user ID {userId} have been updated.");
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating the dashboard settings for user ID {UserId}.", userId);
+                return StatusCode(500, "An error occurred while updating the dashboard settings.");
+            }
         }
     }
 }
