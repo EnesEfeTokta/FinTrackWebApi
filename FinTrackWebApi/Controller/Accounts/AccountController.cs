@@ -1,10 +1,7 @@
-﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos.AccountDtos;
-using FinTrackWebApi.Enums;
-using FinTrackWebApi.Models.Account;
+﻿using FinTrackWebApi.Dtos.AccountDtos;
+using FinTrackWebApi.Services.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace FinTrackWebApi.Controller.Accounts
@@ -14,12 +11,12 @@ namespace FinTrackWebApi.Controller.Accounts
     [Authorize(Roles = "User,Admin")]
     public class AccountController : ControllerBase
     {
-        private readonly MyDataContext _context;
+        private readonly IAccountService _accountService;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(MyDataContext context, ILogger<AccountController> logger)
+        public AccountController(IAccountService accountService, ILogger<AccountController> logger)
         {
-            _context = context;
+            _accountService = accountService;
             _logger = logger;
         }
 
@@ -39,42 +36,7 @@ namespace FinTrackWebApi.Controller.Accounts
             try
             {
                 int userId = GetAuthenticatedUserId();
-
-                var accountsFromDb = await _context
-                    .Accounts.Where(a => a.UserId == userId)
-                    .OrderBy(a => a.Name)
-                    .Select(a => new
-                    {
-                        a.Id,
-                        a.Name,
-                        a.Type,
-                        a.IsActive,
-                        a.Balance,
-                        a.Currency,
-                        a.CreatedAtUtc,
-                        a.UpdatedAtUtc,
-                    })
-                    .AsNoTracking()
-                    .ToListAsync();
-
-                var accountDtos = new List<AccountDto>();
-                foreach (var acc in accountsFromDb)
-                {
-                    accountDtos.Add(
-                        new AccountDto
-                        {
-                            Id = acc.Id,
-                            Name = acc.Name,
-                            Type = acc.Type ?? AccountType.Error,
-                            IsActive = acc.IsActive,
-                            Balance = acc.Balance,
-                            Currency = acc.Currency ?? BaseCurrencyType.Error,
-                            CreatedAtUtc = acc.CreatedAtUtc,
-                            UpdatedAtUtc = acc.UpdatedAtUtc,
-                        }
-                    );
-                }
-
+                var accountDtos = await _accountService.GetAccountsAsync(userId);
                 return Ok(accountDtos);
             }
             catch (Exception ex)
@@ -94,45 +56,7 @@ namespace FinTrackWebApi.Controller.Accounts
             try
             {
                 int userId = GetAuthenticatedUserId();
-
-                var accountFromDb = await _context
-                    .Accounts.Where(a => a.Id == Id && a.UserId == userId)
-                    .Select(a => new
-                    {
-                        a.Id,
-                        a.Name,
-                        a.Type,
-                        a.IsActive,
-                        a.Balance,
-                        a.Currency,
-                        a.CreatedAtUtc,
-                        a.UpdatedAtUtc,
-                    })
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-
-                if (accountFromDb == null)
-                {
-                    _logger.LogWarning(
-                        "Account with ID {Id} not found for user ID: {UserId}",
-                        Id,
-                        userId
-                    );
-                    return NotFound($"Account with ID {Id} not found.");
-                }
-
-                var accountDto = new AccountDto
-                {
-                    Id = accountFromDb.Id,
-                    Name = accountFromDb.Name,
-                    Type = accountFromDb.Type ?? AccountType.Error,
-                    IsActive = accountFromDb.IsActive,
-                    Balance = accountFromDb.Balance,
-                    Currency = accountFromDb.Currency ?? BaseCurrencyType.Error,
-                    CreatedAtUtc = accountFromDb.CreatedAtUtc,
-                    UpdatedAtUtc = accountFromDb.UpdatedAtUtc,
-                };
-
+                var accountDto = await _accountService.GetAccountByIdAsync(Id, userId);
                 return Ok(accountDto);
             }
             catch (Exception ex)
@@ -158,25 +82,12 @@ namespace FinTrackWebApi.Controller.Accounts
             try
             {
                 int userId = GetAuthenticatedUserId();
-
-                var account = new AccountModel
-                {
-                    UserId = userId,
-                    Name = accountDto.Name,
-                    Type = accountDto.Type,
-                    IsActive = accountDto.IsActive,
-                    Currency = accountDto.Currency,
-                    CreatedAtUtc = DateTime.UtcNow,
-                };
-
-                _context.Accounts.Add(account);
-                await _context.SaveChangesAsync();
-
+                var createdAccount = await _accountService.CreateAccountAsync(accountDto, userId);
                 return CreatedAtAction(
                     nameof(GetAccount),
-                    new { account.Id },
-                    account
-                );
+                    new { Id = createdAccount.Id },
+                    createdAccount
+                    );
             }
             catch (Exception ex)
             {
@@ -202,25 +113,8 @@ namespace FinTrackWebApi.Controller.Accounts
             try
             {
                 int userId = GetAuthenticatedUserId();
-
-                var account = await _context.Accounts.FirstOrDefaultAsync(a =>
-                    a.Id == Id && a.UserId == userId
-                );
-
-                if (account == null)
-                {
-                    return NotFound($"Account with ID {Id} not found for user {userId}.");
-                }
-
-                account.Name = accountDto.Name;
-                account.Type = accountDto.Type;
-                account.Currency = accountDto.Currency;
-                account.UpdatedAtUtc = DateTime.UtcNow;
-
-                _context.Accounts.Update(account);
-                await _context.SaveChangesAsync();
-
-                return Ok(true);
+                bool updateStatus = await _accountService.UpdateAccountAsync(Id, accountDto, userId);
+                return Ok(updateStatus);
             }
             catch (Exception ex)
             {
@@ -240,20 +134,8 @@ namespace FinTrackWebApi.Controller.Accounts
             try
             {
                 int userId = GetAuthenticatedUserId();
-
-                var account = await _context.Accounts.FirstOrDefaultAsync(a =>
-                    a.Id == Id && a.UserId == userId
-                );
-
-                if (account == null)
-                {
-                    return NotFound($"Account with ID {Id} not found for user {userId}.");
-                }
-
-                _context.Accounts.Remove(account);
-                await _context.SaveChangesAsync();
-
-                return Ok(true);
+                bool deleteStatus = await _accountService.DeleteAccountAsync(Id, userId);
+                return Ok(deleteStatus);
             }
             catch (Exception ex)
             {
