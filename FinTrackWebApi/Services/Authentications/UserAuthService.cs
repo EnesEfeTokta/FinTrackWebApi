@@ -1,93 +1,131 @@
-﻿using FinTrackWebApi.Data;
-using FinTrackWebApi.Dtos.AuthDtos;
+﻿using FinTrackWebApi.Dtos.AuthDtos;
 using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models.Otp;
 using FinTrackWebApi.Models.User;
-using FinTrackWebApi.Security;
-using FinTrackWebApi.Services.Authentications;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 
-namespace FinTrackWebApi.Controller.Authentications
+namespace FinTrackWebApi.Services.Authentications
 {
-    [Route("[controller]")]
-    [ApiController]
-    public class UserAuthController : ControllerBase
+    public class UserAuthService : IUserAuthService
     {
-        private readonly MyDataContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IEmailSender _emailSender;
-        private readonly IOtpService _otpService;
-        private readonly ILogger<UserAuthController> _logger;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<UserAuthService> _logger;
         private readonly UserManager<UserModel> _userManager;
         private readonly SignInManager<UserModel> _signInManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IOtpService _otpService;
+        private readonly IEmailSender _emailSender;
 
-        private readonly IUserAuthService _userAuthService;
-
-        public UserAuthController(
-            MyDataContext context,
-            IConfiguration configuration,
-            IOtpService otpService,
-            IEmailSender emailService,
-            ILogger<UserAuthController> logger,
+        public UserAuthService(
+            ILogger<UserAuthService> logger, 
+            UserManager<UserModel> userManager, 
+            SignInManager<UserModel> signInManager, 
             IWebHostEnvironment webHostEnvironment,
-            UserManager<UserModel> userManager,
-            SignInManager<UserModel> signInManager,
-            IUserAuthService userAuthService
-        )
+            IOtpService otpService,
+            IEmailSender emailSender)
         {
-            _context = context;
-            _configuration = configuration;
-            _otpService = otpService;
-            _emailSender = emailService;
             _logger = logger;
-            _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
             _signInManager = signInManager;
-            _userAuthService = userAuthService;
+            _webHostEnvironment = webHostEnvironment;
+            _otpService = otpService;
+            _emailSender = emailSender;
         }
 
-        [HttpPost("initiate-registration")]
-        public async Task<IActionResult> UserInitiateRegistration(
-            [FromBody] UserInitiateRegistrationDto initiateDto
-        )
+        public async Task<(bool, string)> InitiateRegistration(UserInitiateRegistrationDto initiateDto)
         {
-            if (
-                initiateDto == null
-                || string.IsNullOrWhiteSpace(initiateDto.Email)
-                || string.IsNullOrWhiteSpace(initiateDto.FirstName)
-                || string.IsNullOrWhiteSpace(initiateDto.LastName)
-                || string.IsNullOrWhiteSpace(initiateDto.Password)
-            )
+            string UserName = initiateDto.FirstName.Replace(" ", "").Trim() + "_" + initiateDto.LastName.Replace(" ", "").Trim();
+
+            if (await _userManager.FindByEmailAsync(initiateDto.Email) != null)
             {
-                return BadRequest(new { Message = "Email, Username, and Password are required." });
+                _logger.LogWarning(
+                    "Registration initiation failed: Email {Email} already exists in Identity.",
+                    initiateDto.Email
+                );
+                return (false, "This email address is already registered.");
+            }
+            if (await _userManager.FindByNameAsync(UserName) != null)
+            {
+                _logger.LogWarning(
+                    "Registration initiation failed: Username {Username} already exists in Identity.",
+                    UserName
+                );
+                return (false, "This username is already taken.");
             }
 
-            var (status, message) = await _userAuthService.InitiateRegistration(initiateDto);
-            if (!status)
+            string otp = _otpService.GenerateOtp();
+            DateTime expiryTime = DateTime.UtcNow.AddMinutes(5);
+            string hashedOtp = BCrypt.Net.BCrypt.HashPassword(otp);
+
+            bool stored = await _otpService.StoreOtpAsync(
+                initiateDto.Email,
+                hashedOtp,
+                UserName,
+                initiateDto.Password,
+                initiateDto.ProfilePicture,
+                expiryTime
+            );
+
+            if (!stored)
             {
-                return StatusCode(500, new { Message = message });
+                _logger.LogError("Failed to store OTP for {Email}.", initiateDto.Email);
+                return (false, "An error occurred while initiating registration. Please try again.");
             }
-            return Ok(message);
+
+            try
+            {
+                string emailSubject = "Email Verification Code For FinTrack new Membership";
+                string emailBody = string.Empty;
+                string emailTemplatePath = Path.Combine(
+                    _webHostEnvironment.ContentRootPath,
+                    "Services",
+                    "EmailService",
+                    "EmailHtmlSchemes",
+                    "CodeVerificationScheme.html"
+                );
+
+                if (!System.IO.File.Exists(emailTemplatePath))
+                {
+                    _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                    await _otpService.RemoveOtpAsync(initiateDto.Email);
+                    return (false, "Email template not found.");
+                }
+                using (StreamReader reader = new StreamReader(emailTemplatePath))
+                {
+                    emailBody = await reader.ReadToEndAsync();
+                }
+                emailBody = emailBody.Replace("[UserName]", UserName);
+                emailBody = emailBody.Replace("[VERIFICATION_CODE]", otp);
+                emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+                await _emailSender.SendEmailAsync(initiateDto.Email, emailSubject, emailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to send verification email to {Email}.",
+                    initiateDto.Email
+                );
+                await _otpService.RemoveOtpAsync(initiateDto.Email);
+                return (false, "Failed to send verification email. Please check the address and try again.");
+            }
+
+            _logger.LogInformation(
+                "OTP sent to {Email} for registration initiation.",
+                initiateDto.Email
+            );
+            return (true, "OTP has been sent to your email address. Please verify to complete registration.");
         }
 
-        [HttpPost("verify-otp-and-register")]
-        public async Task<IActionResult> UserVerifyOtpAndRegister(
-            [FromBody] VerifyOtpRequestDto verifyDto
-        )
+        public void Login(LoginDto loginDto)
         {
-            if (
-                verifyDto == null
-                || string.IsNullOrWhiteSpace(verifyDto.Email)
-                || string.IsNullOrWhiteSpace(verifyDto.Code)
-            )
-            {
-                return BadRequest(new { Message = "Email and OTP code are required." });
-            }
+            throw new NotImplementedException();
+        }
 
+        public async Task<(bool, string)> VerifyOtpAndRegister(VerifyOtpRequestDto verifyDto)
+        {
             OtpVerificationModel? otpData = await _otpService.VerifyOtpAsync(
                 verifyDto.Email,
                 verifyDto.Code
@@ -99,7 +137,7 @@ namespace FinTrackWebApi.Controller.Authentications
                     "OTP verification failed for {Email} or OTP is invalid/expired.",
                     verifyDto.Email
                 );
-                return BadRequest(new { Message = "Invalid or expired OTP code." });
+                return (false, "Invalid or expired OTP code.");
             }
 
             _logger.LogInformation("OTP verified successfully for {Email}.", verifyDto.Email);
@@ -144,7 +182,7 @@ namespace FinTrackWebApi.Controller.Authentications
 
                     try
                     {
-                        var userAppSettings = new UserAppSettingsModel
+                        var userAppSettings = new UserAppSettingsModel 
                         {
                             UserId = newUser.Id,
                             Appearance = AppearanceType.Light,
@@ -185,7 +223,7 @@ namespace FinTrackWebApi.Controller.Authentications
                     {
                         _logger.LogError(ex, "Failed to create initial user settings/membership for UserId: {UserId}. The transaction will be rolled back.", newUser.Id);
                         await _userManager.DeleteAsync(newUser);
-                        return StatusCode(500, new { Message = "An error occurred while setting up the user account. Please try again." });
+                        return (false, "An error occurred while setting up the user account. Please try again.");
                     }
 
                     try
@@ -221,13 +259,7 @@ namespace FinTrackWebApi.Controller.Authentications
                         _logger.LogError(ex, "Error sending welcome email to {Email}", newUser.Email);
                     }
 
-                    return Ok(
-                        new
-                        {
-                            Message = "User registration successful. You can now log in.",
-                            UserId = newUser.Id,
-                        }
-                    );
+                    return (true, $"User registration successful. You can now log in. UserId: {newUser.Id}");
                 }
                 else
                 {
@@ -236,13 +268,7 @@ namespace FinTrackWebApi.Controller.Authentications
                         verifyDto.Email,
                         string.Join(", ", result.Errors.Select(e => e.Description))
                     );
-                    return BadRequest(
-                        new
-                        {
-                            Message = "User registration failed.",
-                            Errors = result.Errors.Select(e => e.Description),
-                        }
-                    );
+                    return (true, $"User registration failed. Error: {result.Errors.Select(e => e.Description)}");
                 }
             }
             catch (Exception ex)
@@ -250,63 +276,8 @@ namespace FinTrackWebApi.Controller.Authentications
                 _logger.LogError(ex, "An unexpected error occurred during user registration for {Email}.", verifyDto.Email);
                 if (otpData != null)
                     await _otpService.RemoveOtpAsync(otpData.Email);
-                return StatusCode(500, new { Message = "An unexpected error occurred during registration." });
+                return (false, "An unexpected error occurred during registration.");
             }
-        }
-
-        [HttpPost("login")]
-        public async Task<IActionResult> UserLogin([FromBody] LoginDto loginDto)
-        {
-            if (
-                loginDto == null
-                || string.IsNullOrWhiteSpace(loginDto.Email)
-                || string.IsNullOrWhiteSpace(loginDto.Password)
-            )
-            {
-                return BadRequest(new { Message = "Email and Password are required." });
-            }
-
-            var user = await _userManager.FindByEmailAsync(loginDto.Email);
-            if (user == null)
-            {
-                _logger.LogWarning("Login attempt for email {Email} failed: User not found.", loginDto.Email);
-                return Unauthorized(new { Message = "Invalid credentials." });
-            }
-
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, lockoutOnFailure: true);
-            if (!result.Succeeded)
-            {
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out for email {Email}.", loginDto.Email);
-                    return Unauthorized(new { Message = $"Account locked out. Please try again later. (Until: {user.LockoutEnd?.ToLocalTime()})", IsLockedOut = true, LockoutEndDateUtc = user.LockoutEnd, });
-                }
-                if (result.IsNotAllowed)
-                {
-                    _logger.LogWarning("Login not allowed for email {Email} (e.g., email not confirmed, if configured).", loginDto.Email);
-                    return Unauthorized(new { Message = "Login not allowed. Please confirm your email or contact support.", });
-                }
-                _logger.LogWarning("Login attempt for email {Email} failed: Invalid password. AccessFailedCount: {AccessFailedCount}", loginDto.Email, user.AccessFailedCount);
-                return Unauthorized(new { Message = "Invalid credentials." });
-            }
-
-            _logger.LogInformation("User {Email} logged in successfully.", loginDto.Email);
-            var userRoles = await _userManager.GetRolesAsync(user);
-
-            Token generatedToken = TokenHandler.CreateToken(_configuration, user.Id, user.UserName ?? "", user.Email ?? "", userRoles);
-
-            return Ok(
-                new
-                {
-                    UserId = user.Id,
-                    user.UserName,
-                    user.Email,
-                    user.ProfilePicture,
-                    generatedToken.AccessToken,
-                    generatedToken.RefreshToken,
-                    Roles = userRoles,
-                }
-            );
         }
     }
 }

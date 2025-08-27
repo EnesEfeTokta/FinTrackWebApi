@@ -1,5 +1,4 @@
 ﻿using FinTrackWebApi.Models.Account;
-using Microsoft.AspNetCore.Mvc;
 
 namespace FinTrackWebApi.Repositories.Account
 {
