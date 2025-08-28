@@ -1168,7 +1168,7 @@ namespace FinTrackWebApi.Data.Migrations.MyData
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text")
-                        .HasDefaultValue("Turkish")
+                        .HasDefaultValue("tr_TR")
                         .HasColumnName("Language");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
@@ -1184,6 +1184,47 @@ namespace FinTrackWebApi.Data.Migrations.MyData
                         .IsUnique();
 
                     b.ToTable("UserAppSettings", (string)null);
+                });
+
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserDashboardSettingsModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("SelectedAccounts")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SelectedBudgets")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SelectedCurrencies")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserDashboardSettings", (string)null);
                 });
 
             modelBuilder.Entity("FinTrackWebApi.Models.User.UserMembershipModel", b =>
@@ -1873,6 +1914,17 @@ namespace FinTrackWebApi.Data.Migrations.MyData
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FinTrackWebApi.Models.User.UserDashboardSettingsModel", b =>
+                {
+                    b.HasOne("FinTrackWebApi.Models.User.UserModel", "User")
+                        .WithOne("DashboardSettings")
+                        .HasForeignKey("FinTrackWebApi.Models.User.UserDashboardSettingsModel", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FinTrackWebApi.Models.User.UserMembershipModel", b =>
                 {
                     b.HasOne("FinTrackWebApi.Models.Membership.MembershipPlanModel", "Plan")
@@ -2018,6 +2070,8 @@ namespace FinTrackWebApi.Data.Migrations.MyData
                     b.Navigation("Budgets");
 
                     b.Navigation("Categories");
+
+                    b.Navigation("DashboardSettings");
 
                     b.Navigation("DebtsAsBorrower");
 

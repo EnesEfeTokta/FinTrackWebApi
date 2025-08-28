@@ -1,85 +1,85 @@
-# GİZLİLİK POLİTİKASI
+# **PRIVACY POLICY**
 
-**Son Güncelleme Tarihi:** 16 Haziran 2025
+**Last Updated:** June 16, 2025
 
-**1. Giriş**
+**1. Introduction**
 
-FinTrack ("Şirket", "biz", "bize", "bizim") olarak, FinTrack ("Hizmet", "Uygulama") kullanıcılarımızın ("Kullanıcı", "siz") gizliliğine son derece önem veriyoruz. Bu Gizlilik Politikası, Hizmetimizi kullandığınızda hangi kişisel verilerinizi topladığımızı, bu verileri neden ve nasıl kullandığımızı, kimlerle paylaştığımızı ve verileriniz üzerindeki haklarınızın neler olduğunu açıklamaktadır.
+At FinTrack ("Company", "we", "us", "our"), we take the privacy of our FinTrack ("Service", "Application") users ("User", "you") very seriously. This Privacy Policy explains what personal data we collect when you use our Service, why and how we use that data, with whom we share it, and what your rights are regarding your data.
 
-Bu politika, Kullanıcı Sözleşmemizin ayrılmaz bir parçasıdır. Hizmetimizi kullanarak, verilerinizin bu Gizlilik Politikası'nda açıklanan şekilde toplanmasını ve işlenmesini kabul etmiş olursunuz.
+This policy is an integral part of our Terms of Service. By using our Service, you consent to the collection and processing of your data as described in this Privacy Policy.
 
-**2. Topladığımız Kişisel Veriler**
+**2. Personal Data We Collect**
 
-Hizmetimizi sunmak ve iyileştirmek için çeşitli türlerde bilgiler topluyoruz:
+We collect various types of information to provide and improve our Service:
 
-**2.1. Doğrudan Sizin Sağladığınız Veriler:**
+**2.1. Data You Provide Directly:**
 
-*   **Hesap Bilgileri:** Hizmetimize kaydolurken sağladığınız ad, soyad, e-posta adresi ve şifrelenmiş (hashed) parolanız.
-*   **Finansal Veriler:** Uygulamaya girdiğiniz tüm veriler; hesap adları, bakiye bilgileri, işlem kayıtları (tutar, tarih, açıklama), bütçe limitleri, gelir/gider kategorileri.
-*   **Güvenli Borç Sistemi Verileri:** Bu özelliği kullandığınızda, borç ilişkisinin tarafları, borç tutarı, vadesi ve en önemlisi, anlaşmanın kanıtı olarak **tarafların rızasıyla çekilen video kayıtları**.
-*   **Abonelik ve Ödeme Bilgileri:** Ücretli bir plana abone olduğunuzda, ödeme işleminizi gerçekleştirmek için adınız, fatura adresiniz ve ödeme bilgileriniz (kredi kartı numaranızın bir kısmı, son kullanma tarihi gibi) üçüncü taraf ödeme işlemcimiz tarafından toplanır. **Kredi kartı bilgilerinizin tamamı sunucularımızda saklanmaz.**
-*   **İletişim Bilgileri:** Destek talebi veya geri bildirim için bizimle iletişime geçtiğinizde paylaştığınız bilgiler (e-postalar, mesajlar vb.).
+*   **Account Information:** Your name, email address, and hashed password that you provide when you register for our Service.
+*   **Financial Data:** All data you enter into the application, including account names, balance information, transaction records (amount, date, description), budget limits, and income/expense categories.
+*   **Secure Debt System Data:** When you use this feature, the parties to the debt relationship, the debt amount, due date, and most importantly, **video recordings made with the consent of the parties** as proof of the agreement.
+*   **Subscription and Payment Information:** When you subscribe to a paid plan, your name, billing address, and payment information (such as a portion of your credit card number and expiration date) are collected by our third-party payment processor to process your payment. **Your full credit card information is not stored on our servers.**
+*   **Contact Information:** Information you share when you contact us for support or feedback (emails, messages, etc.).
 
-**2.2. Otomatik Olarak Topladığımız Veriler:**
+**2.2. Data We Collect Automatically:**
 
-*   **Kullanım Verileri:** Hizmetimizle nasıl etkileşimde bulunduğunuza dair bilgiler; erişim tarih ve saatleri, görüntülenen özellikler, uygulama çökmeleri ve diğer sistem etkinlikleri.
-*   **Cihaz Bilgileri:** IP adresi, işletim sistemi sürümü, cihaz türü, tarayıcı türü gibi teknik bilgiler.
-*   **Çerezler (Cookies):** Oturumunuzu yönetmek, tercihlerinizi hatırlamak ve kullanıcı deneyimini iyileştirmek için çerezler ve benzeri izleme teknolojileri kullanabiliriz.
+*   **Usage Data:** Information about how you interact with our Service, such as access dates and times, features viewed, app crashes, and other system activity.
+*   **Device Information:** Technical information such as your IP address, operating system version, device type, and browser type.
+*   **Cookies:** We may use cookies and similar tracking technologies to manage your session, remember your preferences, and improve the user experience.
 
-**3. Verilerinizi Nasıl ve Neden Kullanıyoruz?**
+**3. How and Why We Use Your Data**
 
-Topladığımız verileri aşağıdaki amaçlar doğrultusunda kullanırız:
+We use the data we collect for the following purposes:
 
-*   **Hizmeti Sağlamak ve Sürdürmek:** Hesabınızı oluşturmak, finansal verilerinizi işlemenize olanak tanımak, bütçelerinizi ve raporlarınızı oluşturmak.
-*   **Güvenli Borç Sistemini İşletmek:** Taraflar arasındaki borç anlaşmalarını kaydetmek, takip etmek ve anlaşmanın kanıtı olan video kaydını güvenli bir şekilde saklayarak ilgili tarafların erişimine sunmak.
-*   **Ödemeleri İşlemek:** Abonelik ödemelerinizi almak ve faturalandırma işlemlerini yönetmek.
-*   **İletişim Kurmak:** Size hizmetle ilgili önemli bildirimler, güvenlik uyarıları, teknik duyurular ve destek mesajları göndermek.
-*   **Hizmeti İyileştirmek:** Kullanım verilerini analiz ederek hangi özelliklerin popüler olduğunu anlamak, kullanıcı deneyimini geliştirmek ve yeni özellikler planlamak.
-*   **Güvenliği Sağlamak:** Sahtekarlığı önlemek, Kullanıcı Sözleşmemizi uygulamak ve platformun bütünlüğünü korumak.
+*   **To Provide and Maintain the Service:** To create your account, allow you to process your financial data, and generate your budgets and reports.
+*   **To Operate the Secure Debt System:** To record and track debt agreements between parties and to securely store the video recording as proof of the agreement, making it accessible to the relevant parties.
+*   **To Process Payments:** To receive your subscription payments and manage billing operations.
+*   **To Communicate with You:** To send you important service-related notifications, security alerts, technical announcements, and support messages.
+*   **To Improve the Service:** To analyze usage data to understand which features are popular, enhance the user experience, and plan new features.
+*   **To Ensure Security:** To prevent fraud, enforce our Terms of Service, and protect the integrity of the platform.
 
-**4. Verilerinizi Kimlerle Paylaşıyoruz?**
+**4. With Whom We Share Your Data**
 
-Kişisel verilerinizi sizin izniniz olmadan üçüncü taraflara satmaz veya kiralamayız. Verilerinizi yalnızca aşağıdaki durumlar ve taraflarla paylaşabiliriz:
+We do not sell or rent your personal data to third parties without your consent. We may share your data only in the following situations and with the following parties:
 
-*   **Üçüncü Taraf Hizmet Sağlayıcıları:** Hizmetimizi işletmemize yardımcı olan şirketlerle çalışırız. Bunlar; bulut altyapı ve sunucu barındırma hizmetleri (örn: AWS, Azure), ödeme işleme hizmetleri (örn: Stripe, PayTR), veri analizi ve e-posta gönderim hizmetleridir. Bu sağlayıcılar, verilerinize yalnızca bizim adımıza belirli görevleri yerine getirmek amacıyla erişebilir ve bu verileri başka bir amaçla kullanmamak veya ifşa etmemekle yükümlüdürler.
-*   **Güvenli Borç Sistemi Kapsamında:** Bir borç işlemi başlattığınızda, ilgili işlemin detayları ve video kaydı, **yalnızca o işlemin tarafı olan diğer kullanıcı ile** paylaşılır.
-*   **Yasal Yükümlülükler:** Yasal bir zorunluluk, mahkeme kararı veya resmi bir kurumun talebi doğrultusunda verilerinizi paylaşmamız gerekebilir.
-*   **İşletme Devri:** Bir birleşme, devralma veya varlık satışı durumunda, verileriniz devredilen varlıkların bir parçası olabilir. Bu durumda, verileriniz yeni bir gizlilik politikasına tabi olmadan önce sizi bilgilendiririz.
+*   **Third-Party Service Providers:** We work with companies that help us operate our Service. These include cloud infrastructure and server hosting services (e.g., AWS, Azure), payment processing services (e.g., Stripe), data analysis, and email delivery services. These providers may access your data only to perform specific tasks on our behalf and are obligated not to disclose or use it for any other purpose.
+*   **Within the Secure Debt System:** When you initiate a debt transaction, the details of that transaction and the video recording are shared **only with the other user who is a party to that transaction**.
+*   **Legal Obligations:** We may be required to share your data in response to a legal obligation, court order, or a request from a public authority.
+*   **Business Transfers:** In the event of a merger, acquisition, or asset sale, your data may be part of the transferred assets. In such a case, we will notify you before your data becomes subject to a new privacy policy.
 
-**5. Veri Güvenliği**
+**5. Data Security**
 
-Verilerinizin güvenliğini ciddiye alıyoruz. Yetkisiz erişime, değiştirilmeye, ifşa edilmeye veya yok edilmeye karşı korumak için makul teknik ve idari güvenlik önlemleri alıyoruz. Bu önlemler arasında verilerin şifrelenmesi (hem aktarım sırasında SSL/TLS ile hem de sunucularımızda), parolaların şifrelenerek saklanması (hashing) ve sunuculara erişimin kısıtlanması bulunmaktadır. Ancak, internet üzerinden hiçbir iletim yönteminin veya elektronik depolama yönteminin %100 güvenli olmadığını lütfen unutmayın.
+We take the security of your data seriously. We implement reasonable technical and administrative security measures to protect it from unauthorized access, alteration, disclosure, or destruction. These measures include data encryption (both in transit with SSL/TLS and at rest on our servers), storing passwords with hashing, and restricting access to servers. However, please be aware that no method of transmission over the internet or method of electronic storage is 100% secure.
 
-**6. Veri Saklama Süresi**
+**6. Data Retention Period**
 
-Kişisel verilerinizi, hesabınız aktif olduğu sürece veya size hizmet sunmak için gerekli olduğu sürece saklarız. Hesabınızı sildiğinizde, yasal yükümlülüklerimizi yerine getirmek, uyuşmazlıkları çözmek ve anlaşmalarımızı uygulamak için gerekli olanlar dışında kişisel verilerinizi makul bir süre içinde sistemlerimizden güvenli bir şekilde sileriz.
+We retain your personal data for as long as your account is active or as long as necessary to provide you with our services. When you delete your account, we will securely delete your personal data from our systems within a reasonable period, except for data that is necessary to comply with our legal obligations, resolve disputes, and enforce our agreements.
 
-**7. Verileriniz Üzerindeki Haklarınız (KVKK ve GDPR Uyarınca)**
+**7. Your Rights Regarding Your Data (Under GDPR and Local Laws)**
 
-Veri sahibi olarak, aşağıdaki haklara sahipsiniz:
+As a data subject, you have the following rights:
 
-*   **Erişim Hakkı:** Hakkınızda hangi kişisel verileri işlediğimizi öğrenme.
-*   **Düzeltme Hakkı:** Eksik veya yanlış verilerinizi düzelttirme.
-*   **Silme Hakkı ("Unutulma Hakkı"):** Belirli koşullar altında verilerinizin silinmesini talep etme.
-*   **İşlemeyi Kısıtlama Hakkı:** Verilerinizin işlenmesinin belirli durumlarda kısıtlanmasını isteme.
-*   **Veri Taşınabilirliği Hakkı:** Verilerinizi yapılandırılmış, yaygın olarak kullanılan ve makine tarafından okunabilir bir formatta alma ve başka bir veri sorumlusuna aktarma.
-*   **İtiraz Hakkı:** Kişisel verilerinizin işlenmesine itiraz etme.
+*   **Right of Access:** To learn what personal data we process about you.
+*   **Right to Rectification:** To have incomplete or inaccurate data corrected.
+*   **Right to Erasure ("Right to be Forgotten"):** To request the deletion of your data under certain conditions.
+*   **Right to Restrict Processing:** To request the restriction of the processing of your data in certain situations.
+*   **Right to Data Portability:** To receive your data in a structured, commonly used, and machine-readable format and to transfer it to another data controller.
+*   **Right to Object:** To object to the processing of your personal data.
 
-Bu haklarınızı kullanmak için hesap ayarlarınızı kullanabilir veya [Destek E-posta Adresiniz] adresi üzerinden bizimle iletişime geçebilirsiniz.
+You can exercise these rights using your account settings or by contacting us at [Your Support Email Address].
 
-**8. Çocukların Gizliliği**
+**8. Children's Privacy**
 
-Hizmetimiz 18 yaşın altındaki bireylere yönelik değildir. Bilerek 18 yaşın altındaki çocuklardan kişisel veri toplamıyoruz.
+Our Service is not intended for individuals under the age of 18. We do not knowingly collect personal data from children under 18.
 
-**9. Bu Politikadaki Değişiklikler**
+**9. Changes to This Policy**
 
-Bu Gizlilik Politikasını zaman zaman güncelleyebiliriz. Değişiklik yaptığımızda, sayfanın başındaki "Son Güncelleme Tarihi"ni güncelleyeceğiz. Önemli değişiklikleri size e-posta veya uygulama içi bildirim yoluyla duyuracağız.
+We may update this Privacy Policy from time to time. When we make changes, we will update the "Last Updated" date at the top of the page. We will notify you of any significant changes via email or an in-app notification.
 
-**10. İletişim**
+**10. Contact Us**
 
-Bu Gizlilik Politikası ile ilgili herhangi bir sorunuz veya endişeniz varsa, lütfen [Destek E-posta Adresiniz] adresi üzerinden bizimle iletişime geçmekten çekinmeyin.
+If you have any questions or concerns about this Privacy Policy, please do not hesitate to contact us at [Your Support Email Address].
 
 ---
-**11. EĞİTİM AMAÇLI PROJE BEYANI VE GİZLİLİK UYARISI**
+**11. EDUCATIONAL PROJECT DECLARATION AND PRIVACY WARNING**
 
-**FinTrack, tamamen eğitim amaçlı (portföy, yetenek gösterimi vb.) geliştirilmiş bir projedir ve hiçbir profesyonel veya ticari amaç gütmemektedir.** Bu nedenle, kullanıcılardan uygulamaya **herhangi bir gerçek, hassas veya kişisel olarak tanımlayıcı finansal veri girmemeleri** şiddetle tavsiye edilir. Özellikle "Güvenli Borç Sistemi" için **gerçek kişileri içeren veya gerçek anlaşmaları yansıtan videolar yüklemeyiniz.** Bu uygulamanın, gerçek verilerle veya gerçek finansal işlemler için kullanılmasından doğabilecek hiçbir gizlilik ihlali, veri sızıntısı veya zarardan geliştirici ve Şirket sorumlu tutulamaz. Uygulamayı kullanmanız, bu riski anladığınız ve kabul ettiğiniz anlamına gelir.
+**FinTrack is a project developed solely for educational purposes (e.g., for a portfolio, demonstration of skills) and is not intended for any professional or commercial use.** Therefore, users are strongly advised **not to enter any real, sensitive, or personally identifiable financial data** into the application. In particular, for the "Secure Debt System," **do not upload videos that feature real individuals or reflect actual agreements.** The developer and the Company cannot be held liable for any privacy breaches, data leaks, or damages that may arise from using this application with real data or for actual financial transactions. Your use of the application signifies that you understand and accept this risk.

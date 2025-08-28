@@ -1,137 +1,160 @@
-# FinTrack API: Kullanıcı Ayarları Yönetimi (UserSettings Controller)
+# **FinTrack API: User Settings Management (UserSettings Controller)**
 
-Bu doküman, kullanıcıların kendi profil bilgilerini, hesap güvenliklerini, uygulama tercihlerini ve bildirim ayarlarını yönetmelerini sağlayan `UserSettingsController` endpoint'lerini açıklamaktadır.
+This document describes the `UserSettingsController` endpoints, which allow users to manage their own profile information, account security, application preferences, and notification settings.
 
 *Controller Base Path:* `/UserSettings`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header.
 
 ---
 
-## 1. Hesap Güvenliği ve Kimlik Yönetimi
+## 1. Account Security and Identity Management
 
-### 1.1. Kullanıcı Adını Güncelle
+### 1.1. Update Username
 
-Kullanıcının adını ve soyadını güncelleyerek sistemdeki `UserName`'ini değiştirir.
+Changes the user's `UserName` in the system by updating their first and last name.
 
 *   **Endpoint:** `POST /UserSettings/update-username`
-*   **Açıklama:** Verilen ad ve soyadı birleştirerek (`Ahmet_Yılmaz` gibi) yeni bir kullanıcı adı oluşturur.
+*   **Description:** Creates a new username by combining the given first and last name (e.g., `John_Doe`).
 
 #### Request Body (`UpdateUserNameDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `firstName` | `string` | Kullanıcının yeni adı. |
-| `lastName` | `string` | Kullanıcının yeni soyadı. |
+| `firstName` | `string` | The user's new first name. |
+| `lastName` | `string` | The user's new last name. |
 
-#### Başarılı Yanıt (Success Response)
-*   `200 OK` ve `{"message": "Username updated successfully.", "newUserName": "..."}`.
+#### Success Response
+*   `200 OK` with `{"message": "Username updated successfully.", "newUserName": "..."}`.
 
-#### Hata Yanıtları (Error Responses)
-*   `409 Conflict`: Yeni kullanıcı adı başka bir kullanıcı tarafından alımmışsa.
+#### Error Responses
+*   `409 Conflict`: If the new username is already taken by another user.
 
-### 1.2. E-posta Değişikliği Talep Et (Adım 1/2)
+### 1.2. Request Email Change (Step 1/2)
 
-Kullanıcının e-posta adresini değiştirmek için **güvenli bir süreç** başlatır.
+Initiates a **secure process** to change the user's email address.
 
 *   **Endpoint:** `POST /UserSettings/request-email-change`
-*   **Açıklama:** Kullanıcının kimliğini doğrulamak için, **mevcut e-posta adresine** 15 dakika geçerli bir OTP kodu gönderir. Bu, hesabın sahibi olmadan e-posta değiştirilmesini engeller.
+*   **Description:** To verify the user's identity, an OTP code, valid for 15 minutes, is sent to their **current email address**. This prevents the email from being changed without the account owner's consent.
 
-#### Başarılı Yanıt (Success Response)
-*   `200 OK` ve `{"message": "An OTP has been sent to your current email address to verify your identity."}`.
+#### Success Response
+*   `200 OK` with `{"message": "An OTP has been sent to your current email address to verify your identity."}`.
 
-### 1.3. E-posta Değişikliğini Onayla (Adım 2/2)
+### 1.3. Confirm Email Change (Step 2/2)
 
-OTP ile kimliğini doğrulayan kullanıcının e-posta adresini kalıcı olarak değiştirir.
+Permanently changes the email address of the user who has verified their identity with the OTP.
 
 *   **Endpoint:** `POST /UserSettings/confirm-email-change`
-*   **Açıklama:** OTP doğrulanırsa, kullanıcının e-postası yeni adrese güncellenir.
+*   **Description:** If the OTP is verified, the user's email is updated to the new address.
 
 #### Request Body (`UpdateUserEmailDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `newEmail` | `string` | Kullanıcının yeni e-posta adresi. |
-| `otpCode` | `string` | Mevcut e-postaya gelen OTP kodu. |
+| `newEmail` | `string` | The user's new email address. |
+| `otpCode` | `string` | The OTP code received at the current email address. |
 
-#### Hata Yanıtları (Error Responses)
-*   `400 Bad Request`: OTP yanlış veya süresi dolmuşsa.
-*   `409 Conflict`: Yeni e-posta adresi başka bir kullanıcı tarafından kullanılıyorsa.
+#### Error Responses
+*   `400 Bad Request`: If the OTP is incorrect or has expired.
+*   `409 Conflict`: If the new email address is already in use by another user.
 
-### 1.4. Şifreyi Güncelle
+### 1.4. Update Password
 
-Kullanıcının mevcut şifresini doğrulayarak yeni bir şifre belirlemesini sağlar.
+Allows the user to set a new password by verifying their current one.
 
 *   **Endpoint:** `POST /UserSettings/update-password`
 
 #### Request Body (`UpdateUserPasswordDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `currentPassword`| `string` | Kullanıcının mevcut şifresi. |
-| `newPassword` | `string` | Kullanıcının yeni şifresi. |
+| `currentPassword`| `string` | The user's current password. |
+| `newPassword` | `string` | The user's new password. |
 
-#### Hata Yanıtları (Error Responses)
-*   `400 Bad Request`: Mevcut şifre yanlışsa.
+#### Error Responses
+*   `400 Bad Request`: If the current password is incorrect.
 
 ---
 
-## 2. Profil ve Uygulama Ayarları
+## 2. Profile and Application Settings
 
-### 2.1. Profil Resmini Güncelle
+### 2.1. Update Profile Picture
 
-Kullanıcının profil resminin URL'sini günceller.
+Updates the URL of the user's profile picture.
 
 *   **Endpoint:** `POST /UserSettings/update-profile-picture`
 
 #### Request Body (`UpdateProfilePictureDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `profilePictureUrl`| `string` | Yeni profil resminin tam URL'si. |
+| `profilePictureUrl`| `string` | The full URL of the new profile picture. |
 
-### 2.2. Uygulama Ayarlarını Getir
+### 2.2. Get Application Settings
 
-Kullanıcının tema, dil ve varsayılan para birimi gibi uygulama genelindeki ayarlarını getirir.
+Retrieves the user's application-wide settings, such as theme, language, and default currency.
 
 *   **Endpoint:** `GET /UserSettings/app-settings`
 
-### 2.3. Uygulama Ayarlarını Güncelle
+### 2.3. Update Application Settings
 
-Kullanıcının uygulama genelindeki ayarlarını günceller.
+Updates the user's application-wide settings.
 
 *   **Endpoint:** `POST /UserSettings/app-settings`
 
 #### Request Body (`UserAppSettingsUpdateDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `appearance` | `string` | Tema (`Light`, `Dark`). |
-| `currency` | `string` | Varsayılan para birimi (`TRY`, `USD`, `EUR`). |
-| `language` | `string` | Uygulama dili (`tr_TR`, `en_US`). |
+| `appearance` | `string` | Theme (`Light`, `Dark`). |
+| `currency` | `string` | Default currency (`TRY`, `USD`, `EUR`). |
+| `language` | `string` | Application language (`tr_TR`, `en_US`). |
 
 ---
 
-## 3. Bildirim Tercihleri
+## 3. Notification Preferences
 
-### 3.1. Bildirim Ayarlarını Getir
+### 3.1. Get Notification Settings
 
-Kullanıcının hangi tür bildirimleri almak istediğini belirten ayarları getirir.
+Retrieves the settings that specify which types of notifications the user wishes to receive.
 
 *   **Endpoint:** `GET /UserSettings/user-notification-settings`
 
-### 3.2. Bildirim Ayarlarını Güncelle
+### 3.2. Update Notification Settings
 
-Kullanıcının bildirim tercihlerini günceller.
+Updates the user's notification preferences.
 
-*   **Endpoint:** `POST /UserSettings/user-notificationettings` 
+*   **Endpoint:** `POST /UserSettings/user-notification-settings`
 
 #### Request Body (`UserNotificationSettingsUpdateDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `spendingLimitWarning`| `boolean` | Bütçe limit uyarısı. |
-| `expectedBillReminder`| `boolean` | Beklenen fatura hatırlatıcısı. |
-| `weeklySpendingSummary`| `boolean`| Haftalık harcama özeti. |
-| `newFeaturesAndAnnouncements`| `boolean` | Yeni özellik ve duyurular. |
-| `enableDesktopNotifications`| `boolean` | Masaüstü bildirimlerini etkinleştir. |
+| `spendingLimitWarning`| `boolean` | Budget limit warning. |
+| `expectedBillReminder`| `boolean` | Expected bill reminder. |
+| `weeklySpendingSummary`| `boolean`| Weekly spending summary. |
+| `newFeaturesAndAnnouncements`| `boolean` | New features and announcements. |
+| `enableDesktopNotifications`| `boolean` | Enable desktop notifications. |
+
+---
+
+## 4. Dashboard Preferences
+
+### 4.1. Get Dashboard Preferences
+
+Retrieves the user's personal dashboard preferences.
+
+*   **Endpoint:** `GET /UserSettings/user-dashboard`
+
+### 4.2. Update Dashboard Preferences
+
+Updates the user's dashboard preferences.
+
+*   **Endpoint:** `POST /UserSettings/user-dashboard`
+
+#### Request Body (`UserDashboardSettingsUpdateDto`)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `selectedCurrencies`| `integer[]` | Selected currencies. Max 5 items. |
+| `selectedBudgets`| `integer[]` | Selected budgets. Max 4 items. |
+| `selectedAccounts`| `integer[]`| Selected accounts. Max 2 items. |

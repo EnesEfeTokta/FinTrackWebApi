@@ -1,64 +1,71 @@
-# Changelog
+# **Changelog**
 
-Bu projedeki tüm önemli değişiklikler bu dosyada belgelenecektir.
+All notable changes to this project will be documented in this file.
 
-Bu dosyanın formatı [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) standardına dayanmaktadır ve bu proje [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (Anlamsal Sürümleme) prensiplerine uyar.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Henüz Yayınlanmadı
+---
 
-_Bu bölüm, bir sonraki sürümde yer alacak ancak henüz yayınlanmamış değişiklikleri içerir._
+## **Announcing the Stable Release!**
 
-### Added (Eklendi)
-- İşlemlere (`Transaction`) not ekleme özelliği.
-- Kullanıcı profili için `/api/profile` endpoint'i.
+We are excited to announce the official release of **FinTrack version 1.0.0!** This marks the project's first stable release, featuring a complete and robust set of core functionalities ready for use in a development environment. Thank you for following our progress.
 
-### Changed (Değiştirildi)
-- `AccountController` içerisindeki loglama (kayıt tutma) yapısı daha detaylı hata takibi için iyileştirildi.
-- Token geçerlilik süresi güvenlik nedeniyle 1 saat olarak güncellendi.
+---
 
-### Fixed (Düzeltildi)
-- Bir işlem silindiğinde hesap bakiyesinin yanlış hesaplanmasına neden olan hata giderildi.
-- `DELETE /api/categories/{id}` endpoint'inin, ilişkili işlemleri olan bir kategoriyi silmeye çalışırken `500 Internal Server Error` vermesi sorunu düzeltildi. Artık bu durumda `400 Bad Request` ile bilgilendirici bir mesaj dönüyor.
+## [Unreleased]
 
+_This section contains changes that will be in the next release but have not been published yet._
+
+### Added
+- Feature to add notes to `Transaction` entities.
+- `/api/profile` endpoint for user profiles.
+
+### Changed
+- Improved logging within the `AccountController` for more detailed error tracking.
+- Updated token expiration time to 1 hour for enhanced security.
+
+### Fixed
+- Fixed a bug that caused incorrect account balance calculation when a transaction was deleted.
+- Fixed an issue where the `DELETE /api/categories/{id}` endpoint returned a `500 Internal Server Error` when trying to delete a category with associated transactions. It now correctly returns a `400 Bad Request` with an informative message.
 
 ---
 
 ## [1.0.0] - 2023-11-15
 
-### Added (Eklendi)
-- **Projenin İlk Kararlı Sürümü!**
-- Docker ve Docker Compose ile tam geliştirme ortamı desteği.
-- `FinTrackWebApi` (.NET 8) için temel CRUD (Oluştur, Oku, Güncelle, Sil) operasyonları:
-  - Kullanıcı Yetkilendirme (`/api/auth`) - Login ve Register.
-  - Hesap Yönetimi (`/api/accounts`).
-  - Kategori Yönetimi (`/api/categories`).
-  - Bütçe Yönetimi (`/api/budgets`).
-  - İşlem Yönetimi (`/api/transactions`).
-- `FinBotWebApi` (Python) için ilk yapı ve entegrasyon.
-- PostgreSQL veritabanı entegrasyonu.
-- Proje için temel dokümantasyonlar oluşturuldu: `README.md`, `FAQ.md`, `CONTRIBUTING.md`, ve bu `CHANGELOG.md` dosyası.
-- Swagger UI (`/swagger`) ile interaktif API dokümantasyonu.
+### Added
+- **Initial Stable Release of the Project!**
+- Full development environment support with Docker and Docker Compose.
+- Basic CRUD (Create, Read, Update, Delete) operations for `FinTrackWebApi` (.NET 8):
+  - User Authentication (`/api/auth`) - Login and Register.
+  - Account Management (`/api/accounts`).
+  - Category Management (`/api/categories`).
+  - Budget Management (`/api/budgets`).
+  - Transaction Management (`/api/transactions`).
+- Initial structure and integration for `FinBotWebApi` (Python).
+- PostgreSQL database integration.
+- Created core project documentation: `README.md`, `FAQ.md`, `CONTRIBUTING.md`, and this `CHANGELOG.md` file.
+- Interactive API documentation with Swagger UI (`/swagger`).
 
 ---
 
 ## [0.2.0] - 2023-10-20
 
-### Added (Eklendi)
-- JWT (JSON Web Token) tabanlı yetkilendirme sistemi eklendi. Tüm hassas endpoint'ler koruma altına alındı.
-- Bütçeler (`Budgets`) ve İşlemler (`Transactions`) için controller'lar ve iş mantığı eklendi.
+### Added
+- Implemented JWT (JSON Web Token) based authorization system. All sensitive endpoints are now protected.
+- Added controllers and business logic for `Budgets` and `Transactions`.
 
-### Changed (Değiştirildi)
-- Proje .NET 7'den .NET 8'e yükseltildi.
+### Changed
+- Upgraded the project from .NET 7 to .NET 8.
 
-### Fixed (Düzeltildi)
-- Kategori isimlerinin büyük/küçük harfe duyarlı olması ve aynı ismin farklı formatlarda kaydedilebilmesi sorunu giderildi.
+### Fixed
+- Fixed an issue where category names were case-sensitive, allowing duplicate names with different casing.
 
 ---
 
 ## [0.1.0] - 2023-09-30
 
-### Added (Eklendi)
-- Projenin ilk başlangıcı.
-- `FinTrackWebApi` projesinin temel yapısı oluşturuldu.
-- `Account` ve `Category` modelleri için yetkilendirme olmadan çalışan temel CRUD endpoint'leri eklendi.
-- Veritabanı olarak PostgreSQL yapılandırıldı ve Entity Framework Core ile ilk migration'lar oluşturuldu.
+### Added
+- Initial project setup.
+- Created the basic structure for the `FinTrackWebApi` project.
+- Added basic, non-authorized CRUD endpoints for `Account` and `Category` models.
+- Configured PostgreSQL as the database and created initial migrations with Entity Framework Core.

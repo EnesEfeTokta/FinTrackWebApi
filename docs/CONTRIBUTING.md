@@ -1,133 +1,133 @@
-# FinTrack Projesine Katkıda Bulunma Rehberi
+# **Guide to Contributing to the FinTrack Project**
 
-Öncelikle, FinTrack projesine katkıda bulunmayı düşündüğünüz için teşekkür ederiz! Bu proje, topluluk katkılarıyla daha da güçlenecektir. Bu rehber, katkıda bulunma sürecini olabildiğince kolay ve şeffaf hale getirmek için hazırlanmıştır.
+First off, thank you for considering contributing to the FinTrack project! This project is made stronger by community contributions. This guide is designed to make the contribution process as easy and transparent as possible.
 
-## İçindekiler
-- [Davranış Kuralları (Code of Conduct)](#davranış-kuralları-code-of-conduct)
-- [Nasıl Katkıda Bulunabilirim?](#nasıl-katkıda-bulunabilirim)
-  - [Hata Bildirimi](#hata-bildirimi)
-  - [Yeni Özellik veya İyileştirme Önerme](#yeni-özellik-veya-iyileştirme-önerme)
-  - [İlk Katkınız](#ilk-katkınız)
-- [Geliştirme Ortamı Kurulumu](#geliştirme-ortamı-kurulumu)
-- [Katkı Süreci ve Git Akışı](#katkı-süreci-ve-git-akışı)
-- [Kodlama Standartları](#kodlama-standartları)
-  - [Genel Kurallar](#genel-kurallar)
-  - [C# (.NET) için Standartlar](#c-net-için-standartlar)
-  - [Python için Standartlar](#python-için-standartlar)
-- [Commit Mesajı Standartları](#commit-mesajı-standartları)
-- [Pull Request (PR) Süreci](#pull-request-pr-süreci)
+## Table of Contents
+- [Code of Conduct](#code-of-conduct)
+- [How Can I Contribute?](#how-can-i-contribute)
+  - [Reporting Bugs](#reporting-bugs)
+  - [Suggesting New Features or Enhancements](#suggesting-new-features-or-enhancements)
+  - [Your First Contribution](#your-first-contribution)
+- [Development Environment Setup](#development-environment-setup)
+- [Contribution Process and Git Workflow](#contribution-process-and-git-workflow)
+- [Coding Standards](#coding-standards)
+  - [General Rules](#general-rules)
+  - [Standards for C# (.NET)](#standards-for-c-net)
+  - [Standards for Python](#standards-for-python)
+- [Commit Message Standards](#commit-message-standards)
+- [Pull Request (PR) Process](#pull-request-pr-process)
 
-## Davranış Kuralları (Code of Conduct)
+## Code of Conduct
 
-Bu projenin tüm katılımcılarının, projemizin `CODE_OF_CONDUCT.md` dosyasında belirtilen davranış kurallarına uyması beklenmektedir. Lütfen herkes için samimi ve kapsayıcı bir ortam sağlamak adına bu kuralları okuyun ve uyun.
+All participants in this project are expected to adhere to our Code of Conduct, outlined in the `CODE_OF_CONDUCT.md` file. Please read and follow these rules to ensure a friendly and inclusive environment for everyone.
 
-## Nasıl Katkıda Bulunabilirim?
+## How Can I Contribute?
 
-### Hata Bildirimi
-Eğer bir hata bulduysanız, lütfen GitHub "Issues" bölümünde yeni bir "issue" oluşturun. Hatanızı tarif ederken şu bilgileri eklemeye çalışın:
-- Hatanın ne olduğunu açık ve kısa bir şekilde özetleyin.
-- Hatayı yeniden oluşturmak için gereken adımları listeleyin.
-- Beklediğiniz davranışın ne olduğunu açıklayın.
-- Gördüğünüz gerçek davranışın ne olduğunu açıklayın.
-- Mümkünse ekran görüntüleri ekleyin.
+### Reporting Bugs
+If you find a bug, please create a new "issue" in the GitHub "Issues" section. When describing your bug, try to include the following information:
+- A clear and concise summary of what the bug is.
+- A list of steps required to reproduce the bug.
+- An explanation of what you expected to happen.
+- A description of what actually happened.
+- Screenshots, if possible.
 
-### Yeni Özellik veya İyileştirme Önerme
-Harika bir fikriniz mi var? GitHub "Issues" bölümünde yeni bir "issue" oluşturarak fikrinizi bizimle paylaşın. Önerinizi detaylandırarak neden faydalı olacağını açıklayın.
+### Suggesting New Features or Enhancements
+Have a great idea? Share it with us by creating a new "issue" in the GitHub "Issues" section. Explain your suggestion in detail and describe why it would be beneficial.
 
-### İlk Katkınız
-Eğer projeye ilk defa katkıda bulunacaksanız, "Issues" bölümünde `good first issue` veya `help wanted` etiketli konulara göz atabilirsiniz. Bunlar, projeye başlamak için genellikle daha uygun konulardır.
+### Your First Contribution
+If you are contributing to the project for the first time, you can browse issues tagged with `good first issue` or `help wanted` in the "Issues" section. These are typically more suitable for getting started with the project.
 
-## Geliştirme Ortamı Kurulumu
+## Development Environment Setup
 
-Proje, geliştirme ortamını standartlaştırmak ve kolaylaştırmak için tamamen **Docker** üzerine kuruludur.
+The project is fully based on **Docker** to standardize and simplify the development environment.
 
-**Gereksinimler:**
+**Requirements:**
 - [Git](https://git-scm.com/)
-- [Docker](https://www.docker.com/products/docker-desktop/) ve Docker Compose
+- [Docker](https://www.docker.com/products/docker-desktop/) and Docker Compose
 
-**Kurulum Adımları:**
-1.  Bu repoyu **fork'layın** ve fork'ladığınız repoyu yerel makinenize klonlayın:
+**Setup Steps:**
+1.  **Fork** this repository and then clone your fork to your local machine:
     ```bash
-    git clone https://github.com/SENIN_KULLANICI_ADIN/FinTrack.git
+    git clone https://github.com/YOUR_USERNAME/FinTrack.git
     cd FinTrack
     ```
-2.  Projenin ana dizininde, tüm servisleri (API'ler ve veritabanı) başlatmak için aşağıdaki komutu çalıştırın:
+2.  In the project's root directory, run the following command to start all services (APIs and database):
     ```bash
     docker-compose up --build -d
     ```
-    - `--build` parametresi, kodda yaptığınız değişikliklerin yansıtılması için imajların yeniden oluşturulmasını sağlar.
-    - `-d` parametresi, servisleri arka planda çalıştırır.
-3.  Hepsi bu kadar! Servisleriniz artık çalışıyor.
-    - **Ana API:** `http://localhost:5000`
-    - **Swagger UI:** `http://localhost:5000/swagger`
-    - **Bot API:** `http://localhost:5001`
+    - The `--build` flag ensures that the images are rebuilt to reflect any changes you've made to the code.
+    - The `-d` flag runs the services in the background (detached mode).
+3.  That's it! Your services are now running.
+    - **Main API:** `http://localhost:5246`
+    - **Swagger UI:** `http://localhost:5246/swagger`
+    - **Bot API:** `http://localhost:8000`
 
-Servisleri durdurmak için `docker-compose down` komutunu kullanabilirsiniz.
+You can stop the services using the `docker-compose down` command.
 
-## Katkı Süreci ve Git Akışı
+## Contribution Process and Git Workflow
 
-1.  Yukarıda anlatıldığı gibi repoyu fork'layıp klonlayın.
-2.  Ana (`main` veya `develop`) branch'inden yola çıkarak yeni bir branch oluşturun. Branch isminiz yaptığınız işi özetlemelidir.
+1.  Fork and clone the repository as described above.
+2.  Create a new branch from the main development branch (`main` or `develop`). Your branch name should summarize the work you are doing.
     ```bash
-    # Örnekler:
+    # Examples:
     git checkout -b feature/add-user-profile-endpoint
     git checkout -b fix/login-validation-bug
     ```
-3.  Değişikliklerinizi yapın ve kodlama standartlarına uygun olduğundan emin olun.
-4.  Değişikliklerinizi anlamlı commit mesajları ile kaydedin.
-5.  Oluşturduğunuz branch'i kendi fork'unuza push'layın:
+3.  Make your changes and ensure they adhere to the coding standards.
+4.  Commit your changes with meaningful commit messages.
+5.  Push your new branch to your own fork:
     ```bash
     git push origin feature/add-user-profile-endpoint
     ```
-6.  GitHub üzerinden orijinal FinTrack reposuna bir **Pull Request (PR)** açın.
+6.  Open a **Pull Request (PR)** from your fork to the original FinTrack repository on GitHub.
 
-## Kodlama Standartları
+## Coding Standards
 
-### Genel Kurallar
-- Tüm kod, yorum ve dokümantasyon **İngilizce** olmalıdır.
-- Kodunuzu anlaşılır ve temiz tutun. Gereksiz karmaşıklıktan kaçının.
+### General Rules
+- All code, comments, and documentation must be in **English**.
+- Keep your code clean and understandable. Avoid unnecessary complexity.
 
-### C# (.NET) için Standartlar
-- [Microsoft'un C# Kodlama Standartları](https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)'nı takip edin.
-- Hata ayıklama için `Console.WriteLine` yerine projedeki `ILogger` yapısını kullanın.
-- Asenkron operasyonlar için `async/await`'i doğru şekilde kullanın.
-- Tüm public metotlar ve sınıflar için XML yorumları ekleyin. Bu, Swagger dokümantasyonu için de gereklidir.
+### Standards for C# (.NET)
+- Follow [Microsoft's C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions).
+- Use the project's `ILogger` for debugging instead of `Console.WriteLine`.
+- Use `async/await` correctly for asynchronous operations.
+- Add XML comments for all public methods and classes. This is also required for Swagger documentation.
 
-### Python için Standartlar
-- [PEP 8 Style Guide](https://www.python.org/dev/peps/pep-0008/)'a uyun.
-- Kodunuzu göndermeden önce `black` gibi bir formatlayıcı ile formatlamanız tavsiye edilir.
+### Standards for Python
+- Adhere to the [PEP 8 Style Guide](https://www.python.org/dev/peps/pep-0008/).
+- It is recommended to format your code with a formatter like `black` before submitting.
 
-## Commit Mesajı Standartları
+## Commit Message Standards
 
-Projemiz, commit mesajları için [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standardını kullanır. Bu, hem Git geçmişini okunabilir kılar hem de versiyonlama sürecini otomatikleştirir.
+Our project uses the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard for commit messages. This makes the Git history readable and helps automate the versioning process.
 
-**Format:** `<tür>(<kapsam>): <açıklama>`
+**Format:** `<type>(<scope>): <description>`
 
-**Yaygın Türler:**
-- `feat`: Yeni bir özellik eklerken.
-- `fix`: Bir hatayı düzeltirken.
-- `docs`: Sadece dokümantasyonu değiştirirken.
-- `style`: Kodun anlamını etkilemeyen formatlama değişiklikleri (boşluk, noktalı virgül vb.).
-- `refactor`: Hata düzeltmeyen veya özellik eklemeyen kod yeniden yapılandırmaları.
-- `test`: Eksik testleri eklerken veya mevcut testleri düzeltirken.
-- `chore`: Build sürecini, yardımcı araçları veya kütüphaneleri etkileyen değişiklikler.
+**Common Types:**
+- `feat`: When adding a new feature.
+- `fix`: When fixing a bug.
+- `docs`: When changing only the documentation.
+- `style`: Formatting changes that do not affect the meaning of the code (whitespace, semicolons, etc.).
+- `refactor`: Code restructuring that neither fixes a bug nor adds a feature.
+- `test`: When adding missing tests or correcting existing tests.
+- `chore`: Changes that affect the build process, helper tools, or libraries.
 
-**Örnekler:**
+**Examples:**
 ```
 feat(auth): Add password reset functionality
 fix(account): Correctly calculate account balance with negative transactions
 docs(readme): Update setup instructions for Docker
 ```
 
-## Pull Request (PR) Süreci
+## Pull Request (PR) Process
 
-1.  PR'ınızın başlığı, yaptığınız değişikliği net bir şekilde özetlemelidir. (Örn: `feat(categories): Add support for sub-categories`)
-2.  PR açıklamasında şu soruları yanıtlayın:
-    - **Bu değişiklik neden gerekli?**
-    - **Ne yapıyor?**
-    - **İlgili "Issue" numarası var mı?** (Örn: `Closes #123`)
-3.  PR'ınızın tek bir amaca hizmet ettiğinden emin olun. Birden fazla alakasız değişikliği tek bir PR'da birleştirmeyin.
-4.  Gönderdiğiniz kodun projeyi "build" ettiğinden ve tüm testlerin geçtiğinden emin olun.
-5.  PR'ınız gözden geçirildikten sonra istenen değişiklikleri yapmaya ve geri bildirimlere yanıt vermeye hazır olun.
+1.  The title of your PR should clearly summarize the change you've made (e.g., `feat(categories): Add support for sub-categories`).
+2.  In the PR description, answer the following questions:
+    - **Why is this change necessary?**
+    - **What does it do?**
+    - **Is there a related "Issue" number?** (e.g., `Closes #123`)
+3.  Ensure that your PR serves a single purpose. Do not combine multiple unrelated changes into a single PR.
+4.  Make sure the code you submit builds the project successfully and that all tests pass.
+5.  Be prepared to make requested changes and respond to feedback after your PR has been reviewed.
 
-FinTrack'i daha iyi bir yer haline getirmeye yardımcı olduğunuz için tekrar teşekkürler!
+Thank you again for helping make FinTrack a better place

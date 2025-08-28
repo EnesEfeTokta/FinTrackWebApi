@@ -1,5 +1,7 @@
 ﻿using FinTrackWebApi.Data;
 using FinTrackWebApi.Models.User;
+using FinTrackWebApi.Repositories.Account;
+using FinTrackWebApi.Services.Account;
 using FinTrackWebApi.Services.ChatBotService;
 using FinTrackWebApi.Services.CurrencyServices;
 using FinTrackWebApi.Services.DocumentService;
@@ -70,6 +72,9 @@ namespace FinTrackWebApi.Extensions
             services.AddScoped<IPaymentService, StripePaymentService>();
             services.AddScoped<IMediaEncryptionService, MediaEncryptionService>();
             services.AddScoped<IChatBotService, ChatBotService>();
+
+            services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IAccountService, AccountService>();
 
             services.AddHostedService<DebtOverdueCheckerService>();
 

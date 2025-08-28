@@ -1,43 +1,43 @@
-# FinTrack API: Hesap Yönetimi (Account Controller)
+# **FinTrack API: Account Management (Account Controller)**
 
-Bu doküman, kullanıcıların finansal hesaplarını (`Account`) yönetmek için kullanılan `AccountController` endpoint'lerini açıklamaktadır.
+This document describes the `AccountController` endpoints used for managing users' financial accounts (`Account`).
 
 *Controller Base Path:* `/Account`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir. Sistem, token içerisindeki `userId` (NameIdentifier claim) üzerinden kullanıcıyı tanır ve işlemleri sadece o kullanıcı adına gerçekleştirir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header. The system identifies the user via the `userId` (from the NameIdentifier claim) within the token and performs operations only on behalf of that user.
 
-**Header Örneği:**
-`Authorization: Bearer <JWT_TOKENINIZ>`
+**Header Example:**
+`Authorization: Bearer <YOUR_JWT_TOKEN>`
 
-Hatalı veya eksik token durumunda `401 Unauthorized` hatası döner.
+An invalid or missing token will result in a `401 Unauthorized` error.
 
 ---
 
 ## Endpoints
 
-### 1. Kullanıcının Tüm Hesaplarını Getir
+### 1. Retrieve All of a User's Accounts
 
-Giriş yapmış kullanıcının sistemde kayıtlı tüm hesaplarını listeler.
+Lists all accounts registered in the system for the logged-in user.
 
 *   **Endpoint:** `GET /Account`
-*   **Açıklama:** Token'ı gönderen kullanıcıya ait tüm hesapların bir listesini döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns a list of all accounts belonging to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 
 *   **Status Code:** `200 OK`
-*   **Content:** `AccountDto` objelerinden oluşan bir dizi.
+*   **Content:** An array of `AccountDto` objects.
     ```json
     [
         {
           "id": 1,
-          "name": "Maaş Hesabı",
+          "name": "Salary Account",
           "type": "Bank",
           "isActive": true,
           "balance": 15250.75,
@@ -47,7 +47,7 @@ Giriş yapmış kullanıcının sistemde kayıtlı tüm hesaplarını listeler.
         },
         {
           "id": 2,
-          "name": "Nakit Cüzdan",
+          "name": "Cash Wallet",
           "type": "Cash",
           "isActive": true,
           "balance": 850.00,
@@ -58,7 +58,7 @@ Giriş yapmış kullanıcının sistemde kayıtlı tüm hesaplarını listeler.
     ]
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 
 *   **Status Code:** `500 Internal Server Error`
     ```json
@@ -67,28 +67,28 @@ Giriş yapmış kullanıcının sistemde kayıtlı tüm hesaplarını listeler.
 
 ---
 
-### 2. Belirli Bir Hesabı Getir
+### 2. Get a Specific Account
 
-Kullanıcıya ait tek bir hesabın detaylarını ID ile getirir.
+Retrieves the details of a single account belonging to the user by its ID.
 
 *   **Endpoint:** `GET /Account/{Id}`
-*   **Açıklama:** Verilen `Id`'ye sahip olan ve token'ı gönderen kullanıcıya ait olan hesabın detaylarını döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns the details of the account with the given `Id` that belongs to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### URL Parametreleri
+#### URL Parameters
 
-| Parametre | Tip     | Açıklama                      | Zorunlu mu? |
-|-----------|---------|-------------------------------|-------------|
-| `Id`      | `integer` | Detayı istenen hesabın ID'si. | Evet        |
+| Parameter | Type      | Description                   | Required? |
+|-----------|-----------|-------------------------------|-----------|
+| `Id`      | `integer` | The ID of the account to retrieve. | Yes       |
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 
 *   **Status Code:** `200 OK`
-*   **Content:** `AccountDto` objesi.
+*   **Content:** An `AccountDto` object.
     ```json
     {
       "id": 1,
-      "name": "Maaş Hesabı",
+      "name": "Salary Account",
       "type": "Bank",
       "isActive": true,
       "balance": 15250.75,
@@ -98,7 +98,7 @@ Kullanıcıya ait tek bir hesabın detaylarını ID ile getirir.
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 
 *   **Status Code:** `404 Not Found`
     ```json
@@ -108,46 +108,46 @@ Kullanıcıya ait tek bir hesabın detaylarını ID ile getirir.
 
 ---
 
-### 3. Yeni Hesap Oluştur
+### 3. Create a New Account
 
-Kullanıcı için yeni bir finansal hesap oluşturur.
+Creates a new financial account for the user.
 
 *   **Endpoint:** `POST /Account`
-*   **Açıklama:** Gönderilen bilgilere göre yeni bir hesap oluşturur ve oluşturulan kaynağı `Location` header'ı ile birlikte döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Creates a new account based on the provided information and returns the created resource along with a `Location` header.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`AccountCreateDto`)
 
 *   **Content-Type:** `application/json`
 
-| Alan       | Tip       | Açıklama                                 | Zorunlu mu? |
-|------------|-----------|------------------------------------------|-------------|
-| `name`     | `string`  | Hesabın adı (örn: "Yatırım Hesabım").    | Evet        |
-| `type`     | `string`  | Hesap türü. Alabileceği değerler: `Cash`, `Bank`, `CreditCard`, `Investment`, `Other`. | Evet        |
-| `isActive` | `boolean` | Hesabın aktif olup olmadığı.             | Evet        |
-| `currency` | `string`  | Hesabın para birimi. Alabileceği değerler: `TRY`, `USD`, `EUR` vb. | Evet        |
+| Field      | Type      | Description                               | Required? |
+|------------|-----------|-------------------------------------------|-----------|
+| `name`     | `string`  | The name of the account (e.g., "My Investment Account"). | Yes       |
+| `type`     | `string`  | The account type. Possible values: `Cash`, `Bank`, `CreditCard`, `Investment`, `Other`. | Yes       |
+| `isActive` | `boolean` | Whether the account is active.            | Yes       |
+| `currency` | `string`  | The currency of the account. Possible values: `TRY`, `USD`, `EUR`, etc. | Yes       |
 
-#### Request Body Örneği
+#### Request Body Example
 
 ```json
 {
-  "name": "Euro Hesabı",
+  "name": "Euro Account",
   "type": "Bank",
   "isActive": true,
   "currency": "EUR"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 
 *   **Status Code:** `201 Created`
-*   **Headers:** `Location: /Account/{yeni_hesap_id}`
-*   **Content:** Oluşturulan `AccountModel` objesi.
+*   **Headers:** `Location: /Account/{new_account_id}`
+*   **Content:** The created `AccountModel` object.
     ```json
     {
         "id": 3,
         "userId": 15,
-        "name": "Euro Hesabı",
+        "name": "Euro Account",
         "type": "Bank",
         "isActive": true,
         "balance": 0.0,
@@ -157,41 +157,41 @@ Kullanıcı için yeni bir finansal hesap oluşturur.
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 
 *   **Status Code:** `400 Bad Request`
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 4. Hesabı Güncelle
+### 4. Update an Account
 
-Mevcut bir hesabı günceller.
+Updates an existing account.
 
 *   **Endpoint:** `PUT /Account/{Id}`
-*   **Açıklama:** Belirtilen `Id`'ye sahip hesabı, gönderilen verilerle günceller.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Updates the account with the specified `Id` using the provided data.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`AccountUpdateDto`)
 
 *   **Content-Type:** `application/json`
 
-| Alan     | Tip       | Açıklama                                | Zorunlu mu? |
-|----------|-----------|-----------------------------------------|-------------|
-| `name`   | `string`  | Hesabın yeni adı.                       | Evet        |
-| `type`   | `string`  | Hesap türü. Alabileceği değerler: `Cash`, `Bank`, `CreditCard`, `Investment`, `Other`. | Evet        |
-| `currency`| `string` | Hesabın yeni para birimi. Alabileceği değerler: `TRY`, `USD`, `EUR` vb. | Evet        |
+| Field    | Type      | Description                               | Required? |
+|----------|-----------|-------------------------------------------|-----------|
+| `name`   | `string`  | The new name of the account.              | Yes       |
+| `type`   | `string`  | The account type. Possible values: `Cash`, `Bank`, `CreditCard`, `Investment`, `Other`. | Yes       |
+| `currency`| `string` | The new currency of the account. Possible values: `TRY`, `USD`, `EUR`, etc. | Yes       |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "name": "Dolar Yatırım Hesabı",
+  "name": "Dollar Investment Account",
   "type": "Investment",
   "currency": "USD"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 
 *   **Status Code:** `200 OK`
 *   **Content:**
@@ -199,7 +199,7 @@ Mevcut bir hesabı günceller.
     true
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 
 *   **Status Code:** `400 Bad Request`
 *   **Status Code:** `404 Not Found`
@@ -207,15 +207,15 @@ Mevcut bir hesabı günceller.
 
 ---
 
-### 5. Hesabı Sil
+### 5. Delete an Account
 
-Mevcut bir hesabı siler.
+Deletes an existing account.
 
 *   **Endpoint:** `DELETE /Account/{Id}`
-*   **Açıklama:** Belirtilen `Id`'ye sahip hesabı kalıcı olarak siler. Bu işlem geri alınamaz.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Permanently deletes the account with the specified `Id`. This action cannot be undone.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 
 *   **Status Code:** `200 OK`
 *   **Content:**
@@ -223,7 +223,7 @@ Mevcut bir hesabı siler.
     true
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`

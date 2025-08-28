@@ -1,26 +1,26 @@
-# FinTrack API: GBS Video Yönetimi (Videos Controller)
+# **FinTrack API: GBS Video Management (Videos Controller)**
 
-Bu doküman, Güvenli Borç Sistemi'nin (GBS) temelini oluşturan **video delil mekanizmasını** yöneten `VideosController` endpoint'lerini açıklamaktadır. Bu controller, video yükleme, operatör onayı, şifreleme ve güvenli video akışı (streaming) süreçlerinden sorumludur.
+This document describes the `VideosController` endpoints, which manage the **video evidence mechanism** that forms the foundation of the Secure Debt System (GBS). This controller is responsible for the processes of video uploading, operator approval, encryption, and secure video streaming.
 
 *Controller Base Path:* `/Videos`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. Her endpoint'in kendine özgü rol ve sahiplik bazlı yetkilendirme kuralları vardır.
+**All endpoints** in this controller require authorization. Each endpoint has its own specific role-based and ownership-based authorization rules.
 
-### Kriptografi ve Güvenlik Modeli
+### Cryptography and Security Model
 
-1.  **Geçici Depolama:** Yüklenen videolar ilk olarak sunucuda şifresiz, geçici bir alanda saklanır.
-2.  **Operatör Onayı:** Bir operatör videoyu onayladığında, sistem rastgele ve güçlü bir **20 karakterlik şifreleme anahtarı** (`userPasswordKey`) üretir.
-3.  **AES Şifreleme:** Video, bu anahtar kullanılarak **AES** algoritması ile şifrelenir ve güvenli bir alana taşınır. Orijinal (şifresiz) dosya kalıcı olarak silinir.
-4.  **Anahtar Teslimi:** Üretilen **20 karakterlik anahtar**, borcun alacaklısına (Lender) e-posta ile teslim edilir. Bu anahtar sistemde **saklanmaz**, sadece hash'lenmiş bir versiyonu doğrulama amacıyla tutulur. Anahtarın güvenliği tamamen alacaklının sorumluluğundadır.
-5.  **Güvenli Akış (Streaming):** Borç temerrüde düştüğünde, alacaklı elindeki anahtarı kullanarak videoyu deşifre edebilir ve izleyebilir.
+1.  **Temporary Storage:** Uploaded videos are initially stored unencrypted in a temporary location on the server.
+2.  **Operator Approval:** When an operator approves a video, the system generates a random and strong **20-character encryption key** (`userPasswordKey`).
+3.  **AES Encryption:** The video is encrypted using this key with the **AES** algorithm and moved to a secure location. The original (unencrypted) file is permanently deleted.
+4.  **Key Delivery:** The generated **20-character key** is delivered to the debt's lender via email. This key is **not stored** in the system; only a hashed version is kept for verification purposes. The security of the key is entirely the lender's responsibility.
+5.  **Secure Streaming:** When a debt is in default, the lender can use their key to decrypt and watch the video.
 
-### `VideoStatusType` Değerleri
+### `VideoStatusType` Values
 *   `PendingApproval`
 *   `ProcessingEncryption`
 *   `Encrypted`
@@ -32,98 +32,98 @@ Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. Her endpoint'
 
 ## Endpoints
 
-### 1. Borçlu Tarafından Video Yükleme (Adım 3)
+### 1. Video Upload by Borrower (Step 3)
 
-Borçlunun, kabul ettiği bir borç teklifi için taahhüt videosunu sisteme yüklemesini sağlar.
+Allows the borrower to upload a commitment video for a debt offer they have accepted.
 
 *   **Endpoint:** `POST /Videos/user-upload-video`
-*   **Açıklama:** Bu endpoint `multipart/form-data` formatında bir video dosyası kabul eder. Videoyu geçici olarak sunucuda saklar ve borcun durumunu `PendingOperatorApproval`'a (Operatör Onayı Bekleniyor) günceller.
-*   **Yetkilendirme:** Gerekli. Sadece borcun "Borçlusu" (`Borrower`) bu işlemi yapabilir.
-*   **İstek Tipi:** `multipart/form-data`
+*   **Description:** This endpoint accepts a video file in `multipart/form-data` format. It temporarily stores the video on the server and updates the debt's status to `PendingOperatorApproval`.
+*   **Authorization:** Required. Only the "Borrower" of the debt can perform this action.
+*   **Request Type:** `multipart/form-data`
 
-#### Form Verisi
-| Alan | Tip | Açıklama | Zorunlu mu? |
+#### Form Data
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `file` | `File` | Kullanıcının taahhüt videosu. | Evet |
-| `debtId` | `integer`| Videonun ilişkili olduğu borcun ID'si. | Evet |
+| `file` | `File` | The user's commitment video. | Yes |
+| `debtId` | `integer`| The ID of the debt associated with the video. | Yes |
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** Videonun metadatası.
+*   **Content:** The video's metadata.
     ```json
     {
-      "message": "Video metadata başarıyla kaydedildi: {VideoMetadata}",
+      "message": "Video metadata saved successfully.",
       "videoMetadata": {
         "id": 1,
         "uploadedByUserId": 22,
-        "originalFileName": "taahhut.mp4",
+        "originalFileName": "commitment.mp4",
         "fileSize": 15728640,
         "contentType": "video/mp4",
         "status": "PendingApproval"
-        // ... diğer metadata alanları
+        // ... other metadata fields
       }
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   `403 Forbidden`: İşlemi yapan kullanıcı borcun borçlusu değilse.
-*   `400 Bad Request`: Borcun durumu video yüklemeye uygun değilse (`AcceptedPendingVideoUpload` değilse).
+#### Error Responses
+*   `403 Forbidden`: If the user performing the action is not the borrower of the debt.
+*   `400 Bad Request`: If the debt is not in a status that allows for video upload (i.e., not `AcceptedPendingVideoUpload`).
 
 ---
 
-### 2. Videoyu Onaylama ve Şifreleme (Adım 4)
+### 2. Approve and Encrypt Video (Step 4)
 
-Operatörün, yüklenen videoyu onaylayıp şifreleme sürecini tetiklemesini sağlar.
+Allows an operator to approve an uploaded video and trigger the encryption process.
 
 *   **Endpoint:** `POST /Videos/video-approve/{videoId}`
-*   **Açıklama:** Bu endpoint, bir operatör tarafından çağrıldığında videoyu şifreler, orijinal dosyayı siler ve borcun durumunu `Active` (Aktif) yapar. Ardından alacaklıya şifreleme anahtarını içeren bir e-posta gönderir.
-*   **Yetkilendirme:** Gerekli. Bu işlemi sadece `VideoApproval` veya `Admin` rolüne sahip kullanıcılar yapabilir.
+*   **Description:** When called by an operator, this endpoint encrypts the video, deletes the original file, and sets the debt's status to `Active`. It then sends an email containing the encryption key to the lender.
+*   **Authorization:** Required. This action can only be performed by users with the `VideoApproval` or `Admin` role.
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
     ```json
     {
-      "message": "Video başarıyla onaylandı ve şifrelendi.",
+      "message": "Video was successfully approved and encrypted.",
       "videoMeta": {
         "id": 1,
         "status": "Encrypted",
         "storageType": "EncryptedFileSystem"
-        // ... diğer metadata alanları
+        // ... other metadata fields
       }
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   `404 Not Found`: Video veya ilişkili borç bulunamazsa.
-*   `400 Bad Request`: Video zaten işlenmişse.
-*   `500 Internal Server Error`: Şifreleme veya e-posta gönderme sırasında bir hata oluşursa.
+#### Error Responses
+*   `404 Not Found`: If the video or the associated debt cannot be found.
+*   `400 Bad Request`: If the video has already been processed.
+*   `500 Internal Server Error`: If an error occurs during encryption or email dispatch.
 
 ---
 
-### 3. Şifreli Videoyu İzleme/Akıtma (Adım 6)
+### 3. Stream/Watch Encrypted Video (Step 6)
 
-Temerrüde düşmüş bir borcun alacaklısının, elindeki anahtar ile videoyu izlemesini sağlar.
+Allows the lender of a defaulted debt to watch the video using their key.
 
 *   **Endpoint:** `GET /Videos/video-metadata-stream/{videoId}`
-*   **Açıklama:** Bu endpoint, şifrelenmiş video dosyasını, sorgu parametresi (`query parameter`) olarak sağlanan anahtar ile anlık olarak deşifre eder ve istemciye bir dosya akışı (stream) olarak gönderir.
-*   **Yetkilendirme:** Gerekli. Sadece borcun "Alacaklısı" (`Lender`) veya `Admin` rolündeki kullanıcılar, borç `Defaulted` (Temerrüde Düştü) durumundayken bu işlemi yapabilir.
+*   **Description:** This endpoint decrypts the encrypted video file on-the-fly using the key provided as a query parameter and sends it to the client as a file stream.
+*   **Authorization:** Required. Only the "Lender" of the debt or users with the `Admin` role can perform this action, and only when the debt status is `Defaulted`.
 
-#### URL Parametreleri
-| Parametre | Tip | Açıklama | Zorunlu mu? |
+#### URL Parameters
+| Parameter | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `videoId` | `integer`| İzlenmek istenen videonun metadatasının ID'si. | Evet |
+| `videoId` | `integer`| The ID of the video metadata to be streamed. | Yes |
 
-#### Sorgu Parametreleri (Query Parameters)
-| Parametre | Tip | Açıklama | Zorunlu mu? |
+#### Query Parameters
+| Parameter | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `key` | `string` | Videoyu deşifre etmek için alacaklıya e-posta ile gönderilen 20 karakterlik anahtar. | Evet |
+| `key` | `string` | The 20-character key sent to the lender via email to decrypt the video. | Yes |
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content-Type:** Videonun orijinal `Content-Type`'ı (örn: `video/mp4`).
-*   **Content:** Deşifre edilmiş video dosyasının kendisi (binary stream).
+*   **Content-Type:** The original `Content-Type` of the video (e.g., `video/mp4`).
+*   **Content:** The decrypted video file itself (binary stream).
 
-#### Hata Yanıtları (Error Responses)
-*   `401 Unauthorized`: Sağlanan `key` yanlışsa.
-*   `403 Forbidden`: Kullanıcı borcun alacaklısı değilse.
-*   `400 Bad Request`: Borcun durumu `Defaulted` değilse.
+#### Error Responses
+*   `401 Unauthorized`: If the provided `key` is incorrect.
+*   `403 Forbidden`: If the user is not the lender of the debt.
+*   `400 Bad Request`: If the debt status is not `Defaulted`.

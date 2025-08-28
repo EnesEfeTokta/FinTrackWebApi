@@ -1,60 +1,60 @@
-# FinTrack API: Kullanıcı Kimlik Doğrulama (UserAuth Controller)
+# **FinTrack API: User Authentication (UserAuth Controller)**
 
-Bu doküman, kullanıcıların sisteme kaydolması, kimliklerini doğrulaması ve giriş yapması için kullanılan `UserAuthController` endpoint'lerini açıklamaktadır.
+This document describes the `UserAuthController` endpoints used for user registration, identity verification, and login.
 
 *Controller Base Path:* `/UserAuth`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki endpoint'ler halka açıktır (public) ve `Authorization` başlığı gerektirmezler. Kimlik doğrulama işlemleri bu endpoint'ler aracılığıyla gerçekleştirilir.
+The endpoints in this controller are public and do not require an `Authorization` header. Authentication processes are performed through these endpoints.
 
-### İş Akışı: İki Aşamalı Kullanıcı Kaydı
+### Workflow: Two-Step User Registration
 
-FinTrack, güvenliği sağlamak için iki aşamalı bir kayıt süreci kullanır:
+FinTrack uses a two-step registration process to ensure security:
 
-1.  **Aşama 1 (Initiate):** Kullanıcı, temel bilgilerini (`initiate-registration` endpoint'i ile) sisteme gönderir. Sistem, bu bilgileri ve tek kullanımlık bir şifreyi (OTP) geçici olarak veritabanında saklar ve OTP'yi kullanıcının e-posta adresine gönderir.
-2.  **Aşama 2 (Verify & Register):** Kullanıcı, e-postasına gelen OTP'yi (`verify-otp-and-register` endpoint'i ile) sisteme gönderir. OTP doğrulanırsa, sistem geçici verileri kullanarak kalıcı kullanıcı kaydını oluşturur, varsayılan ayarları ve üyeliği tanımlar, ardından geçici verileri siler.
+1.  **Step 1 (Initiate):** The user submits their basic information to the system via the `initiate-registration` endpoint. The system temporarily stores this information and a one-time password (OTP) in the database and sends the OTP to the user's email address.
+2.  **Step 2 (Verify & Register):** The user submits the OTP received via email to the system using the `verify-otp-and-register` endpoint. If the OTP is verified, the system creates a permanent user record using the temporary data, defines default settings and a membership, and then deletes the temporary data.
 
-Bu yaklaşım, hem e-posta adresinin sahipliğini doğrular hem de geçersiz kayıtların sisteme yük olmasını engeller.
+This approach both verifies the ownership of the email address and prevents invalid registrations from burdening the system.
 
 ---
 
 ## Endpoints
 
-### 1. Kayıt Başlatma ve OTP Gönderimi
+### 1. Initiate Registration and Send OTP
 
-Yeni bir kullanıcı kaydının ilk adımını başlatır.
+Initiates the first step of a new user registration.
 
 *   **Endpoint:** `POST /UserAuth/initiate-registration`
-*   **Açıklama:** Kullanıcıdan alınan bilgileri doğrular, 5 dakika geçerli bir OTP oluşturur, bilgileri geçici olarak saklar ve OTP'yi içeren bir doğrulama e-postası gönderir.
-*   **Yetkilendirme:** Gerekmez (Public).
+*   **Description:** Validates the information received from the user, creates an OTP valid for 5 minutes, temporarily stores the information, and sends a verification email containing the OTP.
+*   **Authorization:** Not required (Public).
 
 #### Request Body (`UserInitiateRegistrationDto`)
 
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `email` | `string` | Kullanıcının geçerli e-posta adresi. | Evet |
-| `firstName` | `string` | Kullanıcının adı. | Evet |
-| `lastName` | `string` | Kullanıcının soyadı. | Evet |
-| `password` | `string` | Kullanıcının belirlediği güçlü bir şifre. | Evet |
-| `profilePicture`| `string` | Profil resminin URL'si. | Hayır |
+| `email` | `string` | The user's valid email address. | Yes |
+| `firstName` | `string` | The user's first name. | Yes |
+| `lastName` | `string` | The user's last name. | Yes |
+| `password` | `string` | A strong password chosen by the user. | Yes |
+| `profilePicture`| `string` | The URL of the profile picture. | No |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "email": "ornek.kullanici@example.com",
-  "firstName": "Ahmet",
-  "lastName": "Yılmaz",
+  "email": "sample.user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
   "password": "Password123!",
   "profilePicture": "https://example.com/path/to/image.jpg"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:**
     ```json
@@ -63,39 +63,39 @@ Yeni bir kullanıcı kaydının ilk adımını başlatır.
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `400 Bad Request`
-    *   Eksik bilgi gönderildiğinde: `{"message": "Email, Username, and Password are required."}`
-    *   E-posta adresi zaten kayıtlı ise: `{"message": "This email address is already registered."}`
-    *   Kullanıcı adı (Ad_Soyad) zaten alınmışsa: `{"message": "This username is already taken."}`
+    *   When required information is missing: `{"message": "Email, Username, and Password are required."}`
+    *   If the email address is already registered: `{"message": "This email address is already registered."}`
+    *   If the username (FirstName_LastName) is already taken: `{"message": "This username is already taken."}`
 *   **Status Code:** `500 Internal Server Error`
-    *   OTP veritabanına kaydedilemezse veya e-posta gönderimi sırasında bir hata oluşursa.
+    *   If the OTP cannot be saved to the database or an error occurs during email dispatch.
 
 ---
 
-### 2. OTP Doğrulama ve Kaydı Tamamlama
+### 2. Verify OTP and Complete Registration
 
-Kayıt sürecinin ikinci ve son adımını gerçekleştirir.
+Performs the second and final step of the registration process.
 
 *   **Endpoint:** `POST /UserAuth/verify-otp-and-register`
-*   **Açıklama:** Kullanıcının gönderdiği OTP'yi doğrular. Başarılı ise kalıcı kullanıcı kaydını oluşturur, varsayılan rolleri, ayarları ve üyeliği atar, hoş geldin e-postası gönderir.
-*   **Yetkilendirme:** Gerekmez (Public).
+*   **Description:** Verifies the OTP submitted by the user. If successful, it creates the permanent user record, assigns default roles, settings, and a membership, and sends a welcome email.
+*   **Authorization:** Not required (Public).
 
 #### Request Body (`VerifyOtpRequestDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `email` | `string` | OTP'nin gönderildiği e-posta adresi. | Evet |
-| `code` | `string` | E-postaya gelen 6 haneli OTP kodu. | Evet |
+| `email` | `string` | The email address to which the OTP was sent. | Yes |
+| `code` | `string` | The 6-digit OTP code from the email. | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "email": "ornek.kullanici@example.com",
+  "email": "sample.user@example.com",
   "code": "123456"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:**
     ```json
@@ -105,45 +105,45 @@ Kayıt sürecinin ikinci ve son adımını gerçekleştirir.
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `400 Bad Request`
-    *   OTP kodu yanlış veya süresi dolmuşsa: `{"message": "Invalid or expired OTP code."}`
-    *   ASP.NET Identity şifre politikası gibi bir nedenle kullanıcıyı oluşturamazsa: `{"message": "User registration failed.", "errors": ["Passwords must be at least 6 characters.", "Passwords must have at least one non-alphanumeric character." ... ]}`
+    *   If the OTP code is incorrect or has expired: `{"message": "Invalid or expired OTP code."}`
+    *   If the user cannot be created due to a reason like an ASP.NET Identity password policy violation: `{"message": "User registration failed.", "errors": ["Passwords must be at least 6 characters.", "Passwords must have at least one non-alphanumeric character." ... ]}`
 *   **Status Code:** `500 Internal Server Error`
-    *   Kullanıcı için varsayılan ayarlar oluşturulurken bir hata oluşursa.
+    *   If an error occurs while creating default settings for the user.
 
 ---
 
-### 3. Kullanıcı Girişi ve Token Alma
+### 3. User Login and Get Tokens
 
-Kayıtlı bir kullanıcının sisteme giriş yapmasını ve oturum token'larını almasını sağlar.
+Allows a registered user to log in to the system and receive session tokens.
 
 *   **Endpoint:** `POST /UserAuth/login`
-*   **Açıklama:** E-posta ve şifre ile kimlik doğrulaması yapar. Başarılı olursa, API'ye erişim için kullanılacak `AccessToken` ve `RefreshToken` üretir.
-*   **Yetkilendirme:** Gerekmez (Public).
+*   **Description:** Authenticates the user with their email and password. If successful, it generates an `AccessToken` and `RefreshToken` to be used for accessing the API.
+*   **Authorization:** Not required (Public).
 
 #### Request Body (`LoginDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `email` | `string` | Kullanıcının kayıtlı e-posta adresi. | Evet |
-| `password` | `string` | Kullanıcının şifresi. | Evet |
+| `email` | `string` | The user's registered email address. | Yes |
+| `password` | `string` | The user's password. | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "email": "ornek.kullanici@example.com",
+  "email": "sample.user@example.com",
   "password": "Password123!"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:**
     ```json
     {
       "userId": 123,
-      "userName": "Ahmet_Yılmaz",
-      "email": "ornek.kullanici@example.com",
+      "userName": "John_Doe",
+      "email": "sample.user@example.com",
       "profilePicture": "https://.../image.jpg",
       "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
       "refreshToken": "another_long_secure_random_string...",
@@ -151,7 +151,7 @@ Kayıtlı bir kullanıcının sisteme giriş yapmasını ve oturum token'ların�
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `401 Unauthorized`
-    *   E-posta veya şifre yanlış ise: `{"message": "Invalid credentials."}`
-    *   Hesap çok sayıda hatalı deneme nedeniyle kilitlenmişse: `{"message": "Account locked out. Please try again later. (Until: ...)", "isLockedOut": true, "lockoutEndDateUtc": "..."}`
+    *   If the email or password is incorrect: `{"message": "Invalid credentials."}`
+    *   If the account is locked out due to too many failed login attempts: `{"message": "Account locked out. Please try again later. (Until: ...)", "isLockedOut": true, "lockoutEndDateUtc": "..."}`

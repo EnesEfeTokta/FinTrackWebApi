@@ -1,62 +1,62 @@
-# FinTrack – Sistem Rolleri ve Yetki Matrisi
+# **FinTrack – System Roles and Permissions Matrix**
 
-Bu doküman, FinTrack sisteminde tanımlanmış rolleri, bu rollerin sorumluluklarını ve API endpoint'leri üzerindeki erişim yetkilerini detaylandırmaktadır. Sistem, **"En Az Ayrıcalık Prensibi" (Principle of Least Privilege)** temel alınarak tasarlanmıştır; her rol, görevini yerine getirmek için yalnızca gerekli olan minimum yetkiye sahiptir.
+This document details the roles defined within the FinTrack system, the responsibilities of these roles, and their access permissions for API endpoints. The system is designed based on the **Principle of Least Privilege**, meaning each role has only the minimum authority necessary to perform its duties.
 
-## 1. Sistemde Tanımlı Roller
+## 1. Defined Roles in the System
 
-### 1.1. User (Standart Kullanıcı)
+### 1.1. User (Standard User)
 
-*   **Rolün Tanımı ve Amacı:** Sistemin ana son kullanıcısıdır. FinTrack'in tüm temel özelliklerini kendi kişisel verileri üzerinde kullanmak için sisteme kaydolan herkestir.
-*   **Temel Sorumlulukları:**
-    *   Kendi finansal hesaplarını, bütçelerini, gelir/gider işlemlerini ve kategorilerini oluşturmak, görüntülemek ve yönetmek.
-    *   Güvenli Borç Sistemi'nde "Alacaklı" veya "Borçlu" olarak yer almak, teklif oluşturmak, yanıtlamak ve video yüklemek.
-    *   Kendi verilerinden raporlar oluşturmak.
-    *   Uygulama ve bildirim ayarlarını kişiselleştirmek.
-    *   Sistemle ilgili geri bildirimde bulunmak.
-*   **Temel Kısıtlama:** Bu roldeki bir kullanıcı, **hiçbir koşulda başka bir kullanıcının finansal veya kişisel verisine erişemez.** Tüm API çağrıları, token'dan gelen `UserId` ile filtrelenir.
+*   **Role Definition and Purpose:** This is the primary end-user of the system. It includes anyone who registers to use all the core features of FinTrack for their personal data.
+*   **Core Responsibilities:**
+    *   Creating, viewing, and managing their own financial accounts, budgets, income/expense transactions, and categories.
+    *   Participating as a "Lender" or "Borrower" in the Secure Debt System, creating and responding to offers, and uploading videos.
+    *   Generating reports from their own data.
+    *   Personalizing application and notification settings.
+    *   Providing feedback about the system.
+*   **Key Restriction:** A user in this role can, **under no circumstances, access the financial or personal data of another user.** All API calls are filtered by the `UserId` obtained from the token.
 
-### 1.2. Admin (Sistem Yöneticisi)
+### 1.2. Admin (System Administrator)
 
-*   **Rolün Tanımı ve Amacı:** Sistemin genel yönetiminden ve operasyonel bütünlüğünden sorumlu olan "süper kullanıcıdır". Bu rol, genellikle FinTrack'in iç ekibi tarafından kullanılır.
-*   **Temel Sorumlulukları:**
-    *   Kullanıcı hesaplarını yönetmek (askıya alma, silme vb. - *geliştirilecek*).
-    *   Sistem genelindeki abonelik planlarını oluşturmak ve yönetmek.
-    *   Güvenli Borç Sistemi'ndeki kritik adımları denetlemek (örn: video onayı).
-    *   Sistem sağlığını izlemek ve loglara erişmek.
-*   **Temel Kısıtlama:** `Admin` rolü geniş yetkilere sahip olsa da, kullanıcıların özel finansal verilerine (işlem detayları gibi) doğrudan erişimi, denetim kaydı (audit log) ve katı protokoller altında sınırlandırılmıştır.
+*   **Role Definition and Purpose:** This is the "super-user" responsible for the overall management and operational integrity of the system. This role is typically used by FinTrack's internal team.
+*   **Core Responsibilities:**
+    *   Managing user accounts (suspending, deleting, etc. - *to be developed*).
+    *   Creating and managing system-wide subscription plans.
+    *   Overseeing critical steps in the Secure Debt System (e.g., video approval).
+    *   Monitoring system health and accessing logs.
+*   **Key Restriction:** Although the `Admin` role has broad permissions, direct access to users' private financial data (like transaction details) is limited under strict protocols and is subject to audit logging.
 
-### 1.3. VideoApproval (Video Onay Operatörü)
+### 1.3. VideoApproval (Video Approval Operator)
 
-*   **Rolün Tanımı ve Amacı:** Bu rol, Güvenli Borç Sistemi'nin (GBS) güvenliğini sağlamakla görevli, son derece sınırlı yetkilere sahip bir operasyonel roldür.
-*   **Temel Sorumlulukları:**
-    *   Kullanıcılar tarafından borç taahhüdü için yüklenen videoları incelemek.
-    *   İnceleme sonucuna göre videoyu onaylamak veya reddetmek.
-*   **Temel Kısıtlama:** Bu rol, GBS onay süreci dışındaki **hiçbir sistemsel veya kişisel veriye erişemez.** Tek yetkisi, `VideosController` altındaki onaylama (`video-approve`) endpoint'ini çağırmaktır.
+*   **Role Definition and Purpose:** This is an operational role with extremely limited permissions, tasked with ensuring the security of the Secure Debt System (GBS).
+*   **Core Responsibilities:**
+    *   Reviewing videos uploaded by users as a commitment for a debt.
+    *   Approving or rejecting the video based on the review.
+*   **Key Restriction:** This role **cannot access any systemic or personal data** outside of the GBS approval process. Its sole permission is to call the approval (`video-approve`) endpoint under the `VideosController`.
 
-## 2. Yetki Matrisi
+## 2. Permissions Matrix
 
-Aşağıdaki matris, projedeki her bir controller'ın endpoint'lerine hangi rollerin erişebileceğini göstermektedir. Bu matris, kod üzerindeki `[Authorize(Roles = "...")]` ve `[AllowAnonymous]` attribute'ları incelenerek oluşturulmuştur.
+The following matrix shows which roles can access the endpoints of each controller in the project. This matrix was generated by reviewing the `[Authorize(Roles = "...")]` and `[AllowAnonymous]` attributes in the code.
 
-*   `✅`: Rolün endpoint'e erişim yetkisi var.
-*   `❌`: Rolün endpoint'e erişim yetkisi yok.
-*   `🔑`: Endpoint halka açık, yetkilendirme gerektirmez.
+*   `✅`: The role has permission to access the endpoint.
+*   `❌`: The role does not have permission to access the endpoint.
+*   `🔑`: The endpoint is public and does not require authorization.
 
-| Controller | Rol: User | Rol: Admin | Rol: VideoApproval | Notlar / Kısıtlamalar |
+| Controller | Role: User | Role: Admin | Role: VideoApproval | Notes / Restrictions |
 | :--- | :---: | :---: | :---: | :--- |
-| **AccountController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi hesaplarını yönetebilir. |
-| **BudgetsController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi bütçelerini yönetebilir. |
-| **CategoriesController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi kategorilerini yönetebilir. |
-| **ChatController** | ✅ | ✅ | ❌ | Sohbet oturumu kullanıcıya özeldir. |
-| **DebtController** | ✅ | ✅ | ❌ | Kullanıcı sadece tarafı olduğu borçları yönetebilir. |
-| **FeedbackController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi geri bildirimlerini yönetebilir. |
-| **LogController** | 🔑 | 🔑 | 🔑 | **Halka Açık!** Güvenliği ağ katmanında sağlanmalıdır. |
-| **MembershipController** | ✅ | ✅ | ❌ | `.../plan` endpoint'leri yöneticiye özeldir. `AllowAnonymous` plan listeleme hariç. |
-| **NotificationController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi bildirimlerini yönetebilir. |
-| **ReportsController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi verilerinden rapor oluşturabilir. |
-| **StripeWebhookController** | 🔑 | 🔑 | 🔑 | **Halka Açık!** Stripe'tan gelen istekler için. Güvenliği imza ile sağlanır. |
-| **TransactionCategoryController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi işlem kategorilerini yönetebilir. |
-| **TransactionsController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi işlemlerini yönetebilir. |
-| **UserController** | ✅ | ❌ | ❌ | Sadece `User` rolüne özeldir. Kullanıcı kendi profilini çeker. |
-| **UserSettingsController** | ✅ | ✅ | ❌ | Kullanıcı sadece kendi ayarlarını yönetebilir. |
-| **UserAuthController** | 🔑 | 🔑 | 🔑 | **Halka Açık!** Kayıt ve giriş işlemleri için. |
-| **VideosController** | ✅ | ✅ | ✅ | `.../user-upload-video`: `User`'a özel. <br> `.../video-approve`: `Admin`/`VideoApproval`'a özel. <br> `.../video-metadata-stream`: Borcun alacaklısı olan `User`'a özel. |
+| **AccountController** | ✅ | ✅ | ❌ | User can only manage their own accounts. |
+| **BudgetsController** | ✅ | ✅ | ❌ | User can only manage their own budgets. |
+| **CategoriesController** | ✅ | ✅ | ❌ | User can only manage their own categories. |
+| **ChatController** | ✅ | ✅ | ❌ | Chat session is specific to the user. |
+| **DebtController** | ✅ | ✅ | ❌ | User can only manage debts to which they are a party. |
+| **FeedbackController** | ✅ | ✅ | ❌ | User can only manage their own feedback. |
+| **LogController** | 🔑 | 🔑 | 🔑 | **Public!** Security should be handled at the network layer. |
+| **MembershipController** | ✅ | ✅ | ❌ | `.../plan` endpoints are admin-only, except for `AllowAnonymous` plan listing. |
+| **NotificationController** | ✅ | ✅ | ❌ | User can only manage their own notifications. |
+| **ReportsController** | ✅ | ✅ | ❌ | User can only generate reports from their own data. |
+| **StripeWebhookController** | 🔑 | 🔑 | 🔑 | **Public!** For requests from Stripe. Secured with signature verification. |
+| **TransactionCategoryController** | ✅ | ✅ | ❌ | User can only manage their own transaction categories. |
+| **TransactionsController** | ✅ | ✅ | ❌ | User can only manage their own transactions. |
+| **UserController** | ✅ | ❌ | ❌ | Exclusive to the `User` role. Fetches the user's own profile. |
+| **UserSettingsController** | ✅ | ✅ | ❌ | User can only manage their own settings. |
+| **UserAuthController** | 🔑 | 🔑 | 🔑 | **Public!** For registration and login processes. |
+| **VideosController** | ✅ | ✅ | ✅ | `.../user-upload-video`: `User`-only. <br> `.../video-approve`: `Admin`/`VideoApproval`-only. <br> `.../video-metadata-stream`: `User`-only (as the creditor of the debt). |

@@ -19,6 +19,7 @@ namespace FinTrackWebApi.Models.User
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         public virtual UserAppSettingsModel? AppSettings { get; set; }
+        public virtual UserDashboardSettingsModel? DashboardSettings { get; set; }
         public virtual UserNotificationSettingsModel? NotificationSettings { get; set; }
 
         public virtual ICollection<FeedbackModel>? Feedbacks { get; set; } = new List<FeedbackModel>();

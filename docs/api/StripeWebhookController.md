@@ -1,64 +1,64 @@
-# FinTrack API: Stripe Webhook Alıcısı
+# **FinTrack API: Stripe Webhook Receiver**
 
-Bu doküman, Stripe'tan gelen gerçek zamanlı olayları (event) dinleyen ve ödeme süreçlerini otomatikleştiren `StripeWebhookController` endpoint'ini açıklamaktadır.
+This document describes the `StripeWebhookController` endpoint, which listens for real-time events from Stripe and automates payment processes.
 
 *Controller Base Path:* `/api/stripe/webhook`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme ve Güvenlik
+### Authentication and Security
 
-*   **Endpoint:** Bu endpoint **halka açıktır** (`AllowAnonymous`), çünkü Stripe servisinin kimlik doğrulaması olmadan buraya istek gönderebilmesi gerekir.
-*   **Webhook Güvenliği (Signature Verification):** Endpoint halka açık olsa da, her gelen isteğin gerçekten Stripe'tan geldiğini doğrulamak için bir güvenlik mekanizması kullanılır. Stripe, her isteğe `Stripe-Signature` adında özel bir HTTP başlığı ekler. Controller, bu imzayı `appsettings.json` dosyasında saklanan gizli bir anahtar (`WebhookSecret`) ile karşılaştırarak isteğin meşruluğunu doğrular. **İmza geçersizse, istek reddedilir.** Bu, sahte ödeme bildirimlerini engeller.
+*   **Endpoint:** This endpoint is **public** (`AllowAnonymous`) because the Stripe service needs to be able to send requests to it without authentication.
+*   **Webhook Security (Signature Verification):** Although the endpoint is public, a security mechanism is used to verify that every incoming request genuinely originates from Stripe. Stripe includes a special HTTP header called `Stripe-Signature` in every request. The controller verifies the legitimacy of the request by comparing this signature with a secret key (`WebhookSecret`) stored in the `appsettings.json` file. **If the signature is invalid, the request is rejected.** This prevents fraudulent payment notifications.
 
-### Mimarideki Rolü: Olay Güdümlü Otomasyon
+### Role in the Architecture: Event-Driven Automation
 
-Bu controller, doğrudan kullanıcılar tarafından çağrılmaz. Bir **olay dinleyicisi (event listener)** olarak görev yapar.
+This controller is not called directly by users. It functions as an **event listener**.
 
-1.  **Ödeme Başarılı:** Bir kullanıcı, `MembershipController` üzerinden başlattığı Stripe ödeme sayfasında ödemeyi başarıyla tamamlar.
-2.  **Stripe Olay Gönderir:** Stripe, bu başarılı ödeme olayını (`checkout.session.completed`) önceden yapılandırılmış olan bu webhook endpoint'ine bir `POST` isteği ile bildirir.
-3.  **Webhook İşlemi:** `StripeWebhookController`, bu isteği alır ve aşağıdaki işlemleri otomatik olarak gerçekleştirir:
-    *   İsteğin imzasını doğrular.
-    *   Olayın içindeki verileri (ödeme ID'si, üyelik ID'si vb.) ayrıştırır.
-    *   İlgili kullanıcının veritabanındaki üyelik durumunu `PendingPayment`'tan `Active`'e günceller.
-    *   Ödeme kaydını `Succeeded` olarak işaretler.
-    *   Kullanıcıya başarılı ödeme ve fatura detaylarını içeren bir onay e-postası gönderir.
+1.  **Payment Success:** A user successfully completes a payment on the Stripe checkout page initiated via the `MembershipController`.
+2.  **Stripe Sends an Event:** Stripe notifies this pre-configured webhook endpoint of the successful payment event (`checkout.session.completed`) by sending a `POST` request.
+3.  **Webhook Processing:** The `StripeWebhookController` receives this request and automatically performs the following actions:
+    *   Verifies the request's signature.
+    *   Parses the data within the event (payment ID, membership ID, etc.).
+    *   Updates the relevant user's membership status in the database from `PendingPayment` to `Active`.
+    *   Marks the payment record as `Succeeded`.
+    *   Sends a confirmation email to the user with successful payment and invoice details.
 
-Bu yapı, ödeme ve üyelik aktivasyon sürecini insan müdahalesi olmadan, güvenli ve otomatik bir şekilde yönetir.
+This architecture manages the payment and membership activation process securely and automatically, without human intervention.
 
 ---
 
 ## Endpoints
 
-### 1. Stripe Webhook Olaylarını İşle
+### 1. Handle Stripe Webhook Events
 
-Stripe tarafından gönderilen tüm webhook olaylarını kabul eden ve işleyen tekil endpoint.
+The single endpoint that accepts and processes all webhook events sent by Stripe.
 
 *   **Endpoint:** `POST /api/stripe/webhook`
-*   **Açıklama:** Bu endpoint, yalnızca `checkout.session.completed` olayını aktif olarak işler. Diğer olay türleri şu an için loglanır ancak bir eyleme neden olmaz.
-*   **Yetkilendirme:** Gerekmez (`AllowAnonymous`). Güvenlik imza doğrulaması ile sağlanır.
+*   **Description:** This endpoint actively processes only the `checkout.session.completed` event. Other event types are currently logged but do not trigger any action.
+*   **Authorization:** Not required (`AllowAnonymous`). Security is ensured via signature verification.
 
 #### Request Body
 
 *   **Content-Type:** `application/json`
-*   **İçerik:** Bu isteğin gövdesi doğrudan Stripe tarafından oluşturulur ve `Stripe.Event` nesne yapısına sahiptir. Manuel olarak oluşturulması gerekmez.
+*   **Content:** The body of this request is generated directly by Stripe and has the structure of a `Stripe.Event` object. It does not need to be manually created.
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 
 *   **Status Code:** `200 OK`
-*   **Açıklama:** Bu endpoint, Stripe'a "olayı başarıyla aldım ve işledim" mesajını vermek için **her zaman** `200 OK` döner (imza hatası veya kritik sunucu hatası hariç). Bu, Stripe'ın aynı olayı tekrar tekrar göndermesini engeller.
-*   **Content:** Yanıt gövdesi boştur.
+*   **Description:** This endpoint **always** returns `200 OK` (except in cases of signature errors or critical server failures) to signal to Stripe that "the event was received and processed successfully." This prevents Stripe from repeatedly sending the same event.
+*   **Content:** The response body is empty.
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 
 *   `400 Bad Request`:
-    *   `Stripe-Signature` başlığı geçersiz veya eksikse.
-    *   Stripe olayının içindeki veriler (metadata) eksik veya hatalı ise.
+    *   If the `Stripe-Signature` header is invalid or missing.
+    *   If the data (metadata) within the Stripe event is missing or incorrect.
 *   `404 Not Found`:
-    *   Stripe olayındaki metadata içinde belirtilen `UserMembershipId` veya `PaymentId` veritabanında bulunamazsa.
+    *   If the `UserMembershipId` or `PaymentId` specified in the Stripe event's metadata cannot be found in the database.
 *   `500 Internal Server Error`:
-    *   Veritabanı işlemleri veya e-posta gönderimi sırasında beklenmedik bir hata oluşursa.
+    *   If an unexpected error occurs during database operations or email dispatch.
 
-Bu hatalar oluşsa bile, endpoint mümkün olduğunca Stripe'a `200 OK` dönmeye çalışır ve hatayı loglar. Kritik durumlarda (imza hatası gibi) `4xx` döner.
+Even if these errors occur, the endpoint will try to return `200 OK` to Stripe and log the error. In critical situations (like a signature mismatch), it will return a `4xx` status.
