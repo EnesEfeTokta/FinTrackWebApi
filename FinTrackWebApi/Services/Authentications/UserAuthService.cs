@@ -1,4 +1,5 @@
-﻿using FinTrackWebApi.Dtos.AuthDtos;
+﻿using FinTrackWebApi.Data;
+using FinTrackWebApi.Dtos.AuthDtos;
 using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models.Otp;
 using FinTrackWebApi.Models.User;
@@ -10,6 +11,7 @@ namespace FinTrackWebApi.Services.Authentications
 {
     public class UserAuthService : IUserAuthService
     {
+        private readonly MyDataContext _context;
         private readonly ILogger<UserAuthService> _logger;
         private readonly UserManager<UserModel> _userManager;
         private readonly SignInManager<UserModel> _signInManager;
@@ -18,6 +20,7 @@ namespace FinTrackWebApi.Services.Authentications
         private readonly IEmailSender _emailSender;
 
         public UserAuthService(
+            MyDataContext context,
             ILogger<UserAuthService> logger, 
             UserManager<UserModel> userManager, 
             SignInManager<UserModel> signInManager, 
@@ -25,6 +28,7 @@ namespace FinTrackWebApi.Services.Authentications
             IOtpService otpService,
             IEmailSender emailSender)
         {
+            _context = context;
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;

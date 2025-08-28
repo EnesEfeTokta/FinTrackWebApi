@@ -1,38 +1,38 @@
-# FinTrack Projesi: Sistem Mimarisi ve Teknik Dokümantasyon
+# **FinTrack Project: System Architecture and Technical Documentation**
 
-Bu doküman, FinTrack platformunun teknik mimarisini, temel bileşenlerini, teknolojilerini, veri akışlarını ve aralarındaki etkileşimleri detaylı bir şekilde açıklamaktadır.
+This document provides a detailed explanation of the FinTrack platform's technical architecture, its core components, technologies, data flows, and the interactions between them.
 
-## 1. Genel Bakış ve Mimari Yaklaşım
+## 1. Overview and Architectural Approach
 
-FinTrack, **konteyner tabanlı (containerized)** ve **mikroservis odaklı** bir mimari üzerine inşa edilmiştir. Sistem, Docker ve Docker Compose kullanılarak yönetilen, birbirinden bağımsız ancak birbirleriyle API'ler üzerinden haberleşen servislerden oluşur. Bu yaklaşım, aşağıdaki avantajları sağlar:
-*   **Ölçeklenebilirlik:** Her servis, ihtiyaç duyulduğunda bağımsız olarak ölçeklendirilebilir.
-*   **Esneklik:** Her servis, kendi görevine en uygun teknoloji yığını ile geliştirilebilir (örn: .NET ve Python'un bir arada kullanılması).
-*   **Bakım Kolaylığı:** Bir serviste yapılan değişiklik, diğer servisleri doğrudan etkilemez.
-*   **Dağıtım Kolaylığı:** Tüm altyapı, Docker ile tek bir komutla ayağa kaldırılabilir.
+FinTrack is built on a **containerized** and **microservices-oriented** architecture. The system consists of independent services managed using Docker and Docker Compose, which communicate with each other via APIs. This approach provides the following advantages:
+*   **Scalability:** Each service can be scaled independently as needed.
+*   **Flexibility:** Each service can be developed with the technology stack best suited for its task (e.g., using .NET and Python together).
+*   **Maintainability:** Changes in one service do not directly affect others.
+*   **Ease of Deployment:** The entire infrastructure can be launched with a single command using Docker.
 
-## 2. Üst Düzey Mimari Diyagramı
+## 2. High-Level Architecture Diagram
 
-Aşağıdaki diyagram, sistemin ana bileşenlerini, aralarındaki temel veri akışını ve dış dünya ile olan etkileşimini göstermektedir.
+The following diagram illustrates the main components of the system, the primary data flow between them, and their interaction with the outside world.
 
 ```mermaid
 graph TD
-    subgraph "Kullanıcılar & Dış Servisler"
-        User["fa:fa-user Kullanıcı"]
-        Admin["fa:fa-user-shield Operatör/Yönetici"]
+    subgraph "Users & External Services"
+        User["fa:fa-user User"]
+        Admin["fa:fa-user-shield Operator/Administrator"]
         StripeSvc["fa:fa-stripe Stripe API"]
-        EmailSvc["fa:fa-envelope SMTP Servisi"]
-        CurrencyApi["fa:fa-globe Döviz Kuru API"]
+        EmailSvc["fa:fa-envelope SMTP Service"]
+        CurrencyApi["fa:fa-globe Currency Exchange API"]
     end
 
-    subgraph "İstemci Uygulamaları"
+    subgraph "Client Applications"
         WPF_Client["fa:fa-windows FinTrack for Windows (WPF)"]
     end
 
-    subgraph "Altyapı & Gateway"
+    subgraph "Infrastructure & Gateway"
         Nginx["fa:fa-server NGINX / API Gateway<br>Port: 80, 443"]
     end
 
-    subgraph "Backend Servisleri (Docker Ağı: fintrac_network)"
+    subgraph "Backend Services (Docker Network: fintrac_network)"
         API_Main(<b>FinTrack Web API</b><br>.NET 8)
         API_Admin(<b>WinTrack Manager API</b><br>.NET 8)
         API_Bot(<b>FinBot Web API</b><br>Python & FastAPI)
@@ -41,10 +41,10 @@ graph TD
         Ollama["fa:fa-brain Ollama & Mistral 7B"]
     end
     
-    subgraph "Gözetim & DevOps (Monitoring & DevOps)"
+    subgraph "Monitoring & DevOps"
         Prometheus["fa:fa-chart-line Prometheus"]
         Grafana["fa:fa-chart-bar Grafana"]
-        PgBackup["fa:fa-save Veritabanı Yedekleme"]
+        PgBackup["fa:fa-save Database Backup"]
     end
 
     User --> WPF_Client
@@ -58,157 +58,157 @@ graph TD
     API_Main <--> |REST API| API_Bot
     API_Main <--> |TCP/IP| DB_Main
     API_Main <--> |TCP/IP| DB_Log
-    API_Main --> |API Çağrısı| EmailSvc
-    API_Main --> |API Çağrısı| CurrencyApi
-    API_Bot --> |Lokal Çağrı| Ollama
+    API_Main --> |API Call| EmailSvc
+    API_Main --> |API Call| CurrencyApi
+    API_Bot --> |Local Call| Ollama
 
     StripeSvc --> |Webhook| API_Main
 
-    API_Main -- "Metrikleri Topla" --> Prometheus
-    API_Bot -- "Metrikleri Topla" --> Prometheus
-    DB_Main -- "Metrikleri Topla" --> Prometheus
+    API_Main -- "Collect Metrics" --> Prometheus
+    API_Bot -- "Collect Metrics" --> Prometheus
+    DB_Main -- "Collect Metrics" --> Prometheus
     
-    Prometheus --> |Veri Sağla| Grafana
+    Prometheus --> |Provide Data| Grafana
     Admin --> |Dashboard| Grafana
     
-    PgBackup --> |Yedekle| DB_Main
+    PgBackup --> |Backup| DB_Main
 ```
 
-## 3. Temel Bileşenler
+## 3. Core Components
 
-### 3.1. Ana Backend Servisleri
+### 3.1. Main Backend Services
 
 *   **FinTrack Web API (`fintrack_api`):**
-    *   **Teknoloji:** .NET 8, ASP.NET Core, Entity Framework Core.
-    *   **Sorumluluklar:** Sistemin ana beynidir. Kullanıcı yetkilendirme (OTP, JWT), hesap/bütçe/işlem yönetimi, raporlama, Güvenli Borç Sistemi (GBS) iş mantığı, Stripe ödeme oturumu başlatma ve webhook dinleme gibi tüm temel işlevleri yürütür.
+    *   **Technology:** .NET 8, ASP.NET Core, Entity Framework Core.
+    *   **Responsibilities:** This is the core engine of the system. It handles all primary functions, including user authorization (OTP, JWT), account/budget/transaction management, reporting, Secure Debt System (GBS) business logic, initiating Stripe payment sessions, and listening for webhooks.
 *   **FinBot Web API (`finbot_api`):**
-    *   **Teknoloji:** Python, FastAPI.
-    *   **Sorumluluklar:** Yapay zeka operasyonlarını yönetir. `FinTrack Web API`'sinden gelen kullanıcı sorgularını alır, `Ollama` servisi aracılığıyla Mistral 7B dil modeline iletir ve anlamlı yanıtlar üreterek geri döner.
+    *   **Technology:** Python, FastAPI.
+    *   **Responsibilities:** Manages artificial intelligence operations. It receives user queries from the `FinTrack Web API`, forwards them to the Mistral 7B language model via the `Ollama` service, and returns meaningful responses.
 *   **WinTrack Manager Panel (`wintrack_manager`):**
-    *   **Teknoloji:** .NET 8, ASP.NET Core.
-    *   **Sorumluluklar:** Yöneticiler ve operatörler için tasarlanmış bir API'dir. GBS'deki video onaylama/reddetme süreçleri, kullanıcı yönetimi, sistem genelindeki verileri izleme gibi idari fonksiyonları barındırır.
+    *   **Technology:** .NET 8, ASP.NET Core.
+    *   **Responsibilities:** An API designed for administrators and operators. It contains administrative functions such as video approval/rejection processes in the GBS, user management, and monitoring of system-wide data.
 
-### 3.2. Veritabanı Mimarisi
+### 3.2. Database Architecture
 
 *   **MainDB (`postgres_db`):**
-    *   **Teknoloji:** PostgreSQL 15.
-    *   **Sorumluluklar:** Ana uygulama verilerini (kullanıcılar, hesaplar, üyelikler, borçlar vb.) kalıcı olarak depolar.
+    *   **Technology:** PostgreSQL 15.
+    *   **Responsibilities:** Persistently stores the main application data (users, accounts, memberships, debts, etc.).
 *   **LogDB (`postgres_db_logs`):**
-    *   **Teknoloji:** PostgreSQL 15.
-    *   **Sorumluluklar:** Denetim (Audit) amacıyla kullanılır. `MainDB` üzerinde gerçekleşen her veri değişikliği (Ekleme, Güncelleme, Silme), kimin tarafından, ne zaman ve hangi verilerin değiştirildiği bilgisiyle bu veritabanına kaydedilir. Bu, ana veritabanının performansını korurken tam bir izlenebilirlik sağlar.
+    *   **Technology:** PostgreSQL 15.
+    *   **Responsibilities:** Used for auditing purposes. Every data modification (Create, Update, Delete) on `MainDB` is recorded in this database with information on who made the change, when it was made, and what data was altered. This ensures full traceability while preserving the performance of the main database.
 
-### 3.3. İstemci Uygulaması
+### 3.3. Client Application
 
 *   **FinTrack for Windows (`WPF`):**
-    *   **Teknoloji:** .NET, WPF, LiveCharts2.
-    *   **Sorumluluklar:** Windows kullanıcıları için zengin ve yerel bir masaüstü deneyimi sunar. Kullanıcı etkileşimlerini alır ve bunları güvenli RESTful API çağrılarına dönüştürerek `FinTrack Web API`'sine iletir.
+    *   **Technology:** .NET, WPF, LiveCharts2.
+    *   **Responsibilities:** Provides a rich, native desktop experience for Windows users. It captures user interactions and translates them into secure RESTful API calls to the `FinTrack Web API`.
 
-### 3.4. DevOps ve Gözetim (Monitoring)
+### 3.4. DevOps and Monitoring
 
-*   **Docker & Docker Compose:** Tüm altyapıyı konteynerize eder ve yönetir.
-*   **Prometheus:** Sistemdeki tüm servislerden (API'ler, veritabanları, konteynerler) anlık performans metriklerini toplar.
-*   **Grafana:** Prometheus'tan gelen metrikleri, yöneticilerin sistemin genel sağlığını (CPU, RAM, API yanıt süreleri) bir bakışta görebileceği interaktif panolarda görselleştirir.
-*   **Veritabanı Yedekleme (`postgres_backup_service`):** `MainDB`'yi her gece düzenli olarak otomatik olarak yedekler.
+*   **Docker & Docker Compose:** Containerizes and manages the entire infrastructure.
+*   **Prometheus:** Collects real-time performance metrics from all services in the system (APIs, databases, containers).
+*   **Grafana:** Visualizes the metrics from Prometheus in interactive dashboards, allowing administrators to see the overall health of the system (CPU, RAM, API response times) at a glance.
+*   **Database Backup (`postgres_backup`):** Automatically backs up `MainDB` on a regular nightly schedule.
 
-## 4. Güvenlik Mimarisi
+## 4. Security Architecture
 
-*   **Kimlik Doğrulama:**
-    *   **Kayıt:** E-posta sahipliğini doğrulamak için **OTP (One-Time Password)** sistemi kullanılır.
-    *   **Giriş:** Başarılı giriş yapan kullanıcılara, rollerini ve izinlerini içeren, kısa ömürlü bir **JWT (JSON Web Token)** verilir.
-*   **Yetkilendirme:** API endpoint'leri, `[Authorize(Roles = "User,Admin")]` gibi attribute'lar ile korunur. Sisteme gelen her istekte JWT'nin geçerliliği ve rolü kontrol edilir.
-*   **Webhook Güvenliği:** Stripe'tan gelen webhook isteklerinin gerçekten Stripe'tan geldiğini doğrulamak için **imza doğrulama (Signature Verification)** mekanizması kullanılır.
-*   **GBS Kriptografisi:** Güvenli Borç Sistemi'ndeki video delilleri, her video için özel olarak üretilen bir anahtarla **AES** algoritması kullanılarak şifrelenir. Anahtar, sadece alacaklıya teslim edilir ve sistemde saklanmaz.
+*   **Authentication:**
+    *   **Registration:** An **OTP (One-Time Password)** system is used to verify email ownership.
+    *   **Login:** Successfully logged-in users are issued a short-lived **JWT (JSON Web Token)** containing their roles and permissions.
+*   **Authorization:** API endpoints are protected with attributes like `[Authorize(Roles = "User,Admin")]`. The validity and role of the JWT are checked for every incoming request.
+*   **Webhook Security:** A **Signature Verification** mechanism is used to confirm that webhook requests from Stripe genuinely originate from Stripe.
+*   **GBS Cryptography:** Video evidence in the Secure Debt System is encrypted using the **AES** algorithm with a unique key generated for each video. The key is delivered only to the creditor and is not stored in the system.
 
-## 5. Detaylı Süreç Akışları (Sequence Diagrams)
+## 5. Detailed Process Flows (Sequence Diagrams)
 
 <details>
-<summary><b>Akış 1: Yeni Kullanıcı Kaydı (İki Aşamalı OTP)</b></summary>
+<summary><b>Flow 1: New User Registration (Two-Factor OTP)</b></summary>
 
 ```mermaid
 sequenceDiagram
-    participant User as Kullanıcı
-    participant ClientApp as WPF Uygulaması
+    participant User
+    participant ClientApp as WPF Application
     participant API as FinTrack API
-    participant DB as Veritabanı
-    participant Email as SMTP Servisi
+    participant DB as Database
+    participant Email as SMTP Service
 
-    User->>ClientApp: Kayıt bilgilerini girer
+    User->>ClientApp: Enters registration details
     ClientApp->>API: POST /UserAuth/initiate-registration
-    API->>API: OTP oluşturur, hash'ler
-    API->>DB: OTP'yi ve geçici bilgileri kaydeder
-    API->>Email: OTP'yi e-posta ile gönder
-    API-->>ClientApp: 200 OK (OTP Gönderildi)
+    API->>API: Generates OTP, hashes it
+    API->>DB: Saves OTP and temporary info
+    API->>Email: Sends OTP via email
+    API-->>ClientApp: 200 OK (OTP Sent)
 
-    User->>ClientApp: E-postadaki OTP'yi girer
+    User->>ClientApp: Enters OTP from email
     ClientApp->>API: POST /UserAuth/verify-otp-and-register
-    API->>DB: OTP'yi doğrular
-    alt OTP Doğru
-        API->>DB: Kalıcı kullanıcıyı oluşturur (IsVerified=true)
-        API->>DB: Geçici OTP kaydını siler
-        API-->>ClientApp: 200 OK (Kayıt Başarılı)
-    else OTP Yanlış
+    API->>DB: Verifies OTP
+    alt OTP is Correct
+        API->>DB: Creates permanent user (IsVerified=true)
+        API->>DB: Deletes temporary OTP record
+        API-->>ClientApp: 200 OK (Registration Successful)
+    else OTP is Incorrect
         API-->>ClientApp: 400 Bad Request
     end
 ```
 </details>
 
 <details>
-<summary><b>Akış 2: Güvenli Borç Sistemi (GBS) Başlangıcı</b></summary>
+<summary><b>Flow 2: Secure Debt System (GBS) Initiation</b></summary>
 
 ```mermaid
 sequenceDiagram
-    participant Lender as Alacaklı
-    participant Borrower as Borçlu
-    participant ClientApp as WPF Uygulaması
+    participant Lender as Creditor
+    participant Borrower as Debtor
+    participant ClientApp as WPF Application
     participant API as FinTrack API
-    participant AdminAPI as Yönetici API
-    participant Operator as Operatör
+    participant AdminAPI as Manager API
+    participant Operator
 
-    Lender->>ClientApp: Borç teklifi oluşturur (Miktar, Vade, Borçlu E-postası)
+    Lender->>ClientApp: Creates debt offer (Amount, Due Date, Debtor Email)
     ClientApp->>API: POST /Debt/create-debt-offer
-    API-->>ClientApp: 200 OK (Teklif Oluşturuldu)
-    API->>Borrower: (Bildirim/E-posta ile) Yeni borç teklifi
+    API-->>ClientApp: 200 OK (Offer Created)
+    API->>Borrower: (Via Notification/Email) New debt offer
 
-    Borrower->>ClientApp: Teklifi kabul eder
+    Borrower->>ClientApp: Accepts the offer
     ClientApp->>API: POST /Debt/respond-to-offer/{id} (accepted: true)
-    API-->>ClientApp: 200 OK (Durum: Video Bekleniyor)
+    API-->>ClientApp: 200 OK (Status: Awaiting Video)
 
-    Borrower->>ClientApp: Taahhüt videosunu yükler
+    Borrower->>ClientApp: Uploads commitment video
     ClientApp->>API: POST /Videos/user-upload-video
-    API-->>ClientApp: 200 OK (Durum: Operatör Onayı Bekleniyor)
+    API-->>ClientApp: 200 OK (Status: Awaiting Operator Approval)
     
-    API->>Operator: (Yönetim Paneli'nde) Yeni onay bekleyen video
+    API->>Operator: (In Admin Panel) New video awaiting approval
     Operator->>AdminAPI: POST /Videos/video-approve/{id}
-    AdminAPI->>API: (İç Servis Çağrısı) Videoyu Şifrele, Borcu Aktive Et
-    API->>Lender: (E-posta ile) Borcunuz aktifleşti. Şifreleme Anahtarınız: [KEY]
+    AdminAPI->>API: (Internal Service Call) Encrypt Video, Activate Debt
+    API->>Lender: (Via Email) Your debt is now active. Your Encryption Key: [KEY]
 ```
 </details>
 
 <details>
-<summary><b>Akış 3: Üyelik Satın Alma (Stripe)</b></summary>
+<summary><b>Flow 3: Purchasing a Membership (Stripe)</b></summary>
 
 ```mermaid
 sequenceDiagram
-    participant User as Kullanıcı
-    participant ClientApp as WPF Uygulaması
+    participant User
+    participant ClientApp as WPF Application
     participant API as FinTrack API
-    participant DB as Veritabanı
+    participant DB as Database
     participant Stripe as Stripe API
 
-    User->>ClientApp: "Plus" planını seçer
+    User->>ClientApp: Selects the "Plus" plan
     ClientApp->>API: POST /Membership/create-checkout-session
-    API->>DB: Yeni üyelik oluştur (Durum: PendingPayment)
-    API->>Stripe: Ödeme oturumu oluşturma isteği
-    Stripe-->>API: Oturum ID'si ve URL'si
-    API-->>ClientApp: Stripe ödeme URL'sini döndür
+    API->>DB: Creates new membership (Status: PendingPayment)
+    API->>Stripe: Request to create payment session
+    Stripe-->>API: Session ID and URL
+    API-->>ClientApp: Returns Stripe payment URL
 
-    ClientApp->>User: Stripe ödeme sayfasına yönlendirir
-    User->>Stripe: Ödeme bilgilerini girer ve tamamlar
+    ClientApp->>User: Redirects to Stripe payment page
+    User->>Stripe: Enters payment details and completes
     
     Stripe-->>API: (Webhook) POST /api/stripe/webhook (checkout.session.completed)
-    API->>API: Webhook imzasını doğrular
-    API->>DB: Üyelik durumunu "Active" olarak günceller
-    API->>DB: Ödeme kaydını "Succeeded" olarak günceller
-    API->>User: (E-posta ile) Ödeme onayı ve fatura gönderir
+    API->>API: Verifies webhook signature
+    API->>DB: Updates membership status to "Active"
+    API->>DB: Updates payment record to "Succeeded"
+    API->>User: (Via Email) Sends payment confirmation and invoice
 ```
 </details>

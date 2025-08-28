@@ -1,100 +1,100 @@
-# FinTrack Projesi - Sıkça Sorulan Sorular (SSS)
+# **FinTrack Project - Frequently Asked Questions (FAQ)**
 
-Bu doküman, FinTrack projesi, mimarisi, API kullanımı ve geliştirme ortamıyla ilgili sıkça sorulan sorulara hızlı ve net yanıtlar sunmak amacıyla hazırlanmıştır.
+This document is designed to provide quick and clear answers to frequently asked questions about the FinTrack project, its architecture, API usage, and development environment.
 
-## İçindekiler
-*   [Genel ve Başlarken](#genel-ve-başlarken)
-*   [API Mimarisi ve Kullanımı](#api-mimarisi-ve-kullanımı)
-*   [Yetkilendirme (Authentication & Authorization)](#yetkilendirme-authentication--authorization)
-*   [Geliştirme Ortamı ve DevOps](#geliştirme-ortamı-ve-devops)
-*   [Veritabanı](#veritabanı)
-
----
-
-## Genel ve Başlarken
-
-### **Soru:** Bu proje nedir ve temel amacı nedir?
-**Cevap:** FinTrack, bireysel ve profesyonel kullanıcıların finansal hayatlarını yönetmelerini sağlayan bir SaaS (Hizmet Olarak Yazılım) platformudur. Bu repository, platformun **backend (sunucu tarafı)** hizmetlerini içerir ve istemci uygulamaları (WPF, mobil vb.) için güvenli ve zengin bir API altyapısı sunar.
-
-### **Soru:** Projenin ana dokümantasyonlarına nereden ulaşabilirim?
-**Cevap:** Projenin tüm teknik detayları `docs/` klasörü altında merkezi bir yapıda toplanmıştır:
-1.  **`README.md`:** Projeye genel bir bakış, teknoloji yığını ve hızlı başlangıç bilgileri içerir.
-2.  **`docs/ARCHITECTURE.md`:** Sistemin üst düzey mimarisini, servislerini ve veri akışlarını detaylandırır.
-3.  **`docs/DATABASE.md`:** Veritabanı şemasını, tabloları, ilişkileri ve ERD'yi içerir.
-4.  **`docs/api/` Klasörü:** Her bir API controller'ı için hazırlanmış detaylı endpoint dokümanlarını barındırır.
-5.  **Swagger (Etkileşimli UI):** Proje çalışırken `http://localhost:5246/swagger` adresinden ulaşılabilen, endpoint'leri canlı olarak test etmenizi sağlayan arayüzdür.
-
-### **Soru:** Projenin güncel durumu nedir?
-**Cevap:** Proje aktif olarak geliştirme aşamasındadır. `README.md` dosyası ana branch'in son derleme durumunu gösterir.
+## Table of Contents
+*   [General and Getting Started](#general-and-getting-started)
+*   [API Architecture and Usage](#api-architecture-and-usage)
+*   [Authentication & Authorization](#authentication--authorization)
+*   [Development Environment and DevOps](#development-environment-and-devops)
+*   [Database](#database)
 
 ---
 
-## API Mimarisi ve Kullanımı
+## General and Getting Started
 
-### **Soru:** API'nin ana (base) URL adresi nedir?
-**Cevap:** Docker ile yerel geliştirme ortamında çalışan servislerin varsayılan adresi: `http://localhost:5246`'dir.
+### **Question:** What is this project and what is its main purpose?
+**Answer:** FinTrack is a SaaS (Software as a Service) platform that enables individual and professional users to manage their financial lives. This repository contains the **backend services** of the platform, providing a secure and rich API infrastructure for client applications (WPF, mobile, etc.).
 
-### **Soru:** API'de tarih ve saat formatı olarak ne kullanılmalı?
-**Cevap:** API genelinde **ISO 8601** standardı (`YYYY-MM-DDTHH:mm:ssZ`) kullanılmaktadır. Tüm tarih ve saat verileri sunucuya **UTC** (Coordinated Universal Time) olarak gönderilmeli ve sunucudan bu formatta alınmalıdır.
+### **Question:** Where can I find the main documentation for the project?
+**Answer:** All technical details of the project are centralized in the `docs/` folder:
+1.  **`README.md`:** Provides a general overview of the project, the technology stack, and quick start information.
+2.  **`docs/ARCHITECTURE.md`:** Details the high-level architecture of the system, its services, and data flows.
+3.  **`docs/DATABASE.md`:** Contains the database schema, tables, relationships, and an ERD.
+4.  **`docs/api/` Folder:** Houses detailed endpoint documentation for each API controller.
+5.  **Swagger (Interactive UI):** An interface, accessible at `http://localhost:5246/swagger` when the project is running, that allows you to test endpoints live.
 
-### **Soru:** `Status`, `Type` gibi alanlar neden sayı yerine metin (`"Active"`, `"Income"`) olarak gönderiliyor?
-**Cevap:** Bu, API'nin okunabilirliğini ve geliştirici dostu olmasını artırmak için bilinçli bir tasarım tercihidir. ASP.NET Core, bu metin değerlerini sunucu tarafında otomatik olarak doğru `enum` tiplerine dönüştürür. Bu sayede, API'yi kullanan birinin sayıların ne anlama geldiğini ezberlemesine gerek kalmaz.
-
-### **Soru:** Bir `DELETE` işlemi neden `204 No Content` döndürüyor?
-**Cevap:** Bu bir hata değildir. `204 No Content` HTTP durum kodu, işlemin (örn: silme) başarıyla tamamlandığını ancak sunucunun yanıt gövdesinde geri döndüreceği bir içerik olmadığını belirtir. Bu, RESTful API tasarımında yaygın ve doğru bir yaklaşımdır.
-
----
-
-## Yetkilendirme (Authentication & Authorization)
-
-### **Soru:** API'ye erişim için nasıl kimlik doğrularım?
-**Cevap:** İki aşamalı bir süreçle:
-1.  **Kayıt:** `POST /UserAuth/initiate-registration` ve `POST /UserAuth/verify-otp-and-register` endpoint'leri ile OTP doğrulamalı bir kayıt işlemi yapmanız gerekir.
-2.  **Giriş:** Kayıt sonrası `POST /UserAuth/login` endpoint'ine e-posta ve şifrenizi göndererek bir **JWT (JSON Web Token)** alabilirsiniz.
-
-### **Soru:** Aldığım JWT'yi nasıl kullanmalıyım?
-**Cevap:** Aldığınız `accessToken`'ı, yetkilendirme gerektiren tüm isteklerin `Authorization` HTTP başlığına `Bearer ` ön eki ile eklemelisiniz. **Örnek:** `Authorization: Bearer eyJhbGciOiJIUzI1Ni...`
-
-### **Soru:** `401 Unauthorized` ile `403 Forbidden` arasındaki fark nedir?
-**Cevap:**
-*   **401 Unauthorized:** Kimliğiniz doğrulanamadı demektir. Sisteme "giriş yapmamış" olarak kabul edilirsiniz. Genellikle token'ın eksik, geçersiz veya süresinin dolmuş olması durumunda alınır.
-*   **403 Forbidden:** Kimliğiniz doğrulandı, yani "giriş yapmışsınız", ancak erişmeye çalıştığınız kaynak veya eylem için yetkiniz yok. Örneğin, `User` rolündeki bir kullanıcının sadece `Admin` rolünün erişebileceği bir endpoint'e istek atması bu hatayı döndürür.
+### **Question:** What is the current status of the project?
+**Answer:** The project is under active development. The `README.md` file displays the latest build status of the main branch.
 
 ---
 
-## Geliştirme Ortamı ve DevOps
+## API Architecture and Usage
 
-### **Soru:** Projeyi yerel bilgisayarımda nasıl çalıştırabilirim?
-**Cevap:** Projeyi çalıştırmanın **tek ve önerilen yolu Docker'dır**. Projenin ana dizininde `docker-compose up --build` komutunu çalıştırmanız yeterlidir. Bu komut, tüm servisleri (API'ler, veritabanları, gözlem araçları) doğru yapılandırmalarla birlikte otomatik olarak başlatacaktır.
+### **Question:** What is the base URL for the API?
+**Answer:** The default address for services running in the local development environment with Docker is: `http://localhost:5246`.
 
-### **Soru:** Neden Docker kullanmak zorunlu?
-**Cevap:** Docker, projenin tüm bağımlılıklarını (belirli .NET ve Python versiyonları, PostgreSQL, Ollama vb.) izole konteynerler içine paketler. Bu sayede, "benim makinemde çalışıyordu" sorununu tamamen ortadan kaldırır ve her geliştiricinin aynı ortamda çalışmasını garanti eder.
+### **Question:** What date and time format should be used in the API?
+**Answer:** The **ISO 8601** standard (`YYYY-MM-DDTHH:mm:ssZ`) is used throughout the API. All date and time data should be sent to the server in **UTC** (Coordinated Universal Time) and will be received from the server in this format.
 
-### **Soru:** Belirli bir servisin loglarını nasıl görebilirim?
-**Cevap:** Yeni bir terminal açın ve `docker-compose logs -f <servis_adi>` komutunu kullanın. **Örnek:** `docker-compose logs -f fintrack_api`
+### **Question:** Why are fields like `Status` and `Type` sent as text (`"Active"`, `"Income"`) instead of numbers?
+**Answer:** This is a deliberate design choice to enhance the readability and developer-friendliness of the API. ASP.NET Core automatically converts these string values to the correct `enum` types on the server side. This way, a developer using the API doesn't need to memorize what the numbers mean.
 
-### **Soru:** Gözlem (monitoring) panosuna (Grafana) nasıl erişebilirim?
-**Cevap:** Proje çalışırken tarayıcınızdan `http://localhost:3000` adresine gidin. Grafana, sistemin genel sağlık durumunu, CPU/RAM kullanımını ve API performansını gösteren panoları sunar.
-
-### **Soru:** Hassas bilgileri (API anahtarları, şifreler) nerede saklamalıyım?
-**Cevap:** **Asla doğrudan `appsettings.json` içine yazmayın!** Yerel geliştirme için, ASP.NET Core'un "User Secrets" özelliğini kullanın. Üretim ortamları için ise bu bilgileri **ortam değişkenleri (environment variables)** veya Azure Key Vault gibi güvenli bir konfigürasyon yönetim aracı üzerinden sağlayın.
+### **Question:** Why does a `DELETE` operation return a `204 No Content`?
+**Answer:** This is not an error. The `204 No Content` HTTP status code indicates that the operation (e.g., deletion) was completed successfully, but the server has no content to return in the response body. This is a common and correct approach in RESTful API design.
 
 ---
 
-## Veritabanı
+## Authentication & Authorization
 
-### **Soru:** Geliştirme veritabanına bir istemci (DBeaver, pgAdmin) ile nasıl bağlanabilirim?
-**Cevap:** `docker-compose.yml` dosyasında veritabanı portu (`5432`) makinenizin `5432` portuna yönlendirilmiştir. Aşağıdaki bilgilerle bağlantı kurabilirsiniz:
+### **Question:** How do I authenticate to access the API?
+**Answer:** Through a two-step process:
+1.  **Registration:** You need to complete an OTP-verified registration process using the `POST /UserAuth/initiate-registration` and `POST /UserAuth/verify-otp-and-register` endpoints.
+2.  **Login:** After registration, you can obtain a **JWT (JSON Web Token)** by sending your email and password to the `POST /UserAuth/login` endpoint.
+
+### **Question:** How should I use the JWT I received?
+**Answer:** You must include the `accessToken` in the `Authorization` HTTP header of all requests that require authorization, prefixed with `Bearer `. **Example:** `Authorization: Bearer eyJhbGciOiJIUzI1Ni...`
+
+### **Question:** What is the difference between `401 Unauthorized` and `403 Forbidden`?
+**Answer:**
+*   **401 Unauthorized:** This means your identity could not be verified. You are considered "not logged in" to the system. It is typically received when the token is missing, invalid, or has expired.
+*   **403 Forbidden:** This means your identity has been verified—you are "logged in"—but you do not have permission to access the requested resource or perform the action. For example, a user with the `User` role attempting to access an endpoint that is only accessible to the `Admin` role will receive this error.
+
+---
+
+## Development Environment and DevOps
+
+### **Question:** How can I run the project on my local machine?
+**Answer:** The **only and recommended way to run the project is with Docker**. Simply run the `docker-compose up --build` command in the project's root directory. This command will automatically start all services (APIs, databases, monitoring tools) with the correct configurations.
+
+### **Question:** Why is using Docker mandatory?
+**Answer:** Docker packages all of the project's dependencies (specific .NET and Python versions, PostgreSQL, Ollama, etc.) into isolated containers. This completely eliminates the "it worked on my machine" problem and ensures that every developer works in the exact same environment.
+
+### **Question:** How can I view the logs of a specific service?
+**Answer:** Open a new terminal and use the `docker-compose logs -f <service_name>` command. **Example:** `docker-compose logs -f fintrack_api`
+
+### **Question:** How can I access the monitoring dashboard (Grafana)?
+**Answer:** While the project is running, navigate to `http://localhost:3000` in your browser. Grafana provides dashboards that show the overall health of the system, CPU/RAM usage, and API performance.
+
+### **Question:** Where should I store sensitive information (API keys, passwords)?
+**Answer:** **Never write them directly into `appsettings.json`!** For local development, use ASP.NET Core's "User Secrets" feature. For production environments, provide this information via **environment variables** or a secure configuration management tool like Azure Key Vault.
+
+---
+
+## Database
+
+### **Question:** How can I connect to the development database with a client (DBeaver, pgAdmin)?
+**Answer:** In the `docker-compose.yml` file, the database port (`5432`) is mapped to port `5432` on your machine. You can connect using the following information:
 *   **Host:** `localhost`
 *   **Port:** `5432`
-*   **Veritabanı (MainDB):** `fintrack_main_db`
-*   **Kullanıcı Adı:** `postgres`
-*   **Şifre:** `your_strong_password` (docker-compose.yml dosyasından kontrol edin)
+*   **Database (MainDB):** `fintrack_main_db`
+*   **Username:** `postgres`
+*   **Password:** `your_strong_password` (check the `docker-compose.yml` file or your `.env` file)
 
-### **Soru:** `MainDB` ve `LogDB` arasındaki fark nedir?
-**Cevap:**
-*   **`MainDB`:** Ana uygulama verilerinin (kullanıcılar, hesaplar vb.) tutulduğu birincil veritabanıdır.
-*   **`LogDB`:** `MainDB` üzerinde gerçekleşen her veri değişikliğini (Ekleme, Güncelleme, Silme) denetim amacıyla kaydeden ikincil veritabanıdır. Bu, tam bir izlenebilirlik sağlar.
+### **Question:** What is the difference between `MainDB` and `LogDB`?
+**Answer:**
+*   **`MainDB`:** The primary database where the main application data (users, accounts, etc.) is stored.
+*   **`LogDB`:** A secondary database that records every data modification (Create, Update, Delete) on `MainDB` for auditing purposes. This provides full traceability.
 
-### **Soru:** `docker-compose down` komutunu çalıştırdığımda veritabanı verilerim silinir mi?
-**Cevap:** **Hayır, silinmez.** Veritabanı verileriniz, `postgres_data` ve `postgres_log_data` adlı Docker "volume"lerinde saklanır. Bu volume'ler, konteynerler durdurulup kaldırılsa bile verilerinizi kalıcı olarak korur. Verileri tamamen sıfırlamak isterseniz `docker-compose down -v` komutunu kullanmanız gerekir.
+### **Question:** Will my database data be deleted if I run the `docker-compose down` command?
+**Answer:** **No, it will not.** Your database data is stored in Docker "volumes" named `postgres_data` and `postgres_log_data`. These volumes persist your data even if the containers are stopped and removed. If you want to completely reset the data, you need to use the `docker-compose down -v` command.

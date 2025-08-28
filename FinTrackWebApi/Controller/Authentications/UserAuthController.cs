@@ -4,7 +4,6 @@ using FinTrackWebApi.Enums;
 using FinTrackWebApi.Models.Otp;
 using FinTrackWebApi.Models.User;
 using FinTrackWebApi.Security;
-using FinTrackWebApi.Services.Authentications;
 using FinTrackWebApi.Services.EmailService;
 using FinTrackWebApi.Services.OtpService;
 using Microsoft.AspNetCore.Identity;
@@ -25,8 +24,6 @@ namespace FinTrackWebApi.Controller.Authentications
         private readonly UserManager<UserModel> _userManager;
         private readonly SignInManager<UserModel> _signInManager;
 
-        private readonly IUserAuthService _userAuthService;
-
         public UserAuthController(
             MyDataContext context,
             IConfiguration configuration,
@@ -35,8 +32,7 @@ namespace FinTrackWebApi.Controller.Authentications
             ILogger<UserAuthController> logger,
             IWebHostEnvironment webHostEnvironment,
             UserManager<UserModel> userManager,
-            SignInManager<UserModel> signInManager,
-            IUserAuthService userAuthService
+            SignInManager<UserModel> signInManager
         )
         {
             _context = context;
@@ -47,7 +43,6 @@ namespace FinTrackWebApi.Controller.Authentications
             _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
             _signInManager = signInManager;
-            _userAuthService = userAuthService;
         }
 
         [HttpPost("initiate-registration")]
@@ -66,12 +61,105 @@ namespace FinTrackWebApi.Controller.Authentications
                 return BadRequest(new { Message = "Email, Username, and Password are required." });
             }
 
-            var (status, message) = await _userAuthService.InitiateRegistration(initiateDto);
-            if (!status)
+            string UserName = initiateDto.FirstName.Replace(" ", "").Trim() + "_" + initiateDto.LastName.Replace(" ", "").Trim();
+
+            if (await _userManager.FindByEmailAsync(initiateDto.Email) != null)
             {
-                return StatusCode(500, new { Message = message });
+                _logger.LogWarning(
+                    "Registration initiation failed: Email {Email} already exists in Identity.",
+                    initiateDto.Email
+                );
+                return BadRequest(new { Message = "This email address is already registered." });
             }
-            return Ok(message);
+            if (await _userManager.FindByNameAsync(UserName) != null)
+            {
+                _logger.LogWarning(
+                    "Registration initiation failed: Username {Username} already exists in Identity.",
+                    UserName
+                );
+                return BadRequest(new { Message = "This username is already taken." });
+            }
+
+            string otp = _otpService.GenerateOtp();
+            DateTime expiryTime = DateTime.UtcNow.AddMinutes(5);
+            string hashedOtp = BCrypt.Net.BCrypt.HashPassword(otp);
+
+            bool stored = await _otpService.StoreOtpAsync(
+                initiateDto.Email,
+                hashedOtp,
+                UserName,
+                initiateDto.Password,
+                initiateDto.ProfilePicture,
+                expiryTime
+            );
+
+            if (!stored)
+            {
+                _logger.LogError("Failed to store OTP for {Email}.", initiateDto.Email);
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        Message = "An error occurred while initiating registration. Please try again.",
+                    }
+                );
+            }
+
+            try
+            {
+                string emailSubject = "Email Verification Code For FinTrack new Membership";
+                string emailBody = string.Empty;
+                string emailTemplatePath = Path.Combine(
+                    _webHostEnvironment.ContentRootPath,
+                    "Services",
+                    "EmailService",
+                    "EmailHtmlSchemes",
+                    "CodeVerificationScheme.html"
+                );
+
+                if (!System.IO.File.Exists(emailTemplatePath))
+                {
+                    _logger.LogError("Email template not found at {Path}", emailTemplatePath);
+                    await _otpService.RemoveOtpAsync(initiateDto.Email);
+                    return StatusCode(500, new { Message = "Email template not found." });
+                }
+                using (StreamReader reader = new StreamReader(emailTemplatePath))
+                {
+                    emailBody = await reader.ReadToEndAsync();
+                }
+                emailBody = emailBody.Replace("[UserName]", UserName);
+                emailBody = emailBody.Replace("[VERIFICATION_CODE]", otp);
+                emailBody = emailBody.Replace("[YEAR]", DateTime.UtcNow.ToString("yyyy"));
+
+                await _emailSender.SendEmailAsync(initiateDto.Email, emailSubject, emailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to send verification email to {Email}.",
+                    initiateDto.Email
+                );
+                await _otpService.RemoveOtpAsync(initiateDto.Email);
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        Message = "Failed to send verification email. Please check the address and try again.",
+                    }
+                );
+            }
+
+            _logger.LogInformation(
+                "OTP sent to {Email} for registration initiation.",
+                initiateDto.Email
+            );
+            return Ok(
+                new
+                {
+                    Message = "OTP has been sent to your email address. Please verify to complete registration.",
+                }
+            );
         }
 
         [HttpPost("verify-otp-and-register")]
