@@ -1,54 +1,54 @@
-# FinTrack API: İşlem Kategorileri Yönetimi (TransactionCategory Controller)
+# **FinTrack API: Transaction Category Management (TransactionCategory Controller)**
 
-Bu doküman, kullanıcıların gelir ve gider işlemlerini sınıflandırmak için kullandıkları kişisel **işlem kategorilerini** yöneten `TransactionCategoryController` endpoint'lerini açıklamaktadır.
+This document describes the `TransactionCategoryController` endpoints, which are used to manage the personal **transaction categories** that users employ to classify their income and expense transactions.
 
 *Controller Base Path:* `/TransactionCategory`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header.
 
-### Veri İzolasyonu (User Scoping)
+### Data Isolation (User Scoping)
 
-Tüm kategori işlemleri, işlemi yapan kullanıcının kimliğine bağlıdır. Bir kullanıcı, yalnızca kendi oluşturduğu işlem kategorilerini listeleyebilir, görüntüleyebilir, güncelleyebilir veya silebilir.
+All category operations are tied to the identity of the user performing the action. A user can only list, view, update, or delete the transaction categories they have created.
 
-### `type` Alanı Değerleri (`TransactionType`)
+### `type` Field Values (`TransactionType`)
 
-İşlem kategorileri, `Gelir` veya `Gider` olarak sınıflandırılır. Bu, kullanıcıların bütçeleme ve raporlama sırasında daha anlamlı gruplamalar yapmasına olanak tanır.
-*   `Income` (Gelir)
-*   `Expense` (Gider)
+Transaction categories are classified as either `Income` or `Expense`. This allows users to create more meaningful groupings for budgeting and reporting.
+*   `Income`
+*   `Expense`
 
 ---
 
 ## Endpoints
 
-### 1. Kullanıcının Tüm İşlem Kategorilerini Getir
+### 1. Retrieve All of a User's Transaction Categories
 
-Giriş yapmış kullanıcının sistemde kayıtlı tüm işlem kategorilerini listeler.
+Lists all transaction categories registered in the system for the logged-in user.
 
 *   **Endpoint:** `GET /TransactionCategory`
-*   **Açıklama:** Token'ı gönderen kullanıcıya ait tüm işlem kategorilerinin bir listesini döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns a list of all transaction categories belonging to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `TransactionCategoriesDto` objelerinden oluşan bir dizi.
+*   **Content:** An array of `TransactionCategoriesDto` objects.
     ```json
     [
         {
           "id": 1,
-          "name": "Maaş",
+          "name": "Salary",
           "type": "Income",
           "createdAt": "2024-05-01T10:00:00Z",
           "updatedAt": null
         },
         {
           "id": 2,
-          "name": "Faturalar",
+          "name": "Bills",
           "type": "Expense",
           "createdAt": "2024-05-02T11:30:00Z",
           "updatedAt": "2024-05-22T14:00:00Z"
@@ -56,92 +56,92 @@ Giriş yapmış kullanıcının sistemde kayıtlı tüm işlem kategorilerini li
     ]
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   `404 Not Found`: Kullanıcının hiç kategorisi yoksa.
+#### Error Responses
+*   `404 Not Found`: If the user has no categories.
 *   `500 Internal Server Error`
 
 ---
 
-### 2. Belirli Bir İşlem Kategorisini Getir
+### 2. Get a Specific Transaction Category
 
-Kullanıcıya ait tek bir işlem kategorisinin detaylarını ID ile getirir.
+Retrieves the details of a single transaction category belonging to the user by its ID.
 
 *   **Endpoint:** `GET /TransactionCategory/{Id}`
-*   **Açıklama:** Verilen `Id`'ye sahip olan ve kullanıcıya ait olan işlem kategorisinin detaylarını döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns the details of the transaction category with the given `Id` that belongs to the user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** Tek bir `TransactionCategoriesDto` objesi.
+*   **Content:** A single `TransactionCategoriesDto` object.
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   `404 Not Found`
 *   `500 Internal Server Error`
 
 ---
 
-### 3. Yeni İşlem Kategorisi Oluştur
+### 3. Create a New Transaction Category
 
-Kullanıcı için yeni bir işlem kategorisi oluşturur.
+Creates a new transaction category for the user.
 
 *   **Endpoint:** `POST /TransactionCategory`
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`TransactionCategoriesCreateDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `name` | `string` | Kategorinin adı (örn: "Ulaşım"). | Evet |
-| `type` | `string` | Kategorinin türü (`Income` veya `Expense`). | Evet |
+| `name` | `string` | The name of the category (e.g., "Transportation"). | Yes |
+| `type` | `string` | The type of the category (`Income` or `Expense`). | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "name": "Kira",
+  "name": "Rent",
   "type": "Expense"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `201 Created`
-*   **Content:** Oluşturulan `TransactionCategoryModel` objesi.
+*   **Content:** The created `TransactionCategoryModel` object.
 
 ---
 
-### 4. İşlem Kategorisini Güncelle
+### 4. Update a Transaction Category
 
-Mevcut bir işlem kategorisinin adını ve türünü günceller.
+Updates the name and type of an existing transaction category.
 
 *   **Endpoint:** `PUT /TransactionCategory/{Id}`
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Request Body (`TransactionCategoriesCreateDto` kullanılır)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+#### Request Body (Uses `TransactionCategoriesCreateDto`)
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `name` | `string` | Kategorinin yeni adı. | Evet |
-| `type` | `string` | Kategorinin yeni türü (`Income` veya `Expense`). | Evet |
+| `name` | `string` | The new name of the category. | Yes |
+| `type` | `string` | The new type of the category (`Income` or `Expense`). | Yes |
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:** `true`
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   `404 Not Found`
 *   `500 Internal Server Error`
 
 ---
 
-### 5. İşlem Kategorisini Sil
+### 5. Delete a Transaction Category
 
-Mevcut bir işlem kategorisini siler.
+Deletes an existing transaction category.
 
 *   **Endpoint:** `DELETE /TransactionCategory/{Id}`
-*   **Açıklama:** Bu işlem geri alınamaz. Bu kategoriye bağlı işlemler varsa, bu işlemlerin kategorisiz kalabileceği dikkate alınmalıdır.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** This action cannot be undone. It should be noted that transactions associated with this category may become uncategorized.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:** `true`
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   `404 Not Found`
 *   `500 Internal Server Error`

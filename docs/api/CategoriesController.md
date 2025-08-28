@@ -1,170 +1,170 @@
-# FinTrack API: Kategori Yönetimi (Categories Controller)
+# **FinTrack API: Category Management (Categories Controller)**
 
-Bu doküman, kullanıcıların işlemlerini (gelir/gider) sınıflandırmak için kullandıkları kişisel kategorileri yöneten `CategoriesController` endpoint'lerini açıklamaktadır.
+This document describes the `CategoriesController` endpoints, which are used to manage the personal categories that users employ to classify their transactions (income/expenses).
 
 *Controller Base Path:* `/Categories`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header.
 
-**Header Örneği:**
-`Authorization: Bearer <JWT_TOKENINIZ>`
+**Header Example:**
+`Authorization: Bearer <YOUR_JWT_TOKEN>`
 
-### Veri İzolasyonu (User Scoping)
+### Data Isolation (User Scoping)
 
-Tüm kategori işlemleri, işlemi yapan kullanıcının kimliğine bağlıdır. Bir kullanıcı, yalnızca kendi oluşturduğu kategorileri listeleyebilir, görüntüleyebilir, güncelleyebilir veya silebilir. Başka bir kullanıcının verilerine erişim mümkün değildir.
+All category operations are tied to the identity of the user performing the action. A user can only list, view, update, or delete the categories they have created. Access to another user's data is not possible.
 
 ---
 
 ## Endpoints
 
-### 1. Kullanıcının Tüm Kategorilerini Getir
+### 1. Retrieve All of a User's Categories
 
-Giriş yapmış kullanıcının sistemde kayıtlı tüm harcama/gelir kategorilerini listeler.
+Lists all income/expense categories registered in the system for the logged-in user.
 
 *   **Endpoint:** `GET /Categories`
-*   **Açıklama:** Token'ı gönderen kullanıcıya ait tüm kategorilerin bir listesini döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns a list of all categories belonging to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `CategoryDto` objelerinden oluşan bir dizi. Eğer kullanıcının hiç kategorisi yoksa, boş bir dizi `[]` döner.
+*   **Content:** An array of `CategoryDto` objects. If the user has no categories, an empty array `[]` is returned.
     ```json
     [
         {
           "id": 1,
-          "name": "Faturalar",
+          "name": "Bills",
           "createdAtUtc": "2024-05-01T10:00:00Z",
           "updatedAtUtc": "2024-05-20T15:00:00Z"
         },
         {
           "id": 2,
-          "name": "Market",
+          "name": "Groceries",
           "createdAtUtc": "2024-05-02T11:30:00Z",
           "updatedAtUtc": null
         }
     ]
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 2. Belirli Bir Kategoriyi Getir
+### 2. Get a Specific Category
 
-Kullanıcıya ait tek bir kategorinin detaylarını ID ile getirir.
+Retrieves the details of a single category belonging to the user by its ID.
 
 *   **Endpoint:** `GET /Categories/{categoryId}`
-*   **Açıklama:** Verilen `categoryId`'ye sahip olan ve kullanıcıya ait olan kategorinin detaylarını döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns the details of the category with the given `categoryId` that belongs to the user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `CategoryDto` objesi.
+*   **Content:** A `CategoryDto` object.
     ```json
     {
       "id": 1,
-      "name": "Faturalar",
+      "name": "Bills",
       "createdAtUtc": "2024-05-01T10:00:00Z",
       "updatedAtUtc": "2024-05-20T15:00:00Z"
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   **Status Code:** `404 Not Found` (Kategori bulunamazsa veya kullanıcıya ait değilse).
+#### Error Responses
+*   **Status Code:** `404 Not Found` (If the category is not found or does not belong to the user).
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 3. Yeni Kategori Oluştur
+### 3. Create a New Category
 
-Kullanıcı için yeni bir kategori oluşturur.
+Creates a new category for the user.
 
 *   **Endpoint:** `POST /Categories`
-*   **Açıklama:** Gönderilen `name` bilgisine göre yeni bir kategori oluşturur.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Creates a new category based on the provided `name`.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`CategoryCreateDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `name` | `string` | Kategorinin adı (örn: "Ulaşım"). | Evet |
+| `name` | `string` | The name of the category (e.g., "Transportation"). | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "name": "Eğlence"
+  "name": "Entertainment"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:**
     ```json
     true
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 4. Kategoriyi Güncelle
+### 4. Update a Category
 
-Mevcut bir kategorinin adını günceller.
+Updates the name of an existing category.
 
 *   **Endpoint:** `PUT /Categories/{categoryId}`
-*   **Açıklama:** Belirtilen `categoryId`'ye sahip kategoriyi, gönderilen yeni `name` ile günceller.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Updates the category with the specified `categoryId` with the new `name` provided.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`CategoryUpdateDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `name` | `string` | Kategorinin yeni adı. | Evet |
+| `name` | `string` | The new name of the category. | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "name": "Abonelikler ve Aidatlar"
+  "name": "Subscriptions & Dues"
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** Güncellenmiş `CategoryModel` objesi.
+*   **Content:** The updated `CategoryModel` object.
     ```json
     {
         "id": 1,
         "userId": 15,
-        "name": "Abonelikler ve Aidatlar",
+        "name": "Subscriptions & Dues",
         "createdAtUtc": "2024-05-01T10:00:00Z",
         "updatedAtUtc": "2024-05-24T18:30:00Z"
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 5. Kategoriyi Sil
+### 5. Delete a Category
 
-Mevcut bir kategoriyi siler.
+Deletes an existing category.
 
 *   **Endpoint:** `DELETE /Categories/{categoryId}`
-*   **Açıklama:** Belirtilen `categoryId`'ye sahip kategoriyi kalıcı olarak siler. Bu işlem geri alınamaz.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Permanently deletes the category with the specified `categoryId`. This action cannot be undone.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `204 No Content`
-*   **Açıklama:** Silme işlemi başarılı olduğunda response body'de içerik dönmez.
+*   **Description:** No content is returned in the response body when the deletion is successful.
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`

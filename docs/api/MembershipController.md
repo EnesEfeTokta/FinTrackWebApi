@@ -1,133 +1,133 @@
-# FinTrack API: Üyelik ve Plan Yönetimi (Membership Controller)
+# **FinTrack API: Membership and Plan Management (Membership Controller)**
 
-Bu doküman, FinTrack'in üyelik planlarını, kullanıcı üyeliklerini ve Stripe üzerinden ödeme süreçlerini yöneten `MembershipController` endpoint'lerini açıklamaktadır. Bu controller, hem son kullanıcıya yönelik hem de yönetici (Admin) fonksiyonlarını barındırır.
+This document describes the `MembershipController` endpoints, which manage FinTrack's membership plans, user memberships, and payment processes via Stripe. This controller includes functionalities for both end-users and administrators.
 
 *Controller Base Path:* `/Membership`
 
 ---
 
-## Endpoint Kategorileri
+## Endpoint Categories
 
-Bu controller'daki endpoint'ler üç ana gruba ayrılır:
+The endpoints in this controller are divided into three main groups:
 
-1.  **Abonelik Planları (Plans):** Herkese açık (`AllowAnonymous`) endpoint'lerdir. Kullanıcıların ve potansiyel müşterilerin mevcut üyelik planlarını ve özelliklerini görmesini sağlar.
-2.  **Yönetici Fonksiyonları (Admin-Only):** Sadece `Admin` rolüne sahip kullanıcıların üyelik planlarını (oluşturma, güncelleme, silme) yönetebildiği endpoint'lerdir.
-3.  **Kullanıcı Üyelik Yönetimi (User-Specific):** Giriş yapmış kullanıcıların kendi mevcut üyeliklerini görmesi, üyelik geçmişini incelemesi, yeni bir plana abone olması (`create-checkout-session`) veya mevcut aboneliğini iptal etmesi için kullanılır.
+1.  **Subscription Plans:** These are public (`AllowAnonymous`) endpoints that allow users and potential customers to view available membership plans and their features.
+2.  **Admin Functions (Admin-Only):** These endpoints are restricted to users with the `Admin` role and are used to manage membership plans (create, update, delete).
+3.  **User Membership Management (User-Specific):** These endpoints are for logged-in users to view their current membership, review their membership history, subscribe to a new plan (`create-checkout-session`), or cancel their existing subscription.
 
 ---
 
-## 1. Abonelik Planları (Herkese Açık)
+## 1. Subscription Plans (Public)
 
-### 1.1. Tüm Aktif Abonelik Planlarını Getir
+### 1.1. Get All Active Subscription Plans
 
-Sistemdeki tüm aktif ve satın alınabilir üyelik planlarını listeler.
+Lists all active and purchasable membership plans in the system.
 
 *   **Endpoint:** `GET /Membership/plans`
-*   **Yetkilendirme:** Gerekmez (`AllowAnonymous`).
+*   **Authorization:** Not required (`AllowAnonymous`).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `PlanFeatureDto` objelerinden oluşan bir dizi.
+*   **Content:** An array of `PlanFeatureDto` objects.
     ```json
     [
         {
             "id": 1,
             "name": "Free",
-            "description": "Temel ve giriş seviye için.",
+            "description": "For basic and entry-level use.",
             "price": 0,
             "currency": "USD",
             "billingCycle": "Monthly",
-            // ... diğer plan özellikleri
+            // ... other plan features
         },
         {
             "id": 2,
             "name": "Plus",
-            "description": "Orta ve Orta üstü kullanıcılar içindir.",
+            "description": "For intermediate and advanced users.",
             "price": 10,
             "currency": "USD",
-            // ... diğer plan özellikleri
+            // ... other plan features
         }
     ]
     ```
 
-### 1.2. Belirli Bir Abonelik Planını Getir
+### 1.2. Get a Specific Subscription Plan
 
-ID ile belirtilen tek bir aktif abonelik planının detaylarını getirir.
+Retrieves the details of a single active subscription plan specified by its ID.
 
 *   **Endpoint:** `GET /Membership/plan/{Id}`
-*   **Yetkilendirme:** Gerekmez (`AllowAnonymous`).
+*   **Authorization:** Not required (`AllowAnonymous`).
 
 ---
 
-## 2. Yönetici Fonksiyonları (Admin Rolü Gerekli)
+## 2. Admin Functions (Admin Role Required)
 
-### 2.1. Yeni Abonelik Planı Oluştur
+### 2.1. Create a New Subscription Plan
 
-Sisteme yeni bir üyelik planı ekler.
+Adds a new membership plan to the system.
 
 *   **Endpoint:** `POST /Membership/plan`
-*   **Yetkilendirme:** Gerekli (`Admin` rolü).
+*   **Authorization:** Required (`Admin` role).
 
 #### Request Body (`PlanFeatureCreateDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `planName` | `string` | Planın adı (örn: "Pro"). |
-| `price` | `number` | Planın fiyatı. |
-| `currency` | `string` | Para birimi (örn: "USD"). |
-| `billingCycle`|`string`| Fatura döngüsü (örn: "Monthly", "Yearly").|
-| `isActive` | `boolean`| Planın satın alınabilir olup olmadığı. |
-| ... | ... | Diğer özellikler (`reporting`, `budgeting` vb.) |
+| `planName` | `string` | The name of the plan (e.g., "Pro"). |
+| `price` | `number` | The price of the plan. |
+| `currency` | `string` | The currency (e.g., "USD"). |
+| `billingCycle`|`string`| The billing cycle (e.g., "Monthly", "Yearly").|
+| `isActive` | `boolean`| Whether the plan is available for purchase. |
+| ... | ... | Other features (`reporting`, `budgeting`, etc.) |
 
-#### Başarılı Yanıt (Success Response)
-*   `201 Created` durum kodu ve oluşturulan planın objesi.
+#### Success Response
+*   A `201 Created` status code and the created plan object.
 
-### 2.2. Abonelik Planını Güncelle
+### 2.2. Update a Subscription Plan
 
-Mevcut bir üyelik planının detaylarını günceller.
+Updates the details of an existing membership plan.
 
 *   **Endpoint:** `PUT /Membership/plan/{Id}`
-*   **Yetkilendirme:** Gerekli (`Admin` rolü).
+*   **Authorization:** Required (`Admin` role).
 
-### 2.3. Abonelik Planını Sil
+### 2.3. Delete a Subscription Plan
 
-Mevcut bir üyelik planını sistemden kaldırır.
+Removes an existing membership plan from the system.
 
 *   **Endpoint:** `DELETE /Membership/plan/{Id}`
-*   **Yetkilendirme:** Gerekli (`Admin` rolü).
+*   **Authorization:** Required (`Admin` role).
 
 ---
 
-## 3. Kullanıcı Üyelik Yönetimi (Giriş Yapmış Kullanıcı)
+## 3. User Membership Management (Logged-In User)
 
-### 3.1. Aktif Üyeliği Getir
+### 3.1. Get Current Membership
 
-Giriş yapmış kullanıcının mevcut ve aktif olan üyeliğini getirir.
+Retrieves the logged-in user's current and active membership.
 
 *   **Endpoint:** `GET /Membership/current`
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Authorization:** Required (`User` or `Admin` role).
 
-### 3.2. Üyelik Geçmişini Getir
+### 3.2. Get Membership History
 
-Kullanıcının geçmiş ve mevcut tüm üyeliklerini listeler.
+Lists all past and current memberships for the user.
 
 *   **Endpoint:** `GET /Membership/history`
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Authorization:** Required (`User` or `Admin` role).
 
-### 3.3. Ödeme Oturumu Oluştur (Stripe Entegrasyonu)
+### 3.3. Create Checkout Session (Stripe Integration)
 
-Kullanıcının seçtiği bir plana abone olması için Stripe ödeme sayfasını başlatan oturumu oluşturur.
+Creates a session to initiate the Stripe payment page for a user to subscribe to a selected plan.
 
 *   **Endpoint:** `POST /Membership/create-checkout-session`
-*   **Açıklama:** Bu endpoint, bir plan ID'si alır, veritabanında `PendingPayment` (Ödeme Bekleniyor) durumunda bir üyelik kaydı oluşturur ve Stripe API'sine bağlanarak bir ödeme oturumu başlatır. Yanıt olarak, kullanıcının yönlendirileceği Stripe ödeme sayfasının URL'sini döner.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** This endpoint takes a plan ID, creates a membership record in the database with a `PendingPayment` status, and connects to the Stripe API to start a payment session. It returns the URL of the Stripe payment page to which the user should be redirected.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`SubscriptionRequestDto`)
-| Alan | Tip | Açıklama |
+| Field | Type | Description |
 | :--- | :--- | :--- |
-| `planId` | `integer` | Abone olunmak istenen planın ID'si. |
-| `autoRenew`| `boolean`| Aboneliğin otomatik olarak yenilenip yenilenmeyeceği. |
+| `planId` | `integer` | The ID of the plan to subscribe to. |
+| `autoRenew`| `boolean`| Whether the subscription should auto-renew. |
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:**
     ```json
@@ -137,10 +137,10 @@ Kullanıcının seçtiği bir plana abone olması için Stripe ödeme sayfasın�
     }
     ```
 
-### 3.4. Aboneliği İptal Et
+### 3.4. Cancel a Subscription
 
-Kullanıcının aktif bir aboneliğinin otomatik yenilenmesini durdurur.
+Stops the automatic renewal of a user's active subscription.
 
 *   **Endpoint:** `POST /Membership/{userMembershipId}/cancel`
-*   **Açıklama:** Aboneliğin durumunu `Cancelled` olarak günceller. Üyelik, mevcut fatura döneminin sonuna kadar aktif kalmaya devam eder.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Updates the subscription's status to `Cancelled`. The membership remains active until the end of the current billing period.
+*   **Authorization:** Required (`User` or `Admin` role).

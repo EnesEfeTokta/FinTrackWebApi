@@ -1,51 +1,51 @@
-# FinTrack API: Sistem Log Yönetimi (Log Controller)
+# **FinTrack API: System Log Management (Log Controller)**
 
-Bu doküman, sunucuda oluşturulan log dosyalarına erişim sağlayarak hata ayıklama ve sistem izleme süreçlerini kolaylaştıran `LogController` endpoint'ini açıklamaktadır.
+This document describes the `LogController` endpoint, which facilitates debugging and system monitoring processes by providing access to log files generated on the server.
 
 *Controller Base Path:* `/Log`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme ve Güvenlik Uyarısı
+### Authentication and Security Warning
 
-*   **Yetkilendirme:** Bu controller'daki endpoint **halka açıktır** ve herhangi bir yetkilendirme (authentication/authorization) gerektirmez.
-*   **DİKKAT:** Bu endpoint'in halka açık olması, üretim (production) ortamlarında ciddi bir güvenlik riski oluşturabilir. Bu nedenle, bu endpoint'e erişim mutlaka bir ağ katmanı güvenliği ile korunmalıdır. Örneğin:
-    *   Sadece belirli IP adreslerine izin veren bir **Firewall kuralı** tanımlanmalıdır.
-    *   Sadece şirket içi ağdan veya bir **VPN** üzerinden erişilebilir olmalıdır.
-    *   Bir **API Gateway** arkasına alınarak erişim kontrolü sağlanmalıdır.
+*   **Authentication:** The endpoint in this controller is **public** and does not require any authentication or authorization.
+*   **CAUTION:** The public nature of this endpoint can pose a significant security risk in production environments. Therefore, access to this endpoint must be protected by network-level security. For example:
+    *   A **Firewall rule** should be defined to allow access only from specific IP addresses.
+    *   It should only be accessible from an internal network or via a **VPN**.
+    *   Access control should be enforced by placing it behind an **API Gateway**.
 
-### Dizin Geçişi (Path Traversal) Koruması
+### Path Traversal Protection
 
-Bu endpoint, dosya adlarında `../` gibi ifadeler kullanılarak sistemdeki diğer dosyalara (örn: `appsettings.json`) erişilmesini engellemek için bir **dizin geçişi koruması** içerir. Eğer istenen dosya yolu, beklenen `/logs` dizininin dışına çıkmaya çalışırsa, istek `400 Bad Request` hatası ile reddedilir.
+This endpoint includes **path traversal protection** to prevent access to other files on the system (e.g., `appsettings.json`) by using expressions like `../` in the file name. If the requested file path attempts to navigate outside the expected `/logs` directory, the request will be rejected with a `400 Bad Request` error.
 
 ---
 
 ## Endpoints
 
-### 1. Belirli Bir Log Dosyasını İndir
+### 1. Download a Specific Log File
 
-Sunucunun `/logs` klasöründe bulunan belirli bir log dosyasını indirir.
+Downloads a specific log file located in the server's `/logs` directory.
 
 *   **Endpoint:** `GET /Log/{fileName}`
-*   **Açıklama:** Belirtilen dosya adını kullanarak log dosyasının içeriğini döndürür.
-*   **Yetkilendirme:** Gerekmez (`Public`). **Güvenliği ağ katmanında sağlanmalıdır.**
+*   **Description:** Returns the content of the log file using the specified file name.
+*   **Authorization:** Not required (`Public`). **Security must be handled at the network layer.**
 
-#### URL Parametreleri
-| Parametre | Tip | Açıklama | Zorunlu mu? |
+#### URL Parameters
+| Parameter | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `fileName` | `string` | İndirilmek istenen log dosyasının tam adı ve uzantısı (örn: `fintrack-log-20240525.json`). | Evet |
+| `fileName` | `string` | The full name and extension of the log file to be downloaded (e.g., `fintrack-log-20240525.json`). | Yes |
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content-Type:** `application/json` (Logların JSON formatında olduğu varsayılarak).
-*   **Content:** İstenen log dosyasının ham içeriği.
+*   **Content-Type:** `application/json` (Assuming logs are in JSON format).
+*   **Content:** The raw content of the requested log file.
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `400 Bad Request`
-    *   `fileName` parametresinde dizin geçişi saldırısı denemesi tespit edilirse (`../` gibi).
+    *   If a path traversal attack attempt is detected in the `fileName` parameter (e.g., using `../`).
 *   **Status Code:** `404 Not Found`
-    *   Belirtilen `fileName` ile bir log dosyası `/logs` dizininde bulunamazsa.
+    *   If a log file with the specified `fileName` cannot be found in the `/logs` directory.
 *   **Status Code:** `500 Internal Server Error`
-    *   Dosya okunurken veya indirilirken beklenmedik bir sunucu hatası oluşursa.
+    *   If an unexpected server error occurs while reading or downloading the file.

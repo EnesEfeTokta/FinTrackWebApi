@@ -1,47 +1,47 @@
-# FinTrack API: Geri Bildirim Yönetimi (Feedback Controller)
+# **FinTrack API: Feedback Management (Feedback Controller)**
 
-Bu doküman, kullanıcıların uygulama hakkında geri bildirim göndermelerini ve kendi gönderdikleri geçmiş geri bildirimleri görüntülemelerini sağlayan `FeedbackController` endpoint'lerini açıklamaktadır.
+This document describes the `FeedbackController` endpoints, which allow users to send feedback about the application and view their past submissions.
 
 *Controller Base Path:* `/Feedback`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header.
 
-### `type` Alanı Değerleri (`FeedbackType`)
+### `type` Field Values (`FeedbackType`)
 
-Kullanıcılar geri bildirimlerini sınıflandırabilir. `type` alanı aşağıdaki metin değerlerini alabilir:
-*   `BugReport` (Hata Bildirimi)
-*   `FeatureRequest` (Özellik İsteği)
-*   `GeneralFeedback` (Genel Geri Bildirim)
-*   `Question` (Soru)
-*   `Other` (Diğer)
+Users can classify their feedback. The `type` field can take the following string values:
+*   `BugReport`
+*   `FeatureRequest`
+*   `GeneralFeedback`
+*   `Question`
+*   `Other`
 
 ---
 
 ## Endpoints
 
-### 1. Kullanıcının Tüm Geri Bildirimlerini Getir
+### 1. Retrieve All of a User's Feedbacks
 
-Giriş yapmış kullanıcının daha önce gönderdiği tüm geri bildirimleri listeler.
+Lists all feedback previously submitted by the logged-in user.
 
 *   **Endpoint:** `GET /Feedback`
-*   **Açıklama:** Token'ı gönderen kullanıcıya ait tüm geri bildirimlerin bir listesini döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns a list of all feedback belonging to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `FeedbackDto` objelerinden oluşan bir dizi.
+*   **Content:** An array of `FeedbackDto` objects.
     ```json
     [
         {
           "id": 1,
-          "subject": "Raporlama Ekranında Hata",
-          "description": "Excel formatında rapor oluşturmaya çalıştığımda uygulama donuyor.",
+          "subject": "Error on Reporting Screen",
+          "description": "The application freezes when I try to generate a report in Excel format.",
           "type": "BugReport",
           "savedFilePath": "/path/to/screenshot.png",
           "createdAtUtc": "2024-05-23T10:00:00Z",
@@ -49,8 +49,8 @@ Giriş yapmış kullanıcının daha önce gönderdiği tüm geri bildirimleri l
         },
         {
           "id": 2,
-          "subject": "Kripto Para Desteği",
-          "description": "Hesaplarım arasına kripto para cüzdanlarımı da ekleyebilmek harika olurdu.",
+          "subject": "Cryptocurrency Support",
+          "description": "It would be great to be able to add my cryptocurrency wallets to my accounts.",
           "type": "FeatureRequest",
           "savedFilePath": null,
           "createdAtUtc": "2024-05-24T11:30:00Z",
@@ -59,63 +59,63 @@ Giriş yapmış kullanıcının daha önce gönderdiği tüm geri bildirimleri l
     ]
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   `404 Not Found`: Kullanıcının hiç geri bildirimi yoksa.
+#### Error Responses
+*   `404 Not Found`: If the user has no feedback.
 *   `500 Internal Server Error`
 
 ---
 
-### 2. Belirli Bir Geri Bildirimi Getir
+### 2. Get a Specific Feedback
 
-Kullanıcıya ait tek bir geri bildirimin detaylarını ID ile getirir.
+Retrieves the details of a single feedback item belonging to the user by its ID.
 
 *   **Endpoint:** `GET /Feedback/{Id}`
-*   **Açıklama:** Verilen `Id`'ye sahip olan ve kullanıcıya ait olan geri bildirimin detaylarını döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns the details of the feedback with the given `Id` that belongs to the user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** Tek bir `FeedbackDto` objesi. (Yukarıdaki örnekle aynı yapıdadır.)
+*   **Content:** A single `FeedbackDto` object (with the same structure as the example above).
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   `404 Not Found`
 *   `500 Internal Server Error`
 
 ---
 
-### 3. Yeni Geri Bildirim Oluştur
+### 3. Create New Feedback
 
-Kullanıcının yeni bir geri bildirim göndermesini sağlar.
+Allows a user to submit new feedback.
 
 *   **Endpoint:** `POST /Feedback`
-*   **Açıklama:** Gönderilen bilgilere göre yeni bir geri bildirim kaydı oluşturur.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Creates a new feedback record based on the provided information.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`FeedbackCreateDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `subject` | `string` | Geri bildirimin konusu/başlığı. | Evet |
-| `description` | `string` | Geri bildirimin detaylı açıklaması. | Evet |
-| `type` | `string` | Geri bildirim türü (Bkz. `type` alanı değerleri). | Evet |
-| `savedFilePath` | `string` | Varsa, geri bildirimle ilgili bir ekran görüntüsü veya dosyanın sunucudaki yolu. | Hayır |
+| `subject` | `string` | The subject/title of the feedback. | Yes |
+| `description` | `string` | The detailed description of the feedback. | Yes |
+| `type` | `string` | The type of feedback (See `type` field values). | Yes |
+| `savedFilePath` | `string` | If applicable, the server path to a screenshot or file related to the feedback. | No |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "subject": "Uygulama Performansı",
-  "description": "Genel olarak uygulama çok akıcı çalışıyor, teşekkürler!",
+  "subject": "Application Performance",
+  "description": "The application runs very smoothly in general, thank you!",
   "type": "GeneralFeedback",
   "savedFilePath": null
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:**
     ```json
     true
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   `400 Bad Request`: İstek gövdesi boş veya eksikse.
+#### Error Responses
+*   `400 Bad Request`: If the request body is empty or incomplete.
 *   `500 Internal Server Error`

@@ -1,56 +1,56 @@
-# FinTrack API: Bildirim Yönetimi (Notification Controller)
+# **FinTrack API: Notification Management (Notification Controller)**
 
-Bu doküman, kullanıcılara yönelik uygulama içi bildirimlerin oluşturulması, görüntülenmesi ve yönetilmesi için kullanılan `NotificationController` endpoint'lerini açıklamaktadır.
+This document describes the `NotificationController` endpoints used for creating, viewing, and managing in-app notifications for users.
 
 *Controller Base Path:* `/Notification`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir. Tüm işlemler, token sahibi kullanıcı kapsamında gerçekleştirilir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header. All operations are performed within the scope of the token's owner.
 
-### `notificationType` Alanı Değerleri (`NotificationType`)
+### `notificationType` Field Values (`NotificationType`)
 
-Bildirimler, içeriklerine göre sınıflandırılır. `notificationType` alanı aşağıdaki metin değerlerini alabilir:
-*   `Info` (Bilgilendirme)
-*   `Warning` (Uyarı)
-*   `Error` (Hata)
-*   `Success` (Başarı)
-*   `System` (Sistem Mesajı)
-*   `Debt` (Borç Bildirimi)
+Notifications are classified based on their content. The `notificationType` field can take the following string values:
+*   `Info`
+*   `Warning`
+*   `Error`
+*   `Success`
+*   `System` (System Message)
+*   `Debt` (Debt Notification)
 
 ---
 
 ## Endpoints
 
-### 1. Kullanıcının Tüm Bildirimlerini Getir
+### 1. Get All of a User's Notifications
 
-Giriş yapmış kullanıcının sistemdeki tüm bildirimlerini, en yeniden en eskiye doğru sıralanmış olarak listeler.
+Lists all notifications for the logged-in user, sorted from newest to oldest.
 
 *   **Endpoint:** `GET /Notification`
-*   **Açıklama:** Token'ı gönderen kullanıcıya ait tüm bildirimlerin bir listesini döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns a list of all notifications belonging to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `NotificationDto` objelerinden oluşan bir dizi.
+*   **Content:** An array of `NotificationDto` objects.
     ```json
     [
         {
           "id": 1,
-          "messageHead": "Yeni Borç Teklifi",
-          "messageBody": "Ali Veli adlı kullanıcıdan 500 TL tutarında yeni bir borç teklifi aldınız.",
+          "messageHead": "New Debt Offer",
+          "messageBody": "You have received a new debt offer of 500 TRY from the user Ali Veli.",
           "notificationType": "Debt",
           "createdAt": "2024-05-24T10:00:00Z",
           "isRead": false
         },
         {
           "id": 2,
-          "messageHead": "Bütçe Uyarısı",
-          "messageBody": "'Market' bütçenizin %80'ine ulaştınız.",
+          "messageHead": "Budget Alert",
+          "messageBody": "You have reached 80% of your 'Groceries' budget.",
           "notificationType": "Warning",
           "createdAt": "2024-05-23T15:30:00Z",
           "isRead": true
@@ -58,83 +58,83 @@ Giriş yapmış kullanıcının sistemdeki tüm bildirimlerini, en yeniden en es
     ]
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   `500 Internal Server Error`
 
 ---
 
-### 2. Tek Bir Bildirimi Okundu Olarak İşaretle
+### 2. Mark a Single Notification as Read
 
-Belirtilen ID'ye sahip tek bir bildirimi "okundu" olarak işaretler.
+Marks a single notification with the specified ID as "read".
 
 *   **Endpoint:** `POST /Notification/mark-as-read/{id}`
-*   **Açıklama:** Eğer bildirim zaten okunmuşsa, herhangi bir işlem yapmaz.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** If the notification is already read, no action is taken.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `204 No Content`
-*   **Açıklama:** İşlem başarılı olduğunda response body'de içerik dönmez.
+*   **Description:** No content is returned in the response body when the operation is successful.
 
-#### Hata Yanıtları (Error Responses)
-*   `404 Not Found`: Bildirim bulunamazsa veya kullanıcıya ait değilse.
+#### Error Responses
+*   `404 Not Found`: If the notification is not found or does not belong to the user.
 *   `500 Internal Server Error`
 
 ---
 
-### 3. Tüm Bildirimleri Okundu Olarak İşaretle
+### 3. Mark All Notifications as Read
 
-Kullanıcının okunmamış tüm bildirimlerini tek bir işlemle "okundu" olarak işaretler.
+Marks all of the user's unread notifications as "read" in a single operation.
 
 *   **Endpoint:** `POST /Notification/mark-all-as-read`
-*   **Açıklama:** Veritabanında toplu bir güncelleme işlemi gerçekleştirir.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Performs a bulk update operation in the database.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `204 No Content`
 
 ---
 
-### 4. Yeni Bildirim Oluştur (Genellikle Sistem Tarafından Kullanılır)
+### 4. Create a New Notification (Generally Used by the System)
 
-Bir kullanıcı için yeni bir bildirim oluşturur. Bu endpoint genellikle doğrudan kullanıcı tarafından değil, sistemdeki diğer olaylar tarafından (örn: yeni bir borç teklifi geldiğinde) tetiklenir.
+Creates a new notification for a user. This endpoint is typically triggered by other events in the system (e.g., when a new debt offer is received) rather than being called directly by the user.
 
 *   **Endpoint:** `POST /Notification`
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`NotificationCreateDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `messageHead`| `string` | Bildirimin başlığı. | Evet |
-| `messageBody`| `string` | Bildirimin detaylı içeriği. | Evet |
-|`notificationType`|`string`| Bildirim türü (Bkz. `notificationType` alanları).| Evet |
+| `messageHead`| `string` | The title of the notification. | Yes |
+| `messageBody`| `string` | The detailed content of the notification. | Yes |
+|`notificationType`|`string`| The type of notification (See `notificationType` fields).| Yes |
 
-#### Başarılı Yanıt (Success Response)
-*   `201 Created` durum kodu ve oluşturulan bildirimin `NotificationCreateDto` objesi.
+#### Success Response
+*   A `201 Created` status code and the created notification as a `NotificationDto` object.
 
 ---
 
-### 5. Tek Bir Bildirimi Sil
+### 5. Delete a Single Notification
 
-Belirtilen ID'ye sahip tek bir bildirimi kalıcı olarak siler.
+Permanently deletes a single notification with the specified ID.
 
 *   **Endpoint:** `DELETE /Notification/{id}`
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `204 No Content`
 
-#### Hata Yanıtları (Error Responses)
-*   `404 Not Found`: Bildirim bulunamazsa veya kullanıcıya ait değilse.
+#### Error Responses
+*   `404 Not Found`: If the notification is not found or does not belong to the user.
 
 ---
 
-### 6. Tüm Bildirimleri Temizle
+### 6. Clear All Notifications
 
-Kullanıcının tüm bildirimlerini (okunmuş veya okunmamış) tek bir işlemle kalıcı olarak siler.
+Permanently deletes all of a user's notifications (read or unread) in a single operation.
 
 *   **Endpoint:** `DELETE /Notification/clear-all`
-*   **Açıklama:** Veritabanında toplu bir silme işlemi gerçekleştirir.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Performs a bulk delete operation in the database.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `204 No Content`

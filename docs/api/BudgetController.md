@@ -1,46 +1,46 @@
-# FinTrack API: Bütçe Yönetimi (Budgets Controller)
+# **FinTrack API: Budget Management (Budgets Controller)**
 
-Bu doküman, kullanıcıların finansal bütçelerini oluşturmak, takip etmek ve yönetmek için kullanılan `BudgetsController` endpoint'lerini açıklamaktadır.
+This document describes the `BudgetsController` endpoints used for creating, tracking, and managing users' financial budgets.
 
 *Controller Base Path:* `/Budgets`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir. Sistem, token içerisindeki `userId` üzerinden kullanıcıyı tanır ve işlemleri sadece o kullanıcı adına gerçekleştirir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header. The system identifies the user via the `userId` from the token and performs operations only on behalf of that user.
 
-**Header Örneği:**
-`Authorization: Bearer <JWT_TOKENINIZ>`
+**Header Example:**
+`Authorization: Bearer <YOUR_JWT_TOKEN>`
 
-### Dinamik Kategori Yönetimi
+### Dynamic Category Management
 
-Bütçe oluşturma veya güncelleme sırasında, eğer belirtilen `category` adı kullanıcının mevcut kategorileri arasında yoksa, sistem bu kategoriyi kullanıcı için **otomatik olarak oluşturur**. Bu, kullanıcıların bütçe oluştururken anlık olarak yeni harcama kategorileri tanımlamasına olanak tanır.
+During budget creation or updates, if the specified `category` name does not exist among the user's current categories, the system will **automatically create** that category for the user. This allows users to define new spending categories on the fly while creating a budget.
 
 ---
 
 ## Endpoints
 
-### 1. Kullanıcının Tüm Bütçelerini Getir
+### 1. Retrieve All of a User's Budgets
 
-Giriş yapmış kullanıcının sistemde kayıtlı tüm bütçelerini listeler.
+Lists all budgets registered in the system for the logged-in user.
 
 *   **Endpoint:** `GET /Budgets`
-*   **Açıklama:** Token'ı gönderen kullanıcıya ait tüm bütçelerin bir listesini döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns a list of all budgets belonging to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `BudgetDto` objelerinden oluşan bir dizi.
+*   **Content:** An array of `BudgetDto` objects.
     ```json
     [
         {
           "id": 1,
-          "name": "Aylık Market Alışverişi",
-          "description": "Temel gıda ve temizlik malzemeleri için.",
-          "category": "Market",
+          "name": "Monthly Grocery Shopping",
+          "description": "For essential food and cleaning supplies.",
+          "category": "Groceries",
           "allocatedAmount": 5000.00,
           "reachedAmount": 2350.50,
           "currency": "TRY",
@@ -53,28 +53,28 @@ Giriş yapmış kullanıcının sistemde kayıtlı tüm bütçelerini listeler.
     ]
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 2. Belirli Bir Bütçeyi Getir
+### 2. Get a Specific Budget
 
-Kullanıcıya ait tek bir bütçenin detaylarını ID ile getirir.
+Retrieves the details of a single budget belonging to the user by its ID.
 
 *   **Endpoint:** `GET /Budgets/{id}`
-*   **Açıklama:** Verilen `id`'ye sahip olan ve token'ı gönderen kullanıcıya ait olan bütçenin detaylarını döndürür.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Returns the details of the budget with the given `id` that belongs to the authenticated user.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `BudgetDto` objesi.
+*   **Content:** A `BudgetDto` object.
     ```json
     {
       "id": 1,
-      "name": "Aylık Market Alışverişi",
-      "description": "Temel gıda ve temizlik malzemeleri için.",
-      "category": "Market",
+      "name": "Monthly Grocery Shopping",
+      "description": "For essential food and cleaning supplies.",
+      "category": "Groceries",
       "allocatedAmount": 5000.00,
       "reachedAmount": 2350.50,
       "currency": "TRY",
@@ -86,38 +86,38 @@ Kullanıcıya ait tek bir bütçenin detaylarını ID ile getirir.
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 3. Yeni Bütçe Oluştur
+### 3. Create a New Budget
 
-Kullanıcı için yeni bir finansal bütçe oluşturur.
+Creates a new financial budget for the user.
 
 *   **Endpoint:** `POST /Budgets`
-*   **Açıklama:** Gönderilen bilgilere göre yeni bir bütçe oluşturur. Eğer belirtilen kategori mevcut değilse, onu da otomatik olarak oluşturur.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Creates a new budget based on the provided information. If the specified category does not exist, it will be created automatically.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`BudgetCreateDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `name` | `string` | Bütçenin adı. | Evet |
-| `description`| `string` | Bütçe hakkında kısa açıklama. | Hayır |
-| `category` | `string` | Bütçenin ilişkili olduğu kategori adı. | Evet |
-| `allocatedAmount` | `number` | Bu bütçe için ayrılan toplam tutar. | Evet |
-| `reachedAmount`| `number`| Bütçenin başlangıçtaki harcanan tutarı (genellikle 0).| Evet |
-| `currency` | `string` | Para birimi (örn: "TRY", "USD"). | Evet |
-| `startDate` | `string` | Bütçenin başlangıç tarihi (ISO 8601 formatında). | Evet |
-| `endDate` | `string` | Bütçenin bitiş tarihi (ISO 8601 formatında). | Evet |
-| `isActive` | `boolean` | Bütçenin aktif olup olmadığı. | Evet |
+| `name` | `string` | The name of the budget. | Yes |
+| `description`| `string` | A short description of the budget. | No |
+| `category` | `string` | The name of the category associated with the budget. | Yes |
+| `allocatedAmount` | `number` | The total amount allocated for this budget. | Yes |
+| `reachedAmount`| `number`| The initial spent amount for the budget (usually 0).| Yes |
+| `currency` | `string` | The currency (e.g., "TRY", "USD"). | Yes |
+| `startDate` | `string` | The start date of the budget (in ISO 8601 format). | Yes |
+| `endDate` | `string` | The end date of the budget (in ISO 8601 format). | Yes |
+| `isActive` | `boolean` | Whether the budget is active. | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
-  "name": "Dışarıda Yemek Bütçesi",
-  "category": "Restoran & Kafe",
+  "name": "Dining Out Budget",
+  "category": "Restaurant & Cafe",
   "allocatedAmount": 1500,
   "reachedAmount": 0,
   "currency": "TRY",
@@ -127,45 +127,45 @@ Kullanıcı için yeni bir finansal bütçe oluşturur.
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `201 Created`
-*   **Content:** Oluşturulan bütçenin `BudgetDto` objesi.
+*   **Content:** The created budget as a `BudgetDto` object.
 
 ---
 
-### 4. Bütçeyi Güncelle
+### 4. Update a Budget
 
-Mevcut bir bütçeyi günceller.
+Updates an existing budget.
 
 *   **Endpoint:** `PUT /Budgets/{id}`
-*   **Açıklama:** Belirtilen `id`'ye sahip bütçeyi, gönderilen verilerle günceller.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Updates the budget with the specified `id` using the provided data.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** Güncellenmiş bütçenin `BudgetDto` objesi.
+*   **Content:** The updated budget as a `BudgetDto` object.
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 5. Bütçenin Harcanan Tutarını Güncelle
+### 5. Update a Budget's Reached Amount
 
-Bir bütçenin sadece harcanan (`reachedAmount`) tutarını güncellemek için özel endpoint.
+A dedicated endpoint to update only the spent (`reachedAmount`) value of a budget.
 
 *   **Endpoint:** `PUT /Budgets/Update-Reached-Amount`
-*   **Açıklama:** Genellikle bir işlem eklendiğinde veya silindiğinde, ilişkili bütçenin mevcut harcama miktarını güncellemek için kullanılır.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Typically used to update the current spending amount of a related budget when a transaction is added or deleted.
+*   **Authorization:** Required (`User` or `Admin` role).
 
 #### Request Body (`BudgetUpdateReachedAmountDto`)
-| Alan | Tip | Açıklama | Zorunlu mu? |
+| Field | Type | Description | Required? |
 | :--- | :--- | :--- | :--- |
-| `budgetId` | `integer`| Güncellenecek bütçenin ID'si. | Evet |
-| `reachedAmount`|`number`| Bütçenin yeni harcanan toplam tutarı. | Evet |
+| `budgetId` | `integer`| The ID of the budget to be updated. | Yes |
+| `reachedAmount`|`number`| The new total spent amount for the budget. | Yes |
 
-#### Request Body Örneği
+#### Request Body Example
 ```json
 {
   "budgetId": 1,
@@ -173,29 +173,29 @@ Bir bütçenin sadece harcanan (`reachedAmount`) tutarını güncellemek için �
 }
 ```
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** Güncellenmiş bütçenin `BudgetDto` objesi.
+*   **Content:** The updated budget as a `BudgetDto` object.
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `400 Bad Request`
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`
 
 ---
 
-### 6. Bütçeyi Sil
+### 6. Delete a Budget
 
-Mevcut bir bütçeyi siler.
+Deletes an existing budget.
 
 *   **Endpoint:** `DELETE /Budgets/{id}`
-*   **Açıklama:** Belirtilen `id`'ye sahip bütçeyi kalıcı olarak siler. Bu işlem geri alınamaz.
-*   **Yetkilendirme:** Gerekli (`User` veya `Admin` rolü).
+*   **Description:** Permanently deletes the budget with the specified `id`. This action cannot be undone.
+*   **Authorization:** Required (`User` or `Admin` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
 *   **Content:** `true`
 
-#### Hata Yanıtları (Error Responses)
+#### Error Responses
 *   **Status Code:** `404 Not Found`
 *   **Status Code:** `500 Internal Server Error`
