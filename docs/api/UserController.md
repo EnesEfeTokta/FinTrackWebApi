@@ -1,59 +1,59 @@
-# FinTrack API: Kullanıcı Profili ve Veri Merkezi (User Controller)
+# **FinTrack API: User Profile and Data Hub (User Controller)**
 
-Bu doküman, giriş yapmış kullanıcının tüm kişisel bilgilerini, ayarlarını, üyelik durumunu ve finansal verilerinin özetini tek bir merkezden sağlayan `UserController` endpoint'ini açıklamaktadır.
+This document describes the `UserController` endpoint, which provides a centralized source for all of the logged-in user's personal information, settings, membership status, and a summary of their financial data.
 
 *Controller Base Path:* `/User`
 
 ---
 
-## Genel Bilgiler
+## General Information
 
-### Yetkilendirme (Authentication)
+### Authentication
 
-Bu controller'daki **tüm endpoint'ler** yetkilendirme gerektirir. İsteklerin `Authorization` başlığında geçerli bir JWT `Bearer Token` gönderilmelidir.
+**All endpoints** in this controller require authorization. Requests must include a valid JWT `Bearer Token` in the `Authorization` header.
 
-### Mimarideki Rolü: Veri Toplama Merkezi (Data Aggregator)
+### Role in the Architecture: Data Aggregator
 
-Bu controller, istemci uygulamasının (WPF, Mobil vb.) kullanıcı oturumu başladığında ihtiyaç duyabileceği tüm temel verileri **tek bir API çağrısıyla** sunmak için tasarlanmıştır. Bu yaklaşım:
-*   İstemcinin başlangıçtaki API çağrı sayısını azaltır.
-*   Uygulama açılış performansını artırır.
-*   Kullanıcıya ait tüm verilerin tutarlı bir anlık görüntüsünü (snapshot) sağlar.
+This controller is designed to serve as a **data aggregator**, providing all essential data that a client application (WPF, Mobile, etc.) might need upon user session start **in a single API call**. This approach:
+*   Reduces the number of initial API calls the client needs to make.
+*   Improves application startup performance.
+*   Provides a consistent snapshot of all user-related data.
 
-Controller, arka planda birden fazla veritabanı tablosunu (`Users`, `UserMemberships`, `Accounts`, `Budgets` vb.) birleştirerek zengin bir `UserProfileDto` nesnesi oluşturur.
+In the background, the controller joins data from multiple database tables (`Users`, `UserMemberships`, `Accounts`, `Budgets`, etc.) to create a rich `UserProfileDto` object.
 
 ---
 
 ## Endpoints
 
-### 1. Giriş Yapmış Kullanıcının Tüm Bilgilerini Getir
+### 1. Get All Information for the Logged-In User
 
-Token sahibi kullanıcının profil bilgilerini, ayarlarını, aktif üyeliğini ve tüm finansal varlıklarının ID listelerini içeren kapsamlı bir veri paketi döndürür.
+Returns a comprehensive data package containing the token owner's profile information, settings, active membership, and ID lists of all their financial assets.
 
 *   **Endpoint:** `GET /User`
-*   **Açıklama:** Bu endpoint, genellikle kullanıcı uygulamaya giriş yaptıktan hemen sonra çağrılır.
-*   **Yetkilendirme:** Gerekli (`User` rolü).
+*   **Description:** This endpoint is generally called immediately after the user logs into the application.
+*   **Authorization:** Required (`User` role).
 
-#### Başarılı Yanıt (Success Response)
+#### Success Response
 *   **Status Code:** `200 OK`
-*   **Content:** `UserProfileDto` objesi.
+*   **Content:** A `UserProfileDto` object.
     ```json
     {
-      // --- Temel Bilgiler ---
+      // --- Basic Information ---
       "id": 15,
       "userName": "Ahmet_Yilmaz",
       "email": "ahmet.yilmaz@example.com",
       "profilePictureUrl": "https://.../image.jpg",
       "createdAtUtc": "2024-01-10T14:00:00Z",
 
-      // --- Üyelik Bilgileri ---
+      // --- Membership Information ---
       "currentMembershipPlanId": 2,
       "currentMembershipPlanType": "Plus",
       "membershipStartDateUtc": "2024-05-20T10:00:00Z",
       "membershipExpirationDateUtc": "2025-05-20T10:00:00Z",
 
-      // --- Kullanıcı Ayarları ---
+      // --- User Settings ---
       "thema": "Light",
-      "language": "tr_TR",
+      "language": "en_US",
       "currency": "TRY",
       "spendingLimitWarning": true,
       "expectedBillReminder": true,
@@ -61,7 +61,7 @@ Token sahibi kullanıcının profil bilgilerini, ayarlarını, aktif üyeliğini
       "newFeaturesAndAnnouncements": true,
       "enableDesktopNotifications": true,
 
-      // --- Kullanım Verileri (ID Listeleri) ---
+      // --- Usage Data (ID Lists) ---
       "currentAccounts": [1, 2, 5],
       "currentBudgets": [10, 11],
       "currentTransactions": [101, 102, 103, 104],
@@ -75,6 +75,6 @@ Token sahibi kullanıcının profil bilgilerini, ayarlarını, aktif üyeliğini
     }
     ```
 
-#### Hata Yanıtları (Error Responses)
-*   `401 Unauthorized`: Geçerli bir token gönderilmediğinde.
-*   `500 Internal Server Error`: Veriler toplanırken beklenmedik bir sunucu hatası oluşursa.
+#### Error Responses
+*   `401 Unauthorized`: When a valid token is not provided.
+*   `500 Internal Server Error`: If an unexpected server error occurs while aggregating the data.
